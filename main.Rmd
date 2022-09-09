@@ -269,7 +269,7 @@ parse_categories <- function(data_dictionary, categoricals = c("radio", "dropdow
 parse_live_filters <- function (parameters, categories, live_filter_status = c("0" = "Incomplete","1"="Unverified","2" = "Complete")) {
   data.frame(field_name = c(params$dynamic_filter1, params$dynamic_filter2, params$dynamic_filter3), option_code = c(params$lf1, params$lf2, params$lf3)) %>%
   # Remove empty filters
-  filter(filter(option_code != "")) 
+  filter(option_code != "")
   mutate(
      # Match the option_name to match to option_code from the instrument or categories list
      option_name = if_else( # Match titles for filters
