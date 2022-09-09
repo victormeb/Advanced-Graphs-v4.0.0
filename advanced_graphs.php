@@ -125,7 +125,7 @@ if(!is_numeric($pid) || !is_numeric($report_id) || $report_id<1) {
 								
 						$module_physical_path = str_replace("\\","/",$module->getModulePath());
 						
-						$markdown_file_path = $module_physical_path . "R_Tables_and_Plots.Rmd";				
+						$markdown_file_path = $module_physical_path . "main.Rmd"; # changed from "R_Tables_and_Plots.Rmd" TODO: Delete comment				
 						
 						$output_folder = $module_physical_path . "output";
 						
