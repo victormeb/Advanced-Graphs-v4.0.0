@@ -86,7 +86,7 @@ import_data <- function(parameters, live_filters) {
   filter_condition <- paste(paste("[", live_filters$filter_name, "] = [", live_filters$options_code, "]" ,sep = "", collapse = " AND "))
   
   return(
-    postForm(
+    read.csv(text = postForm(
       uri=server_url,
       token=params$token,
       content='record',
@@ -98,8 +98,7 @@ import_data <- function(parameters, live_filters) {
       exportCheckboxLabel='false',
       returnFormat='csv',
      .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ) %>%
-    read.csv(text = data_filter, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
   )
 }
 
@@ -129,15 +128,14 @@ post_project_info <- function (parameters) {
   ##########################
   # Project Dataframe
   ##########################
-  postForm(
+  read.csv(text = postForm(
     uri= parameters$server_url,
     token= parameters$token,
     content='project',
     format='csv',
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ) %>%
-    read.csv(text = project_info, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
 }
 
 # post_data_dictionary
@@ -167,15 +165,14 @@ post_data_dictionary <- function (parameters) {
   # Data Dictionary
   ##########################
   # Reads a very large string for all dd from REDCap
-  postForm(
+  read.csv(text = postForm(
     uri=parameters$server_url,
     token= parameters$token,
     content='metadata',
     format='csv',
     returnFormat='csv',
    .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ) %>% 
-    read.csv(text = dd, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
 }
 
 # parse_categories
