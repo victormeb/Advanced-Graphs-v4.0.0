@@ -205,7 +205,7 @@ post_data_dictionary <- function (parameters) {
 #
 #     $field_name2$label
 #     [1] "optionA", "optionB", "optionC"
-parse_categories <- function(data_dictionary, categoricals = ) {
+parse_categories <- function(data_dictionary, categoricals = c("radio", "dropdown", "yesno", "truefalse", "checkbox")) {
   # Create a list of categories and their options
   categories <- 
     # split the variables by | "The pipe character"
