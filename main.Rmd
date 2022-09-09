@@ -206,10 +206,12 @@ post_data_dictionary <- function (parameters) {
 #     $field_name2$label
 #     [1] "optionA", "optionB", "optionC"
 parse_categories <- function(data_dictionary, categoricals = c("radio", "dropdown", "yesno", "truefalse", "checkbox")) {
+  categorical_indexes <- data_dictionary$field_type %in% categoricals
+  
   # Create a list of categories and their options
   categories <- 
     # split the variables by | "The pipe character"
-    strsplit(data_dictionary$select_choices_or_calculations[data_dictionary$field_type %in% categoricals], "[|]") %>% 
+    strsplit(data_dictionary$select_choices_or_calculations[categorical_indexes], "[|]") %>% 
     # Strip white space on either end of the categories_list
     lapply(function (x) {gsub("^\\s+|\\s+$", "", x)}) %>% 
     # 
@@ -223,7 +225,7 @@ parse_categories <- function(data_dictionary, categoricals = c("radio", "dropdow
     })
   
   # Assign each category the appropriate field name
-  names(categories) <- data_dictionary$field_name[categorical] 
+  names(categories) <- data_dictionary$field_name[categorical_indexes] 
 
   return(categories) 
 }
