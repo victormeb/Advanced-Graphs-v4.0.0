@@ -26,7 +26,7 @@ library(dplyr)
 library(RCurl)
 ```
 
-```{r custom_functions}
+```{r custom_functions, results='asis'}
 # title_caps
 # Author: Joel Cohen (Based on previously existing work)
 # Description:
@@ -65,32 +65,29 @@ import_data <- function(parameters, live_filters) {
   ##########################
   # REDCap Report
   ##########################
-  if (nrow(live_filters) == 0) {
-    return(
-      postForm(
+    report_data <- read.csv(text = postForm(
         uri=parameters$server_url,
         token=parameters$token,
         content='report',
         format='csv',
-        report_id=report_number,
+        report_id=parameters$reportId,
         rawOrLabel='raw',
         rawOrLabelHeaders='raw',
         exportCheckboxLabel='false',
         returnFormat='csv',
        .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-      ) %>%
-      read.csv(text = data_report, header = TRUE, sep = ",", stringsAsFactors = FALSE)
-    )
-  }
+      ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  
+    if (nrow(live_filters) == 0) return(report_data)
+  
   
   filter_condition <- paste(paste("[", live_filters$filter_name, "] = [", live_filters$options_code, "]" ,sep = "", collapse = " AND "))
-  
   return(
     read.csv(text = postForm(
-      uri=server_url,
-      token=params$token,
+      uri=parameters$server_url,
+      token=parameters$token,
       content='record',
-      fields=field_name_dd[1],
+      #fields=names(report_data),
       format='csv',
       filterLogic = filter_condition,
       rawOrLabel='raw',
@@ -266,10 +263,10 @@ parse_categories <- function(data_dictionary, categoricals = c("radio", "dropdow
 # field2  	                  3	              option1  	         Field 2	
 # instrument_one_complete     2	              Complete	       Instrument One
 # ...........................................................................
-parse_live_filters <- function (parameters, categories, live_filter_status = c("0" = "Incomplete","1"="Unverified","2" = "Complete")) {
+parse_live_filters <- function (parameters, categories, data_dictionary,live_filter_status = c("0" = "Incomplete","1"="Unverified","2" = "Complete")) {
   data.frame(field_name = c(params$dynamic_filter1, params$dynamic_filter2, params$dynamic_filter3), option_code = c(params$lf1, params$lf2, params$lf3)) %>%
   # Remove empty filters
-  filter(option_code != "")
+  filter(option_code != "") %>%
   mutate(
      # Match the option_name to match to option_code from the instrument or categories list
      option_name = if_else( # Match titles for filters
@@ -306,10 +303,9 @@ parse_live_filters <- function (parameters, categories, live_filter_status = c("
       # e.g. Example_instrument_complete => Example Instrument
       gsub("_", " ", substr(field_name, 0, nchar(field_name)-9)) %>% title_caps(),
        # Otherwise try to match it with field label from the data_dictionary
-      right_join(dd_df, data.frame(field_name = field_name), by = "field_name")[["field_label"]]
+      right_join(data_dictionary, data.frame(field_name = field_name), by = "field_name")[["field_label"]]
     )
   )
-  
 } 
 
 
@@ -325,10 +321,10 @@ data_dictionary <- post_data_dictionary(params)
 categories <- parse_categories(data_dictionary)
 
 # Retrieve the live filters
-live_filters <- parse_live_filters(params, categories)
+live_filters <- parse_live_filters(params, categories, data_dictionary)
 
 # Retrieve report data
-report_data <- import_data(params, live_filters) 
+report_data <- import_data(params, live_filters)
 ```
 
 ```{r}
