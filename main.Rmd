@@ -15,6 +15,9 @@ params:
   lf3: "2"
 ---
 
+# Test
+
+
 ```{r setup, include=FALSE }
 #knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
 knitr::opts_chunk$set(echo = FALSE)
@@ -26,7 +29,7 @@ library(dplyr)
 library(RCurl)
 ```
 
-```{r custom_functions, results='asis'}
+```{r data_processing_functions, results='asis'}
 # title_caps
 # Author: Joel Cohen (Based on previously existing work)
 # Description:
@@ -51,17 +54,38 @@ title_caps <- function (string_vec) {
 # Author: Joel Cohen (Based on previously existing work)
 # Description:
 # 
-# Retrieves a REDCap project's data frame and data dictionary and returns them as a list containing two data frames. 
+# Retrieves a REDCap report's data frame with live filters applied
 # If no parameters are supplied, it uses local files for the data frames.
 #
+# Input:
+#   params:
+#     pid: 0
+#     reportId: 0
+#     server_url: ""
+#     token: ""
+#     dynamic_filter1: ""
+#     dynamic_filter2: ""
+#     dynamic_filter3: ""
+#     lf1: ""
+#     lf2: ""
+#     lf3: ""
+#
+#   live_filters:
+#     field_name <chr>    option_code <chr>     option_name <chr> field_title <chr>
+#     ...........................................................................
+#     field1  	                  1	              option2	           Field 1
+#     field2  	                  3	              option1  	         Field 2
+#     instrument_one_complete     2	              Complete	       Instrument One
+#     ...........................................................................
+#
 # Returns:
+# 
+# A dataframe containing the report fields with any applicable live filter.
 #
-# A list of the form:
-#
-#   -   list(project_df = project_df, dd_df = dd_df)
-#
+# NOTE: entry ID MUST be a field in the report for this to work!
 # TODO: Make local files non-static
 import_data <- function(parameters, live_filters) {
+  # TODO: We could filter locally if we didn't have to worry abour fields that aren't in the report
   ##########################
   # REDCap Report
   ##########################
@@ -78,16 +102,29 @@ import_data <- function(parameters, live_filters) {
        .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
       ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
   
+    
+    # If there are no live_filters active, submit the report_data
     if (nrow(live_filters) == 0) return(report_data)
+    
+    # If live filters are selected but there are duplicate entries 
+    # in the report column report data_frame, return null
+    # live filter records must be merged on the entry ids
+    if (anyDuplicated(report_data)) return(data.frame())
   
+  # Create filter condition to send request to redcap.
+  filter_condition <- paste("[", live_filters$field_name, "] = \"", live_filters$option_code, "\"" ,sep = "", collapse = " AND ")
   
-  filter_condition <- paste(paste("[", live_filters$filter_name, "] = [", live_filters$options_code, "]" ,sep = "", collapse = " AND "))
-  return(
-    read.csv(text = postForm(
+  print(filter_condition)
+  
+  # Create the array of field names to be returned from redcap
+  report_fields <- toString(names(report_data))
+  
+  # All records matching live filter
+  live_filtered_records <- read.csv(text = postForm(
       uri=parameters$server_url,
       token=parameters$token,
       content='record',
-      #fields=names(report_data),
+      fields= report_fields,
       format='csv',
       filterLogic = filter_condition,
       rawOrLabel='raw',
@@ -95,7 +132,12 @@ import_data <- function(parameters, live_filters) {
       exportCheckboxLabel='false',
       returnFormat='csv',
      .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
+    ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  
+  # return(report_data)
+  return(
+    report_data %>%
+      inner_join(live_filtered_records)
   )
 }
 
@@ -227,7 +269,7 @@ parse_categories <- function(data_dictionary, categoricals = c("radio", "dropdow
   return(categories) 
 }
 
-# post_data_dictionary
+# parse_live_filters
 # Author: Joel Cohen
 # Description:
 # 
@@ -279,7 +321,7 @@ parse_live_filters <- function (parameters, categories, data_dictionary,live_fil
           # ... If the options code is equal to [NULL]
           option_code == "[NULL]",
           # Change it to an empty string (this is for the filter condition to send to REDCap)
-          "\'\'",
+          "",
           # In all other cases
           unlist(mapply(     
             # Attempt to map the option_name to the corresponding field_name, option_code in the categories list
@@ -307,10 +349,12 @@ parse_live_filters <- function (parameters, categories, data_dictionary,live_fil
     )
   )
 } 
+```
 
-
+```{r, results=}
 
 ```
+
 
 ```{r data_input}
 # Get report metadata
