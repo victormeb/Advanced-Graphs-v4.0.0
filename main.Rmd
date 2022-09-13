@@ -26,6 +26,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 options(dplyr.summarise.inform = FALSE)
 library(data.table)
+  # Used to take permutations of fields
+library(gtools)
 
 # Used for connections
 library(RCurl)
@@ -440,4 +442,21 @@ for (group_index in 1:nrow(likert_groups)) {
         nlevels=6)
 }
 ```
+
+```{r scatter_plots}
+# Take report data
+numerical_data_fields <- report_data %>%
+  # Select only numeric columns
+  select(is.numeric) %>%
+  # Only get field names
+  names()
+
+# TODO: Should we use combinations instead? Should we create our own permutations function to replace gtools?
+numeric_pairs <- permutations(length(numerical_data_fields), 2, numerical_data_fields) 
+
+
+empty <- apply(numeric_pairs, 1, function(name) {report_data %>% select(name) %>% na.omit() %>% plot})
+
+```
+
 
