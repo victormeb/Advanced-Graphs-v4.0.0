@@ -24,6 +24,7 @@ knitr::opts_chunk$set(echo = FALSE)
 # Used for data manipulation
 #library(tidyr)
 library(dplyr)
+options(dplyr.summarise.inform = FALSE)
 library(data.table)
 
 # Used for connections
@@ -136,7 +137,7 @@ import_data <- function(parameters, record_id, live_filters) {
 
   return(
     report_data %>%
-      inner_join(live_filtered_records, by = record_id)
+      inner_join(live_filtered_records) # TODO: by = report_id - decide whether or not it should be joined just by the report_id field or to try to match across all fields
   )
 }
 
@@ -374,8 +375,9 @@ report_data <- import_data(params, data_dictionary$field_name[1], live_filters)
 ###### `r paste0(live_filters$field_title, " = ", live_filters$option_name, collapse = "\n")`
 <!--TODO: fix '=' when no live filters selected -->
 ```{r}
+# TODO: Delete
 # print(project_info)
-print(data_dictionary)
+#print(data_dictionary)
 # print(categories)
 # print(live_filters)
 # print(report_data)
@@ -386,25 +388,56 @@ print(data_dictionary)
 # Get categorical fields that can be made into likert graphs
 likert_categories <- data_dictionary[data_dictionary$field_type %in% c("dropdown", "radio") & data_dictionary$field_name %in% names(report_data), "field_name"]
 
+# TODO: Other checks such as making sure common categories share an instrument
 
-# TODO: split likert into two sections
 # Get the levels for each categorical field
-likert_candidate_levels <- sapply(likert_categories, function(x) {categories[[x]][["label"]]})
-print(likert_candidate_levels)
-# Send the lists to 
+likert_candidate_levels <- lapply(likert_categories, function(x) {categories[[x]][["code"]]})
+likert_candidate_labels <- lapply(likert_categories, function(x) {categories[[x]][["label"]]})
 
-# TODO: Other check like making sure common categories share an instrument
+# Create a dataframe for each grouping of categorical variables
+likert_groups <- data.table(likert_candidate_levels, likert_candidate_labels) %>%
+  group_by(likert_candidate_levels, likert_candidate_labels) %>%
+  summarise(indices = list(cur_group_rows()), category_names = list(likert_categories[cur_group_rows()]))
 
-# For each group of variables that shares options create a likert_group
- likert_groups <- data.table(group_names = sapply(likert_candidate_levels, toString))[, list(list(.I)), by = group_names]# %>%
-#   transmute(options = likert_candidate_levels, indices = V1, categories = lapply(V1, function(x) {likert_categories[x]}))
-print(likert_groups)
-# Create a graph for each likert_group
-# for (likert_group in likert_groups) {
-#   likert_dataframe <- lapply(report_data[likert_group$categories], factor, )
-# }
+# TODO: delete
+# print(likert_categories)
+# print(likert_candidate_levels)
+# print(likert_groups)
 
-print(likert_candidate_levels)
-print(likert_groups)
+for (group_index in 1:nrow(likert_groups)) {
+  # Get raw data and check for NA's
+  raw_group_data <- as.data.frame(report_data[, unlist(likert_groups$category_names[group_index])])
+
+  names(raw_group_data) <- likert_groups$category_names[group_index]
+
+  # If there are any NA's
+  if (any(is.na(raw_group_data))) {
+    # Replace them with character vectors "NA"
+    raw_group_data <- raw_group_data %>%
+      replace(is.na(.), "NA")
+
+    # Add an "NA" level
+    likert_groups$likert_candidate_levels[[group_index]] <- append(likert_groups$likert_candidate_levels[[group_index]], "NA")
+
+    # As well as a corresponding NA label
+    likert_groups$likert_candidate_labels[[group_index]] <- append(likert_groups$likert_candidate_labels[[group_index]], "NA")
+  }
+
+  # Create a dataframe out of corresponding factors for each group
+  likert_group_df <- data.frame(lapply(raw_group_data, factor, levels = likert_groups$likert_candidate_levels[[group_index]], labels = likert_groups$likert_candidate_labels[[group_index]]))
+
+  # Print a likert bar plot for this group
+  print(likert::likert.bar.plot(likert::likert(likert_group_df),
+          as.percent = TRUE,
+          horizontal=TRUE,
+          xlimEqualLeftRight=FALSE,
+          xTickLabelsPositive=TRUE,
+          reverse=FALSE,
+          xlab = "Percent",
+          ylab.right = ""),
+        height=1,
+        wide=2,
+        nlevels=6)
+}
 ```
 
