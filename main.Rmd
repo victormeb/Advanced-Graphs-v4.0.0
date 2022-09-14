@@ -7,12 +7,12 @@ params:
   reportId: 0
   server_url: ""
   token: ""
-  dynamic_filter1: "Example1"
-  dynamic_filter2: "Example2"
-  dynamic_filter3: "Example3_dairy_complete"
-  lf1: "1"
-  lf2: "3"
-  lf3: "2"
+  dynamic_filter1: ""
+  dynamic_filter2: ""
+  dynamic_filter3: ""
+  lf1: ""
+  lf2: ""
+  lf3: ""
 ---
 
 # Test
@@ -383,12 +383,30 @@ custom_likert <- function(x) {
             xlab = "Percent",
             ylab.right = "")
 }
+
+custom_scatter <- function(data) {
+  field_labels <- unlist(names_to_labels[names(data)])
+  data %>%
+    na.omit() %>%
+    plot(
+      main = paste0(field_labels, collapse = " vs "),
+      xlab = field_labels[1],
+      ylab = field_labels[2],
+      type = "p",
+      xaxt = "n",
+      yaxt = "n",
+      # TODO: Make point sizes increase for repeated (y?) values
+      #cex= points_to_plot[,3]
+      pch=19, 
+      col="blue"
+    )
+}
 ```
 
 
 ```{r data_input}
 # TODO: The if statement is temporary and allows for testing on sample data
-if (params$pid) {
+if (params$pid != 0) {
   # Get report metadata
   project_info <- post_project_info(params)
   data_dictionary <- post_data_dictionary(params)
@@ -413,6 +431,9 @@ if (params$pid) {
   # Report data was randomly sampled from Advanced Graphs - Demo Project
   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
 }
+# Create list of labels
+names_to_labels <- data_dictionary$field_label
+names(names_to_labels) <- data_dictionary$field_name
 ```
 
 ## Advanced Graphs 
@@ -436,6 +457,7 @@ if (params$pid) {
 ```{r likert_plots}
 # Likert types
 like_likert <- c("dropdown", "radio")
+key_likert_words <- c("not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "in\u00fatil", "completamente inutil", "completamente in\u00fatil", "dificil", "dif\u00edcil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo")
 
 # Get categorical fields that can be made into likert graphs
 likert_categories <- data_dictionary[data_dictionary$field_type %in% like_likert & data_dictionary$field_name %in% names(report_data), "field_name"]
@@ -451,14 +473,15 @@ likert_candidate_labels <- lapply(likert_categories, function(x) {categories[[x]
 # Create a dataframe for each grouping of categorical variables
 likert_groups <- data.table(likert_candidate_levels, likert_candidate_labels) %>%
   group_by(likert_candidate_levels, likert_candidate_labels) %>%
-  summarise(indices = list(cur_group_rows()), category_names = list(likert_categories[cur_group_rows()]))
+  summarise(indices = list(cur_group_rows()), category_names = list(likert_categories[cur_group_rows()])) %>%
+  filter(any(grepl(paste0("*",tolower(key_likert_words), "*", collapse = "|"), tolower(likert_candidate_labels))))
 
 # TODO: delete
 # print(likert_categories)
 # print(likert_candidate_levels)
 # print(likert_groups)
 
-for (group_index in 1:nrow(likert_groups)) {
+for (group_index in seq_len(nrow(likert_groups))) {
   # Get raw data for this group and check for NA's
   raw_group_data <- report_data %>%
     select(unlist(likert_groups$category_names[group_index]))
@@ -483,10 +506,7 @@ for (group_index in 1:nrow(likert_groups)) {
   names(likert_group_df) <- data_dictionary[data_dictionary$field_name %in% names(likert_group_df), "field_label"]
 
   # Print a likert bar plot for this group
-  print(custom_likert(likert_group_df),
-        height=1,
-        wide=2,
-        nlevels=6)
+  print(custom_likert(likert_group_df))
 }
 ```
 
@@ -499,37 +519,42 @@ numerical_data_fields <- report_data %>%
   # Select only numeric columns
   select(where(is.numeric) 
          # Where the column isn't completely empty
-        # & where(function(x) !(all(is.na(x)))) 
-         & -matches(paste0("*", ignored_names, "*", collapse = "|"))) %>%
+         & where(function(x) !(all(is.na(x)))) 
+         # And neither the the field_type nor the text_validation are NULL
+         & where(function(x) 
+           !any(
+             is.na(data_dictionary[data_dictionary$field_name %in% names(x),  "text_validation_or_show_slider_number"])
+               & data_dictionary[data_dictionary$field_name %in% names(x), "field_type"] == "text")
+           )
+         & -matches(paste0("*", ignored_names, "*", collapse = "|"))
+         ) %>% names()
   # Only get field names
-  names()
-
 # For each field to be considered x
 for (x_field in numerical_data_fields) {
   # And each field considered y
-  for (y_field in numeric_pairs[,2]) {
+  for (y_field in numerical_data_fields) {
     # Excluding field_x = field_y
-    if (y_field != x_field) {
+    if (y_field != x_field)
       custom_scatter(report_data[, c(x_field, y_field)])
-    }
   } 
 }
 
 # From the dictionary
 date_data_fields <- data_dictionary %>%
   # Select only fields that start with 'date'
-  filter(substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
+  filter(substr(text_validation_type_or_show_slider_number, 1, 4) == "date"
+         # and the column isn't empty
+         & where(function(x) !(all(is.na(x))))) %>%
   # Select the field name
   select(field_name) %>%
+  # Return field names in vector
   unlist()
 
+# For each date_field as x
 for (date_field in date_data_fields) {
-  if (!all(is.na(report_data[,date_field]))) {
-    for (numeric_field in numerical_data_fields) {
-      if (!all(is.na(report_data[,date_field]))) {
-        plot(as.Date(report_data[,date_field], tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d")), report_data[,numeric_field])
-      }
-    }
+  # And numeric_field as y
+  for (numeric_field in numerical_data_fields) {
+      custom_time_scatter(report_data[,c(date_field, numeric_field)])
   }
 }
 
