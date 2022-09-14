@@ -40,9 +40,9 @@ library(plyr, include.only = c("ddply", "."))
 #library(tidyr)
 library(dplyr)
 options(dplyr.summarise.inform = FALSE)
+
+# Used to create dataframe with category lists for likert
 library(data.table)
-# Used to take permutations of fields
-library(gtools)
 # ----------------------------------
 ```
 
@@ -387,18 +387,32 @@ custom_likert <- function(x) {
 
 
 ```{r data_input}
-# Get report metadata
-project_info <- post_project_info(params)
-data_dictionary <- post_data_dictionary(params)
-
-# Get a list of categories and their options
-categories <- parse_categories(data_dictionary)
-
-# Retrieve the live filters
-live_filters <- parse_live_filters(params, categories, data_dictionary)
-
-# Retrieve report data
-report_data <- import_data(params, data_dictionary$field_name[1], live_filters)
+# TODO: The if statement is temporary and allows for testing on sample data
+if (params$pid) {
+  # Get report metadata
+  project_info <- post_project_info(params)
+  data_dictionary <- post_data_dictionary(params)
+  
+  # Get a list of categories and their options
+  categories <- parse_categories(data_dictionary)
+  
+  # Retrieve the live filters
+  live_filters <- parse_live_filters(params, categories, data_dictionary)
+  
+  # Retrieve report data
+  report_data <- import_data(params, data_dictionary$field_name[1], live_filters)
+} else {
+  # Data dictionary is same one from Advanced Graphs - Demo Project
+  data_dictionary <- read.csv(file = "./sample/sample_data_dictionary.csv", header = TRUE)
+  categories <- parse_categories(data_dictionary)
+  
+  project_info <- data.frame(project_title = c("Sample Data"))
+  
+  live_filters <- c()
+  
+  # Report data was randomly sampled from Advanced Graphs - Demo Project
+  report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
+}
 ```
 
 ## Advanced Graphs 
@@ -422,10 +436,6 @@ report_data <- import_data(params, data_dictionary$field_name[1], live_filters)
 ```{r likert_plots}
 # Likert types
 like_likert <- c("dropdown", "radio")
-
-# Likert colour lower colours
-bottom_colors <- c('red3', 'orangered', 'tomato')
-top_colors <- c('forestgreen', 'palegreen3', 'green', 'lightgoldenrod')
 
 # Get categorical fields that can be made into likert graphs
 likert_categories <- data_dictionary[data_dictionary$field_type %in% like_likert & data_dictionary$field_name %in% names(report_data), "field_name"]
@@ -471,8 +481,6 @@ for (group_index in 1:nrow(likert_groups)) {
   
   # Swap the names with the corresponding labels in the data dictionary
   names(likert_group_df) <- data_dictionary[data_dictionary$field_name %in% names(likert_group_df), "field_label"]
-  
-  # category_colours <- if (option_count > 1) c(likert_colors[1:floor((option_count+1)/2)], rev(top_colors[length():floor((option_count+1)/2)])) else "white"
 
   # Print a likert bar plot for this group
   print(custom_likert(likert_group_df),
@@ -483,35 +491,47 @@ for (group_index in 1:nrow(likert_groups)) {
 ```
 
 ```{r scatter_plots}
-# ignored_names = c("latitude", "longitude", "latitud", "longitud")
-# 
-# # Take report data
-# numerical_data_fields <- report_data %>%
-#   # Select only numeric columns
-#   select(where(is.numeric)) %>%
-#   # Only get field names
-#   names()
-# 
-# numerical_data_fields <- numerical_data_fields[!(numerical_data_fields %in% ignored_names)]
-# 
-# # TODO: Should we use combinations instead? Should we create our own permutations function to replace gtools?
-# numeric_pairs <- permutations(length(numerical_data_fields), 2, numerical_data_fields)
-# 
-# empty <- apply(numeric_pairs, 1, function(name) {report_data %>% select(all_of(name), -one_of(ignored_names)) %>% na.omit() %>% plot})
+# Fields to ignore if any of these words appear anywhere in the field name
+ignored_names = c("latitude", "longitude", "latitud", "longitud")
+
+# Take report data
+numerical_data_fields <- report_data %>%
+  # Select only numeric columns
+  select(where(is.numeric) 
+         # Where the column isn't completely empty
+        # & where(function(x) !(all(is.na(x)))) 
+         & -matches(paste0("*", ignored_names, "*", collapse = "|"))) %>%
+  # Only get field names
+  names()
+
+# For each field to be considered x
+for (x_field in numerical_data_fields) {
+  # And each field considered y
+  for (y_field in numeric_pairs[,2]) {
+    # Excluding field_x = field_y
+    if (y_field != x_field) {
+      custom_scatter(report_data[, c(x_field, y_field)])
+    }
+  } 
+}
 
 # From the dictionary
-# date_data_fields <- data_dictionary %>%
-#   # Select only fields that start with 'date'
-#   filter(substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
-#   # Select the field name
-#   select(field_name) %>%
-#   unlist()
-# 
-# for (date_field in date_data_fields) {
-#   for (numeric_field in numerical_data_fields) {
-#     plot(as.Date(report_data[,date_field]), report_data[,numeric_field])
-#   }
-# }
+date_data_fields <- data_dictionary %>%
+  # Select only fields that start with 'date'
+  filter(substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
+  # Select the field name
+  select(field_name) %>%
+  unlist()
+
+for (date_field in date_data_fields) {
+  if (!all(is.na(report_data[,date_field]))) {
+    for (numeric_field in numerical_data_fields) {
+      if (!all(is.na(report_data[,date_field]))) {
+        plot(as.Date(report_data[,date_field], tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d")), report_data[,numeric_field])
+      }
+    }
+  }
+}
 
 ```
 
