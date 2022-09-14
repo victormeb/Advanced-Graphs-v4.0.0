@@ -21,16 +21,29 @@ params:
 ```{r setup, include=FALSE }
 #knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
 knitr::opts_chunk$set(echo = FALSE)
-# Used for data manipulation
+
+
+# Used for connections
+library(RCurl)
+
+# --- Used for creating plots ---
+
+# Used for likert plots
+library(likert)
+
+# Necessary for all percents in likert plot
+library(plyr, include.only = c("ddply", "."))
+
+# -------------------------------
+
+# --- Used for data manipulation ---
 #library(tidyr)
 library(dplyr)
 options(dplyr.summarise.inform = FALSE)
 library(data.table)
-  # Used to take permutations of fields
+# Used to take permutations of fields
 library(gtools)
-
-# Used for connections
-library(RCurl)
+# ----------------------------------
 ```
 
 ```{r data_processing_functions, results='asis'}
@@ -353,6 +366,26 @@ parse_live_filters <- function (parameters, categories, data_dictionary,live_fil
 } 
 ```
 
+```{r custom_plots}
+custom_likert <- function(x) {
+  likert.bar.plot(likert(x),
+            as.percent = TRUE,
+            low.color="forestgreen",
+            high.color = "red3",
+            neutral.color = "lightgoldenrod",
+            horizontal=TRUE,
+            plot.percents = TRUE,
+            xscale.components=xscale.components.top.HH,
+            yscale.components=yscale.components.right.HH,
+            xlimEqualLeftRight=FALSE,
+            xTickLabelsPositive=TRUE,
+            reverse=FALSE,
+            xlab = "Percent",
+            ylab.right = "")
+}
+```
+
+
 ```{r data_input}
 # Get report metadata
 project_info <- post_project_info(params)
@@ -387,8 +420,17 @@ report_data <- import_data(params, data_dictionary$field_name[1], live_filters)
 
 
 ```{r likert_plots}
+# Likert types
+like_likert <- c("dropdown", "radio")
+
+# Likert colour lower colours
+bottom_colors <- c('red3', 'orangered', 'tomato')
+top_colors <- c('forestgreen', 'palegreen3', 'green', 'lightgoldenrod')
+
 # Get categorical fields that can be made into likert graphs
-likert_categories <- data_dictionary[data_dictionary$field_type %in% c("dropdown", "radio") & data_dictionary$field_name %in% names(report_data), "field_name"]
+likert_categories <- data_dictionary[data_dictionary$field_type %in% like_likert & data_dictionary$field_name %in% names(report_data), "field_name"]
+
+#likert_categories
 
 # TODO: Other checks such as making sure common categories share an instrument
 
@@ -407,10 +449,9 @@ likert_groups <- data.table(likert_candidate_levels, likert_candidate_labels) %>
 # print(likert_groups)
 
 for (group_index in 1:nrow(likert_groups)) {
-  # Get raw data and check for NA's
-  raw_group_data <- as.data.frame(report_data[, unlist(likert_groups$category_names[group_index])])
-
-  names(raw_group_data) <- likert_groups$category_names[group_index]
+  # Get raw data for this group and check for NA's
+  raw_group_data <- report_data %>%
+    select(unlist(likert_groups$category_names[group_index]))
 
   # If there are any NA's
   if (any(is.na(raw_group_data))) {
@@ -427,16 +468,14 @@ for (group_index in 1:nrow(likert_groups)) {
 
   # Create a dataframe out of corresponding factors for each group
   likert_group_df <- data.frame(lapply(raw_group_data, factor, levels = likert_groups$likert_candidate_levels[[group_index]], labels = likert_groups$likert_candidate_labels[[group_index]]))
+  
+  # Swap the names with the corresponding labels in the data dictionary
+  names(likert_group_df) <- data_dictionary[data_dictionary$field_name %in% names(likert_group_df), "field_label"]
+  
+  # category_colours <- if (option_count > 1) c(likert_colors[1:floor((option_count+1)/2)], rev(top_colors[length():floor((option_count+1)/2)])) else "white"
 
   # Print a likert bar plot for this group
-  print(likert::likert.bar.plot(likert::likert(likert_group_df),
-          as.percent = TRUE,
-          horizontal=TRUE,
-          xlimEqualLeftRight=FALSE,
-          xTickLabelsPositive=TRUE,
-          reverse=FALSE,
-          xlab = "Percent",
-          ylab.right = ""),
+  print(custom_likert(likert_group_df),
         height=1,
         wide=2,
         nlevels=6)
@@ -444,18 +483,35 @@ for (group_index in 1:nrow(likert_groups)) {
 ```
 
 ```{r scatter_plots}
-# Take report data
-numerical_data_fields <- report_data %>%
-  # Select only numeric columns
-  select(is.numeric) %>%
-  # Only get field names
-  names()
+# ignored_names = c("latitude", "longitude", "latitud", "longitud")
+# 
+# # Take report data
+# numerical_data_fields <- report_data %>%
+#   # Select only numeric columns
+#   select(where(is.numeric)) %>%
+#   # Only get field names
+#   names()
+# 
+# numerical_data_fields <- numerical_data_fields[!(numerical_data_fields %in% ignored_names)]
+# 
+# # TODO: Should we use combinations instead? Should we create our own permutations function to replace gtools?
+# numeric_pairs <- permutations(length(numerical_data_fields), 2, numerical_data_fields)
+# 
+# empty <- apply(numeric_pairs, 1, function(name) {report_data %>% select(all_of(name), -one_of(ignored_names)) %>% na.omit() %>% plot})
 
-# TODO: Should we use combinations instead? Should we create our own permutations function to replace gtools?
-numeric_pairs <- permutations(length(numerical_data_fields), 2, numerical_data_fields) 
-
-
-empty <- apply(numeric_pairs, 1, function(name) {report_data %>% select(name) %>% na.omit() %>% plot})
+# From the dictionary
+# date_data_fields <- data_dictionary %>%
+#   # Select only fields that start with 'date'
+#   filter(substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
+#   # Select the field name
+#   select(field_name) %>%
+#   unlist()
+# 
+# for (date_field in date_data_fields) {
+#   for (numeric_field in numerical_data_fields) {
+#     plot(as.Date(report_data[,date_field]), report_data[,numeric_field])
+#   }
+# }
 
 ```
 
