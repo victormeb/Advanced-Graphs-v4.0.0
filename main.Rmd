@@ -388,18 +388,23 @@ custom_scatter <- function(data) {
   field_labels <- unlist(names_to_labels[names(data)])
   data %>%
     na.omit() %>%
-    plot(
-      main = paste0(field_labels, collapse = " vs "),
-      xlab = field_labels[1],
-      ylab = field_labels[2],
-      type = "p",
-      xaxt = "n",
-      yaxt = "n",
-      # TODO: Make point sizes increase for repeated (y?) values
-      #cex= points_to_plot[,3]
-      pch=19, 
-      col="blue"
-    )
+    (function(data) {
+      if (nrow(data) != 0) {
+        plot(
+          data,
+          main = paste0(field_labels, collapse = " vs "),
+          xlab = field_labels[1],
+          ylab = field_labels[2],
+          type = "p",
+          xaxt = "n",
+          yaxt = "n",
+          # TODO: Make point sizes increase for repeated (y?) values
+          #cex= points_to_plot[,3]
+          pch=19, 
+          col="blue"
+        )
+      }
+    })
 }
 ```
 
@@ -514,22 +519,31 @@ for (group_index in seq_len(nrow(likert_groups))) {
 # Fields to ignore if any of these words appear anywhere in the field name
 ignored_names = c("latitude", "longitude", "latitud", "longitud")
 
+accepted_text_validation = c("integer", "number", "float", "decimal")
+
 # Take report data
-numerical_data_fields <- report_data %>%
-  # Select only numeric columns
-  select(where(is.numeric) 
-         # Where the column isn't completely empty
-         & where(function(x) !(all(is.na(x)))) 
-         # And neither the the field_type nor the text_validation are NULL
-         & where(function(x) 
-           !any(
-             is.na(data_dictionary[data_dictionary$field_name %in% names(x),  "text_validation_or_show_slider_number"])
-               & data_dictionary[data_dictionary$field_name %in% names(x), "field_type"] == "text")
-           )
-         & -matches(paste0("*", ignored_names, "*", collapse = "|"))
-         ) %>% names()
-  # Only get field names
-# For each field to be considered x
+numerical_data_fields <- data_dictionary %>%
+  filter(
+    # The field name is in the report
+    field_name %in% names(report_data)
+    # The field type isn't null
+    & !is.na(field_type) 
+    # If the field type is text but there is no text validation, don't include (text field)
+    & !(field_type == "text" & is.na(text_validation_type_or_show_slider_number)) 
+    # Include only fields where either:
+    & (
+      # The field type is calc
+      field_type == "calc" 
+      # If the field type is text it uses a recognized validation format
+      | (field_type == "text" 
+          & grepl(paste0("*",accepted_text_validation, "*", collapse = "|"), text_validation_type_or_show_slider_number))
+      )
+      # And is not one of the ignored_names
+    & !grepl(paste0("*", ignored_names, "*", collapse = "|"), field_name)
+  ) %>%
+  select(field_name) %>%
+  unlist()
+
 for (x_field in numerical_data_fields) {
   # And each field considered y
   for (y_field in numerical_data_fields) {
@@ -541,22 +555,22 @@ for (x_field in numerical_data_fields) {
 
 # From the dictionary
 date_data_fields <- data_dictionary %>%
-  # Select only fields that start with 'date'
-  filter(substr(text_validation_type_or_show_slider_number, 1, 4) == "date"
-         # and the column isn't empty
-         & where(function(x) !(all(is.na(x))))) %>%
+  # Select only fields in the report
+  filter(field_name %in% names(report_data)
+         # Select only fields that start with 'date'
+         & substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
   # Select the field name
   select(field_name) %>%
   # Return field names in vector
   unlist()
 
-# For each date_field as x
-for (date_field in date_data_fields) {
-  # And numeric_field as y
-  for (numeric_field in numerical_data_fields) {
-      custom_time_scatter(report_data[,c(date_field, numeric_field)])
-  }
-}
+# # For each date_field as x
+# for (date_field in date_data_fields) {
+#   # And numeric_field as y
+#   for (numeric_field in numerical_data_fields) {
+#       custom_time_scatter(report_data[,c(date_field, numeric_field)])
+#   }
+# }
 
 ```
 
