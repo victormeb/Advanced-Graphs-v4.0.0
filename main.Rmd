@@ -152,7 +152,14 @@ import_data <- function(parameters, record_id, live_filters) {
 
   return(
     report_data %>%
-      inner_join(live_filtered_records) # TODO: by = report_id - decide whether or not it should be joined just by the report_id field or to try to match across all fields
+      group_by_all() %>%
+      mutate(adv_graph_internal_duplicates_id = row_number()) %>% 
+      inner_join(live_filtered_records %>%
+                 select(names(report_data)) %>%
+                 group_by_all() %>%
+                 mutate(adv_graph_internal_duplicates_id = row_number())    
+                ) %>%
+      select(-adv_graph_internal_duplicates_id)# TODO: Test this solutions
   )
 }
 
@@ -367,6 +374,19 @@ parse_live_filters <- function (parameters, categories, data_dictionary,live_fil
 ```
 
 ```{r custom_plots}
+# custom_likert
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a dataframe containing factors and returns a likert plot
+#
+#   Input:
+#     
+#     A dataframe containing factors with the same levels
+#
+#   Output:
+#     
+#     A likert plot
 custom_likert <- function(x) {
   likert.bar.plot(likert(x),
             as.percent = TRUE,
@@ -384,8 +404,86 @@ custom_likert <- function(x) {
             ylab.right = "")
 }
 
-custom_scatter <- function(data) {
-  field_labels <- unlist(names_to_labels[names(data)])
+# custom_scatter
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a dataframe containing two numerical columns and field labels and returns a scatterplot
+#
+#   Input:
+#     
+#     A dataframe containing two numerical columns and a list of field labels
+#
+#   Output:
+#     
+#     A scatter plot
+custom_scatter <- function(data, field_labels = NULL, date_fields = c()) {
+  # If any number of columns other than two is provided, stop
+  if (ncol(data) != 2) stop(paste0("custom_scatter takes a dataframe with two columns, (",ncol(data),") provided."))
+  
+  # If field_labels is NULL use the names of the passed dataframes
+  if (is.null(field_labels)) {
+    field_labels <- names(data)
+  } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
+    stop("field_labels must be a character vector or character list of length 2")
+  }
+  
+  data %>%
+    na.omit() %>%
+    mutate(across(date_fields, as.Date, tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"))) %>%
+    (function(data) {
+      if (nrow(data) != 0) {
+        plot(
+          data,
+          main = paste0(field_labels, collapse = " vs "),
+          xlab = field_labels[1],
+          ylab = field_labels[2],
+          type = "p",
+          xaxt = "n",
+          yaxt = "n",
+          # TODO: Make point sizes increase for repeated (y?) values
+          #cex= points_to_plot[,3]
+          pch=19, 
+          col="blue"
+        )
+        if (length(date_fields) == 0) {
+          axis(side = 1, labels = TRUE, las = 1)
+          axis(side = 2, labels = TRUE, las = 1)
+        } else if (length(date_fields) == 1) {
+          axis.Date(side = which(names(data) == date_fields), data[[date_fields]], format = "%m/%d/%Y", labels = TRUE, las = 2)
+          axis(side = which(names(data) != date_fields), las = 1)
+        } else {
+          axis.Date(side = 1, data[[date_fields[1]]], format = "%m/%d/%Y", labels = TRUE, las = 2)
+          axis.Date(side = 1, data[[date_fields[2]]], format = "%m/%d/%Y", labels = TRUE, las = 2)
+        }
+      }
+    })
+}
+
+# custom_scatter_date
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a dataframe containing a date column as x and a numerical column as y and field labels and returns a scatterplot
+#
+#   Input:
+#     
+#     A dataframe containing a date column as the first field, a numerical column as the second field and a (optional) list of field labels
+#
+#   Output:
+#     
+#     A date scatter plot
+custom_scatter_date <- function(data, field_labels = NULL) {
+  # If any number of columns other than two is provided, stop
+  if (ncol(data) != 2) stop(paste0("custom_scatter_date takes a dataframe with two columns, (",ncol(data),") provided."))
+  
+  # If field_labels is NULL use the names of the passed dataframes
+  if (is.null(field_labels)) {
+    field_labels <- names(data)
+  } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
+    stop("field_labels must be a character vector or character list of length 2")
+  }
+  
   data %>%
     na.omit() %>%
     (function(data) {
@@ -447,7 +545,7 @@ names(names_to_labels) <- data_dictionary$field_name
 #### project pid `r params$pid`
 #### Number of results returned: `r nrow(report_data)`
 ##### Live filter(s)
-###### `r paste0(live_filters$field_title, " = ", live_filters$option_name, collapse = "\n")`
+###### `r if (nrow(live_filters) > 0) paste0(live_filters$field_title, " = ", live_filters$option_name, collapse = "\n")`
 <!--TODO: fix '=' when no live filters selected -->
 ```{r}
 # TODO: Delete
@@ -521,7 +619,7 @@ ignored_names = c("latitude", "longitude", "latitud", "longitud")
 
 accepted_text_validation = c("integer", "number", "float", "decimal")
 
-# Take report data
+# Get numerical fields
 numerical_data_fields <- data_dictionary %>%
   filter(
     # The field name is in the report
@@ -549,11 +647,11 @@ for (x_field in numerical_data_fields) {
   for (y_field in numerical_data_fields) {
     # Excluding field_x = field_y
     if (y_field != x_field)
-      custom_scatter(report_data[, c(x_field, y_field)])
+      custom_scatter(report_data[, c(x_field, y_field)], names_to_labels[c(x_field, y_field)])
   } 
 }
 
-# From the dictionary
+# Get date fields
 date_data_fields <- data_dictionary %>%
   # Select only fields in the report
   filter(field_name %in% names(report_data)
@@ -564,13 +662,14 @@ date_data_fields <- data_dictionary %>%
   # Return field names in vector
   unlist()
 
-# # For each date_field as x
-# for (date_field in date_data_fields) {
-#   # And numeric_field as y
-#   for (numeric_field in numerical_data_fields) {
-#       custom_time_scatter(report_data[,c(date_field, numeric_field)])
-#   }
-# }
+# For each date_field as x
+for (date_field in date_data_fields) {
+  # And numeric_field as y
+  for (numeric_field in numerical_data_fields) {
+      custom_scatter(report_data[,c(date_field, numeric_field)], names_to_labels[c(date_field, numeric_field)], date_fields = date_field)
+    custom_scatter(report_data[,c(numeric_field, date_field)], names_to_labels[c(numeric_field, date_field)], date_fields = date_field)
+  }
+}
 
 ```
 
