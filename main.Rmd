@@ -34,9 +34,6 @@ library(likert)
 # Necessary for all percents in likert plot
 library(plyr, include.only = c("ddply", "."))
 
-# Used to format dates in plots
-library(lubridate)
-
 # -------------------------------
 
 # --- Used for data manipulation ---
@@ -432,7 +429,7 @@ custom_scatter <- function(data, field_labels = NULL, date_fields = c()) {
   }
   
   data %>%
-    mutate(across(date_fields, as.Date, tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"))) %>%
+    mutate(across(all_of(date_fields), as.Date, tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"))) %>%
     na.omit() %>%
     (function(fixed_data) {
       if (nrow(fixed_data) != 0) {
