@@ -27,6 +27,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(RCurl)
 
 # --- Used for creating plots ---
+# Used for many nice looking plots
+library(ggplot2)
 
 # Used for likert plots
 library(likert)
@@ -34,10 +36,12 @@ library(likert)
 # Necessary for all percents in likert plot
 library(plyr, include.only = c("ddply", "."))
 
+# Used to extract trailing numbers from checkboxes
+library(stringr)
+
 # -------------------------------
 
 # --- Used for data manipulation ---
-#library(tidyr)
 library(dplyr)
 options(dplyr.summarise.inform = FALSE)
 
@@ -682,4 +686,38 @@ for (date_field_x in date_data_fields) {
 
 ```
 
+```{r bar_graphs}
+checkbox_fields <- data_dictionary %>% 
+  filter(field_type == "checkbox") %>% 
+  transmute(
+    field_name,
+    field_label,
+    options = lapply(strsplit(select_choices_or_calculations, "[|]"), function(x) {gsub("^\\s+|\\s+^", "", x)}),
+    options_code = lapply(options, function(x) {gsub("^\\s+|\\s+^", "", substr(x, 1, regexpr(",", x)[1]-1))}),
+    options_label = lapply(options, function(x) {gsub("^\\s+|\\s+^", "", substr(x, regexpr(",", x)[1]+1, nchar(x)))})
+  ) %>% apply(1, function(row) {
+    list(
+      field_name = row$field_name,
+      field_label = row$field_label,
+      options = row$options,
+      options_code = row$options_code,
+      options_label = row$options_label
+    )
+  })
+
+for (checkbox_field in checkbox_fields) {
+  names(checkbox_field$options_label) <- checkbox_field$options_code
+  checkbox_field = checkbox_fields[[1]]
+  report_data %>%
+    select(id, city_bc, health_authority) %>%
+    #select(matches(paste0(checkbox_field$field_name, "__[0-9]+\\b")))) %>%
+    pivot_longer(cols = everything()) %>%
+    transmute(name = checkbox_field$options_label[str_extract(name, "[0-9]+")], value = value) %>%
+    group_by(name) %>%
+    summarise(value = sum(value)) %>%
+    ggplot(aes(x=name, y = value)) +
+    geom_bar(stat = "identity")
+
+}
+```
 
