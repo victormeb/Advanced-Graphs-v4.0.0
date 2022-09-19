@@ -33,6 +33,10 @@ library(ggplot2)
 # Used for likert plots
 library(likert)
 
+# Used to get good color palettes
+library(RColorBrewer)
+getPalette = colorRampPalette(brewer.pal(8, "Set2"))
+
 # Necessary for all percents in likert plot
 library(plyr, include.only = c("ddply", "."))
 
@@ -43,6 +47,7 @@ library(stringr)
 
 # --- Used for data manipulation ---
 library(dplyr)
+library(tidyr)
 options(dplyr.summarise.inform = FALSE)
 
 # Used to create dataframe with category lists for likert
@@ -687,37 +692,91 @@ for (date_field_x in date_data_fields) {
 ```
 
 ```{r bar_graphs}
-checkbox_fields <- data_dictionary %>% 
-  filter(field_type == "checkbox") %>% 
+split_codes_and_labels <- function(options) {
+                    # Split all options over "|" character
+  options_matrix <- lapply(strsplit(options, "[|]"), 
+                      # Remove leading/trailing whitespace from "  option_code, option_label " 
+                      function(x) {gsub("^\\s+|\\s+^", "", x)}) %>%
+                      # Split "option_code, option_label" over ","
+                    lapply(
+                      # Remove whitespace from "option_code ", " option_label"
+                      function(x) {gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))})
+  
+  # Return columns containing the corresponding list of codes and options for each field_name
+  data.table(
+    options_code = lapply(options_matrix, function(x) x[,1]), 
+    options_label = lapply(options_matrix, function(x) x[,2])
+  )
+}
+
+full_line <- 15
+
+# Create a list of checkbox field parameters to pass to the 
+# checkbox for loop
+checkbox_fields <- data_dictionary %>%
+  filter(field_type == "checkbox") %>%
   transmute(
     field_name,
     field_label,
-    options = lapply(strsplit(select_choices_or_calculations, "[|]"), function(x) {gsub("^\\s+|\\s+^", "", x)}),
-    options_code = lapply(options, function(x) {gsub("^\\s+|\\s+^", "", substr(x, 1, regexpr(",", x)[1]-1))}),
-    options_label = lapply(options, function(x) {gsub("^\\s+|\\s+^", "", substr(x, regexpr(",", x)[1]+1, nchar(x)))})
+    split_codes_and_labels(select_choices_or_calculations)
   ) %>% apply(1, function(row) {
     list(
       field_name = row$field_name,
       field_label = row$field_label,
-      options = row$options,
       options_code = row$options_code,
       options_label = row$options_label
     )
   })
 
 for (checkbox_field in checkbox_fields) {
-  names(checkbox_field$options_label) <- checkbox_field$options_code
-  checkbox_field = checkbox_fields[[1]]
-  report_data %>%
-    select(id, city_bc, health_authority) %>%
-    #select(matches(paste0(checkbox_field$field_name, "__[0-9]+\\b")))) %>%
-    pivot_longer(cols = everything()) %>%
-    transmute(name = checkbox_field$options_label[str_extract(name, "[0-9]+")], value = value) %>%
-    group_by(name) %>%
-    summarise(value = sum(value)) %>%
-    ggplot(aes(x=name, y = value)) +
-    geom_bar(stat = "identity")
-
+  #print(checkbox_field$field_name)
+  names(checkbox_field$options_label) <- paste0("___", checkbox_field$options_code)
+  n_bars <- length(checkbox_field$options_label)
+  
+  angle_rotation <- 45
+  v_just <- 0.5
+  label_size <- 8
+  legend_size <- 7
+  
+  if (n_bars > 25) {
+    angle_rotation <- 90
+    v_just <- 0
+  }
+  
+  if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
+    checkbox_plot <- report_data %>%
+      select(matches(paste0(checkbox_field$field_name, "___[0-9]+\\b"))) %>%
+      pivot_longer(cols = everything())  %>%
+      na.omit() %>%
+      group_by(name) %>%
+      summarise(count = sum(value), percent = count/n())  %>%
+      transmute("{checkbox_field$field_label}" := factor(checkbox_field$options_label[str_extract(name, "___[0-9]+\\b")], levels = checkbox_field$options_label), count, percent) %>%
+      ggplot(aes(x=!!sym(checkbox_field$field_label), y = count)) +
+      geom_bar(stat = "identity", color="black", fill= getPalette(n_bars)) +
+      ylab("Count") + 
+      theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
+            plot.title = element_text(hjust = 0.5),
+            plot.margin = margin(full_line,full_line,full_line,full_line),
+            axis.title.x = element_text(size=label_size),
+            axis.text.x = element_text(size=label_size,
+            angle = angle_rotation,
+            vjust = v_just,
+            colour = "black"),
+            axis.title.y = element_text(size=10,
+             colour = "black"),
+            legend.position = "bottom",
+            legend.box = "horizontal")  +
+            scale_y_continuous(expand = expansion(mult = 0.2)) +
+                # Depending on the number of bars, labels are counts only or counts/percentages
+                if(n_bars > 12 )
+                  geom_text(aes(label=count), vjust=-0.5, size = 3)
+                else if(n_bars > 7 )
+                  geom_text(aes(label=paste(count ," (",scales::percent(percent),")")), vjust=-0.5, size = 3)
+                else
+                  geom_text(aes(label=paste(count," (",scales::percent(percent),")")), vjust=-0.5)
+    
+    print(checkbox_plot)
+  }
 }
 ```
 
