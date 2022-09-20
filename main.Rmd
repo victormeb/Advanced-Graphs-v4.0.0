@@ -513,6 +513,44 @@ custom_scatter_date <- function(data, field_labels = NULL) {
       }
     })
 }
+
+custom_bars <- function(data, x, y, percent = NULL, margin = 15, angle_rotation = 45, v_just = 0.5, x_title_size = 8, legend_size = 7) {
+  x <- enquo(x)
+  y <- enquo(y)
+  percent_quo <- enquo(percent)
+  if (length(data %>% select(!!percent_quo)) != 0)add_percent <- TRUE else add_percent <- FALSE
+
+  
+  n_bars <- data %>% select(!!x) %>% unlist() %>% levels() %>%  length()
+  
+  label_size <- if (n_bars > 7) 3 else 5
+  
+  data %>%
+  ggplot(aes(x=!!x, y = !!y)) +
+      geom_bar(stat = "identity", color="black", fill= getPalette(n_bars)) +
+      ylab("Count") + 
+      theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
+            plot.title = element_text(hjust = 0.5),
+            plot.margin = margin(margin,margin,margin,margin),
+            #axis.title.x = element_text(size=x_title_size),
+            axis.text.x = element_text(#size=label_size,
+              angle = angle_rotation,
+              vjust = v_just,
+              colour = "black"
+            ),
+            axis.title.y = element_text(
+              size=10,
+              colour = "black"
+            ),
+            legend.position = "bottom",
+            legend.box = "horizontal"
+            )  +
+            scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
+            if (add_percent != FALSE)
+              geom_text(aes(label=paste0(!!y ," (",scales::percent(!!percent_quo),")")), vjust=-0.5)
+            else
+              geom_text(aes(label=!!y), vjust=-0.5, size = label_size) 
+}
 ```
 
 
@@ -692,57 +730,88 @@ for (date_field_x in date_data_fields) {
 ```
 
 ```{r bar_graphs}
-split_codes_and_labels <- function(options) {
-                    # Split all options over "|" character
-  options_matrix <- lapply(strsplit(options, "[|]"), 
-                      # Remove leading/trailing whitespace from "  option_code, option_label " 
-                      function(x) {gsub("^\\s+|\\s+^", "", x)}) %>%
-                      # Split "option_code, option_label" over ","
-                    lapply(
-                      # Remove whitespace from "option_code ", " option_label"
-                      function(x) {gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))})
-  
-  # Return columns containing the corresponding list of codes and options for each field_name
-  data.table(
-    options_code = lapply(options_matrix, function(x) x[,1]), 
-    options_label = lapply(options_matrix, function(x) x[,2])
-  )
+parse_categories <- function(data) {
+  mapply(
+    function(field_name, field_label, options) {
+     list(
+       field_name = field_name,
+        field_label = field_label,#mapply(function(x, y) y, field_name, field_label, SIMPLIFY = FALSE),
+        options_code = options[,1],
+        options_label = mapply(function(x,y) y, options[,1], options[,2])
+     )
+    },
+    data$field_name, 
+    data$field_label, 
+    str_split(data$select_choices_or_calculations, "[|]") %>%
+    lapply(function(x) gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))),
+    SIMPLIFY = FALSE
+    )
+  #print(data)
+  # apply(
+  #   X = data, 
+  #   MARGIN = 1,
+  #   function(row) {
+  #     print(row)
+  #     options_matrix <- str_split(row["select_choices_or_calculations"], "[|]") #%>%
+  #       #(function (x) gsub("^\\s+|\\s+^", "", x)) #%>%
+  #       # lapply(str_split, pattern = ",", n=2, simplify = TRUE) #%>%
+  #       #lapply(function (x) gsub("^\\s+|\\s+^", "", x))
+  #       # lapply(strsplit(unname(row["select_choices_or_calculations"]), "[|]"), 
+  #       #               # Remove leading/trailing whitespace from "  option_code, option_label "
+  #       #               function(x) {gsub("^\\s+|\\s+^", "", x)}) %>%
+  #       #               # Split "option_code, option_label" over ","
+  #       #             lapply(
+  #       #               # Remove whitespace from "option_code ", " option_label"
+  #       #               function(x) {gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))})
+  #     print(options_matrix)
+  #     # list(
+  #     #   field_name = row["field_name"],
+  #     #   field_label = row["field_label"],
+  #     #   options_code = options_matrix[,1],
+  #     #   options_label = mapply(function(x, y) y,options_matrix[,1], options_matrix[,2])
+  #     # )
+  #   }
+  # )
 }
+
+# split_codes_and_labels <- function(options) {
+#                     # Split all options over "|" character
+#   options_matrix <- lapply(strsplit(options, "[|]"), 
+#                       # Remove leading/trailing whitespace from "  option_code, option_label " 
+#                       function(x) {gsub("^\\s+|\\s+^", "", x)}) %>%
+#                       # Split "option_code, option_label" over ","
+#                     lapply(
+#                       # Remove whitespace from "option_code ", " option_label"
+#                       function(x) {gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))})
+#   
+#   # Return columns containing the corresponding list of codes and options for each field_name
+#   data.table(
+#     options_code = lapply(options_matrix, function(x) x[,1]), 
+#     options_label = lapply(options_matrix, function(x) x[,2])
+#   )
+# }
+
+checkbox_fields <- data_dictionary %>%
+  filter(field_type == "checkbox") %>%
+  parse_categories()
 
 full_line <- 15
 
-# Create a list of checkbox field parameters to pass to the 
-# checkbox for loop
-checkbox_fields <- data_dictionary %>%
-  filter(field_type == "checkbox") %>%
-  transmute(
-    field_name,
-    field_label,
-    split_codes_and_labels(select_choices_or_calculations)
-  ) %>% apply(1, function(row) {
-    list(
-      field_name = row$field_name,
-      field_label = row$field_label,
-      options_code = row$options_code,
-      options_label = row$options_label
-    )
-  })
-
 for (checkbox_field in checkbox_fields) {
-  #print(checkbox_field$field_name)
-  names(checkbox_field$options_label) <- paste0("___", checkbox_field$options_code)
-  n_bars <- length(checkbox_field$options_label)
+  # Set the names of the labels to their corresponding report field name
+  #names(checkbox_field$options_label) <- paste0("___", checkbox_field$options_code)
   
-  angle_rotation <- 45
-  v_just <- 0.5
-  label_size <- 8
-  legend_size <- 7
+  # Get the number of options for this field
+  n_bars <- length(checkbox_field$options_label)
+
   
   if (n_bars > 25) {
     angle_rotation <- 90
     v_just <- 0
   }
   
+  # If there is at least on field of the form "field_name___[0-9]+" in the report_data
+  # create a plot
   if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
     checkbox_plot <- report_data %>%
       select(matches(paste0(checkbox_field$field_name, "___[0-9]+\\b"))) %>%
@@ -750,30 +819,9 @@ for (checkbox_field in checkbox_fields) {
       na.omit() %>%
       group_by(name) %>%
       summarise(count = sum(value), percent = count/n())  %>%
-      transmute("{checkbox_field$field_label}" := factor(checkbox_field$options_label[str_extract(name, "___[0-9]+\\b")], levels = checkbox_field$options_label), count, percent) %>%
-      ggplot(aes(x=!!sym(checkbox_field$field_label), y = count)) +
-      geom_bar(stat = "identity", color="black", fill= getPalette(n_bars)) +
-      ylab("Count") + 
-      theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
-            plot.title = element_text(hjust = 0.5),
-            plot.margin = margin(full_line,full_line,full_line,full_line),
-            axis.title.x = element_text(size=label_size),
-            axis.text.x = element_text(size=label_size,
-            angle = angle_rotation,
-            vjust = v_just,
-            colour = "black"),
-            axis.title.y = element_text(size=10,
-             colour = "black"),
-            legend.position = "bottom",
-            legend.box = "horizontal")  +
-            scale_y_continuous(expand = expansion(mult = 0.2)) +
-                # Depending on the number of bars, labels are counts only or counts/percentages
-                if(n_bars > 12 )
-                  geom_text(aes(label=count), vjust=-0.5, size = 3)
-                else if(n_bars > 7 )
-                  geom_text(aes(label=paste(count ," (",scales::percent(percent),")")), vjust=-0.5, size = 3)
-                else
-                  geom_text(aes(label=paste(count," (",scales::percent(percent),")")), vjust=-0.5)
+      transmute("{checkbox_field$field_label}" := factor(checkbox_field$options_label[str_extract(name, "[0-9]+\\b")], levels = checkbox_field$options_label), count, percent) %>%
+      custom_bars(x = !!sym(checkbox_field$field_label), y = count)
+      
     
     print(checkbox_plot)
   }
