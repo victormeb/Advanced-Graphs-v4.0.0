@@ -249,55 +249,66 @@ post_data_dictionary <- function (parameters) {
 # Author: Joel Cohen
 # Description:
 # 
-# Takes a REDCap Data Dictionary and extracts the options for each categorical variable.
+# Takes filtered fields from a REDCap Data Dictionary and extracts the options for each categorical variable.
 # 
 # Input:
 #
-#   required: A REDCap Data Dictionary
+#   required: A REDCap Data Dictionary containing relevant field names
 # 
-#   optional: A list of categorical variables
-#             (Default):  "radio", "dropdown", "yesno", "truefalse", "checkbox"
 #
 # Returns:
 #
 #   A Nested list of the form:
 #
 #   $field_name1
-#     $field_name1$code
+#     $field_name1$field_name
+#     [1] "field_name1"
+#
+#     $field_name1$field_label
+#     [1] "Field Name One"
+#
+#     $field_name1$options_code
 #     [1] "1", "2", "3"
 #
-#     $field_name1$label
-#     [1] "option1", "option2", "option3"
+#     $field_name1$options_label
+#     [1] "option 1", "option 2", "option 3"
 #
 #   $field_name2
-#     $field_name2$code
+##     $field_name2field_name
+#     [1] "field_name2"
+#
+#     $field_name2$field_label
+#     [1] "Field Name Two"
+#     
+#     $field_name2$options_code
 #     [1] "A", "B", "C"
 #
-#     $field_name2$label
-#     [1] "optionA", "optionB", "optionC"
-parse_categories <- function(data_dictionary, categoricals = c("radio", "dropdown", "yesno", "truefalse", "checkbox")) {
-  categorical_indexes <- data_dictionary$field_type %in% categoricals
-  
-  # Create a list of categories and their options
-  categories <- 
-    # split the variables by | "The pipe character"
-    strsplit(data_dictionary$select_choices_or_calculations[categorical_indexes], "[|]") %>% 
-    # Strip white space on either end of the categories_list
-    lapply(function (x) {gsub("^\\s+|\\s+$", "", x)}) %>% 
-    # 
-    lapply(function (x) {
-      list(
-        # Extract the code and remove leading and trailing whitespace
-        code = gsub("^\\s+|\\s+$", "",substr(x, 1, regexpr(",", x)[1]-1)), 
-        # Extract the label and remove leading and trailing whitespace
-        label = gsub("^\\s+|\\s+$", "", substr(x, regexpr(",", x)[1]+1, nchar(x))) 
-      )
-    })
-  
-  # Assign each category the appropriate field name
-  names(categories) <- data_dictionary$field_name[categorical_indexes] 
-
-  return(categories) 
+#     $field_name2$options_label
+#     [1] "option A", "option B", "option C"
+parse_categories <- function(data) {
+  # Create a list of categories
+  mapply(
+    function(field_name, field_label, options) {
+    # For each category include
+     list(
+       # The field name
+       field_name = field_name,
+       # field label
+        field_label = field_label,
+       # option codes
+        options_code = options[,1],
+       # option labels
+        options_label = mapply(function(x,y) y, options[,1], options[,2])
+     )
+    },
+    data$field_name, 
+    data$field_label, 
+    # split the categories into separate options
+    str_split(data$select_choices_or_calculations, "[|]") %>%
+    # then split each option into its code and label and remove whitespace
+    lapply(function(x) gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))),
+    SIMPLIFY = FALSE
+    )
 }
 
 # parse_live_filters
@@ -521,9 +532,15 @@ custom_bars <- function(data, x, y, percent = NULL, margin = 15, angle_rotation 
   if (length(data %>% select(!!percent_quo)) != 0)add_percent <- TRUE else add_percent <- FALSE
 
   
-  n_bars <- data %>% select(!!x) %>% unlist() %>% levels() %>%  length()
-  
+  n_bars <- nrow(data)
+  #print(n_bars)
   label_size <- if (n_bars > 7) 3 else 5
+  
+  if (n_bars > 25) {
+    angle_rotation <- 90
+    v_just <- 0
+    add_percent <- FALSE
+  }  
   
   data %>%
   ggplot(aes(x=!!x, y = !!y)) +
@@ -609,54 +626,40 @@ names(names_to_labels) <- data_dictionary$field_name
 like_likert <- c("dropdown", "radio")
 key_likert_words <- c("not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "in\u00fatil", "completamente inutil", "completamente in\u00fatil", "dificil", "dif\u00edcil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo")
 
-# Get categorical fields that can be made into likert graphs
-likert_categories <- data_dictionary[data_dictionary$field_type %in% like_likert & data_dictionary$field_name %in% names(report_data), "field_name"]
+# From the data dictionary
+likert_groups <- data_dictionary %>%
+  filter(
+    # Select only the fields that are in the report
+    field_name %in% names(report_data) 
+    # That have a field type that can be likert
+    & field_type %in% like_likert
+    # And whose options contain a likert keyword
+    & grepl(paste0("*",tolower(key_likert_words), "*", collapse = "|"), tolower(select_choices_or_calculations))
+  ) %>%
+  # Group the fields that have the same options
+  group_by(select_choices_or_calculations) %>%
+  # Take a list of field names and labels
+  summarise(field_name = list(field_name), field_label = list(field_label)) %>%
+  # Parse the categories into a useful format
+  parse_categories()
 
-#likert_categories
-
-# TODO: Other checks such as making sure common categories share an instrument
-
-# Get the levels for each categorical field
-likert_candidate_levels <- lapply(likert_categories, function(x) {categories[[x]][["code"]]})
-likert_candidate_labels <- lapply(likert_categories, function(x) {categories[[x]][["label"]]})
-
-# Create a dataframe for each grouping of categorical variables
-likert_groups <- data.table(likert_candidate_levels, likert_candidate_labels) %>%
-  group_by(likert_candidate_levels, likert_candidate_labels) %>%
-  summarise(indices = list(cur_group_rows()), category_names = list(likert_categories[cur_group_rows()])) %>%
-  filter(any(grepl(paste0("*",tolower(key_likert_words), "*", collapse = "|"), tolower(likert_candidate_labels))))
-
-# TODO: delete
-# print(likert_categories)
-# print(likert_candidate_levels)
-# print(likert_groups)
-
-for (group_index in seq_len(nrow(likert_groups))) {
-  # Get raw data for this group and check for NA's
-  raw_group_data <- report_data %>%
-    select(unlist(likert_groups$category_names[group_index]))
-
-  # If there are any NA's
-  if (any(is.na(raw_group_data))) {
-    # Replace them with character vectors "NA"
-    raw_group_data <- raw_group_data %>%
-      replace(is.na(.), "NA")
-
-    # Add an "NA" level
-    likert_groups$likert_candidate_levels[[group_index]] <- append(likert_groups$likert_candidate_levels[[group_index]], "NA")
-
-    # As well as a corresponding NA label
-    likert_groups$likert_candidate_labels[[group_index]] <- append(likert_groups$likert_candidate_labels[[group_index]], "NA")
-  }
-
-  # Create a dataframe out of corresponding factors for each group
-  likert_group_df <- data.frame(lapply(raw_group_data, factor, levels = likert_groups$likert_candidate_levels[[group_index]], labels = likert_groups$likert_candidate_labels[[group_index]]))
-  
-  # Swap the names with the corresponding labels in the data dictionary
-  names(likert_group_df) <- data_dictionary[data_dictionary$field_name %in% names(likert_group_df), "field_label"]
-
-  # Print a likert bar plot for this group
-  print(custom_likert(likert_group_df))
+# For each set of fields that share options
+for (likert_group in likert_groups) {
+    report_data %>%
+      # Select these fields from the data dictionary and turn them into factors
+      transmute(across(all_of(likert_group$field_name), factor, levels = likert_group$options_code, labels = likert_group$options_label, .names = "{likert_group$field_label}")) %>%
+      (function(data) {
+       if (any(is.na(data))) { # If any of the fields contain an NA
+         return(
+           transmute(data, across(.fns = addNA)) # Add an NA field to each factor
+         )
+       } 
+        return(data) # Otherwise return the data as is
+      }) %>%
+      # Pass this dataframe to the custom likert
+      custom_likert() %>%
+      # print this plot
+      print()
 }
 ```
 
@@ -730,67 +733,7 @@ for (date_field_x in date_data_fields) {
 ```
 
 ```{r bar_graphs}
-parse_categories <- function(data) {
-  mapply(
-    function(field_name, field_label, options) {
-     list(
-       field_name = field_name,
-        field_label = field_label,#mapply(function(x, y) y, field_name, field_label, SIMPLIFY = FALSE),
-        options_code = options[,1],
-        options_label = mapply(function(x,y) y, options[,1], options[,2])
-     )
-    },
-    data$field_name, 
-    data$field_label, 
-    str_split(data$select_choices_or_calculations, "[|]") %>%
-    lapply(function(x) gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))),
-    SIMPLIFY = FALSE
-    )
-  #print(data)
-  # apply(
-  #   X = data, 
-  #   MARGIN = 1,
-  #   function(row) {
-  #     print(row)
-  #     options_matrix <- str_split(row["select_choices_or_calculations"], "[|]") #%>%
-  #       #(function (x) gsub("^\\s+|\\s+^", "", x)) #%>%
-  #       # lapply(str_split, pattern = ",", n=2, simplify = TRUE) #%>%
-  #       #lapply(function (x) gsub("^\\s+|\\s+^", "", x))
-  #       # lapply(strsplit(unname(row["select_choices_or_calculations"]), "[|]"), 
-  #       #               # Remove leading/trailing whitespace from "  option_code, option_label "
-  #       #               function(x) {gsub("^\\s+|\\s+^", "", x)}) %>%
-  #       #               # Split "option_code, option_label" over ","
-  #       #             lapply(
-  #       #               # Remove whitespace from "option_code ", " option_label"
-  #       #               function(x) {gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))})
-  #     print(options_matrix)
-  #     # list(
-  #     #   field_name = row["field_name"],
-  #     #   field_label = row["field_label"],
-  #     #   options_code = options_matrix[,1],
-  #     #   options_label = mapply(function(x, y) y,options_matrix[,1], options_matrix[,2])
-  #     # )
-  #   }
-  # )
-}
-
-# split_codes_and_labels <- function(options) {
-#                     # Split all options over "|" character
-#   options_matrix <- lapply(strsplit(options, "[|]"), 
-#                       # Remove leading/trailing whitespace from "  option_code, option_label " 
-#                       function(x) {gsub("^\\s+|\\s+^", "", x)}) %>%
-#                       # Split "option_code, option_label" over ","
-#                     lapply(
-#                       # Remove whitespace from "option_code ", " option_label"
-#                       function(x) {gsub("^\\s+|\\s+^", "", str_split(x, pattern = ",", n=2, simplify = TRUE))})
-#   
-#   # Return columns containing the corresponding list of codes and options for each field_name
-#   data.table(
-#     options_code = lapply(options_matrix, function(x) x[,1]), 
-#     options_label = lapply(options_matrix, function(x) x[,2])
-#   )
-# }
-
+# Get a parsed list of each checkbox field
 checkbox_fields <- data_dictionary %>%
   filter(field_type == "checkbox") %>%
   parse_categories()
@@ -798,33 +741,72 @@ checkbox_fields <- data_dictionary %>%
 full_line <- 15
 
 for (checkbox_field in checkbox_fields) {
-  # Set the names of the labels to their corresponding report field name
-  #names(checkbox_field$options_label) <- paste0("___", checkbox_field$options_code)
-  
-  # Get the number of options for this field
-  n_bars <- length(checkbox_field$options_label)
-
-  
-  if (n_bars > 25) {
-    angle_rotation <- 90
-    v_just <- 0
-  }
-  
   # If there is at least on field of the form "field_name___[0-9]+" in the report_data
   # create a plot
   if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
     checkbox_plot <- report_data %>%
+      # Select each column of the report data that matches the current checkbox field
       select(matches(paste0(checkbox_field$field_name, "___[0-9]+\\b"))) %>%
+      # Let each column be it's own level in a factor column
       pivot_longer(cols = everything())  %>%
+      # remove NA entries
       na.omit() %>%
       group_by(name) %>%
+      # Get the count and proportion for each of the checkboxes
       summarise(count = sum(value), percent = count/n())  %>%
-      transmute("{checkbox_field$field_label}" := factor(checkbox_field$options_label[str_extract(name, "[0-9]+\\b")], levels = checkbox_field$options_label), count, percent) %>%
-      custom_bars(x = !!sym(checkbox_field$field_label), y = count)
+      # Use the field label as the name 
+      transmute(
+        # Use the field_label as the name for the options
+        "{checkbox_field$field_label}" := 
+          # replace the field_name__1 with the corresponding label
+          factor(checkbox_field$options_label[str_extract(name, "[0-9]+\\b")], levels = checkbox_field$options_label), 
+        # Include counts and percents
+        count, 
+        percent) %>%
+      # Create a custom bar plot
+      custom_bars(x = !!sym(checkbox_field$field_label), y = count, percent = percent)
       
     
     print(checkbox_plot)
   }
 }
+
+# Radio or dropdown fields
+radio_categories <- data_dictionary %>%
+  # Select fields from the data dictionary
+  filter(
+    # Where they are of "radio" type
+    field_type %in% c("radio", "dropdown", "yesno", "truefalse")
+    # The field name is in the report data
+    & field_name %in% names(report_data)
+    # And there are options
+    & select_choices_or_calculations != "") %>%
+  # Turn them into a list of category attributes
+  parse_categories()
+
+for (radio_category in radio_categories) {
+  # If the entire column isn't NA
+  if (!all(is.na(report_data[[radio_category$field_name]])))
+  report_data %>%
+    transmute(
+      # Select the column
+      across(all_of(radio_category$field_name), 
+             # Turn it into a factor
+             function(column) {
+               # add an NA level if there are NA's in the column
+               addNA(factor(as.character(column), levels = radio_category$options_code, labels = radio_category$options_label), ifany=TRUE)
+             },
+             # Rename it the field label
+             .names = radio_category$field_label)
+      ) %>%
+    # Get a count of each category
+    group_by_all() %>%
+    summarise(count = n()) %>%
+    # Create a custom bar plot
+    custom_bars(x = !!sym(radio_category$field_label), y = count) %>%
+    # Print it
+    print()
+}
+
 ```
 
