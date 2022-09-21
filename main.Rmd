@@ -525,27 +525,33 @@ custom_scatter_date <- function(data, field_labels = NULL) {
     })
 }
 
-custom_bars <- function(data, x, y, percent = NULL, margin = 15, angle_rotation = 45, v_just = 0.5, x_title_size = 8, legend_size = 7) {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15, angle_rotation = 45, v_just = 0.5, x_title_size = 8, legend_size = 7) {
   x <- enquo(x)
   y <- enquo(y)
-  percent_quo <- enquo(percent)
-  if (length(data %>% select(!!percent_quo)) != 0)add_percent <- TRUE else add_percent <- FALSE
-
+  label2 <- enquo(label2)
   
   n_bars <- nrow(data)
-  #print(n_bars)
   label_size <- if (n_bars > 7) 3 else 5
-  
   if (n_bars > 25) {
     angle_rotation <- 90
     v_just <- 0
-    add_percent <- FALSE
-  }  
+  } 
   
+  if (rlang::quo_is_null(label2) | n_bars > 25)
+    if (percent)
+      bar_labels <- geom_text(aes(label = scales::percent(!!y)), vjust = -0.5, size = label_size)
+    else
+      bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
+  else 
+    if (percent)
+      bar_labels <- geom_text(aes(label=paste0(!!y ," (",scales::percent(!!label2),")")), vjust = -0.5, size = label_size)
+    else
+      bar_labels <- geom_text(aes(label = paste0(!!y ," (",!!label2,")")), vjust = -0.5, size = label_size)
+  
+
   data %>%
   ggplot(aes(x=!!x, y = !!y)) +
       geom_bar(stat = "identity", color="black", fill= getPalette(n_bars)) +
-      ylab("Count") + 
       theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
             plot.title = element_text(hjust = 0.5),
             plot.margin = margin(margin,margin,margin,margin),
@@ -563,11 +569,15 @@ custom_bars <- function(data, x, y, percent = NULL, margin = 15, angle_rotation 
             legend.box = "horizontal"
             )  +
             scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
-            if (add_percent != FALSE)
-              geom_text(aes(label=paste0(!!y ," (",scales::percent(!!percent_quo),")")), vjust=-0.5)
-            else
-              geom_text(aes(label=!!y), vjust=-0.5, size = label_size) 
+            bar_labels
 }
+
+# fun1 <- function(data, st1 = NULL) {
+# st1 <- enquo(st1)
+#    data %>%
+#       select(!!st1) %>%
+#       print()
+# }
 ```
 
 
@@ -732,7 +742,7 @@ for (date_field_x in date_data_fields) {
 
 ```
 
-```{r bar_graphs}
+```{r bar_plots}
 # Get a parsed list of each checkbox field
 checkbox_fields <- data_dictionary %>%
   filter(field_type == "checkbox") %>%
@@ -762,12 +772,9 @@ for (checkbox_field in checkbox_fields) {
           factor(checkbox_field$options_label[str_extract(name, "[0-9]+\\b")], levels = checkbox_field$options_label), 
         # Include counts and percents
         count, 
-        percent) %>%
+        percent) #%>%
       # Create a custom bar plot
-      custom_bars(x = !!sym(checkbox_field$field_label), y = count, percent = percent)
-      
-    
-    print(checkbox_plot)
+      #custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE) %>% print()
   }
 }
 
@@ -808,5 +815,31 @@ for (radio_category in radio_categories) {
     print()
 }
 
+```
+
+```{r numerical_bar_plots}
+for (category in radio_categories) {
+  if (!all(is.na(report_data[[category$field_name]])))
+  for (numeric_field in numerical_data_fields) {
+    #print(paste(category$field_label, names_to_labels[numeric_field], sep = "#-#"))
+    if (
+      !all(is.na(report_data[[numeric_field]]))
+    )
+    report_data %>%
+      transmute(
+        across(all_of(category$field_name),
+               function(column) {
+                addNA(factor(column, levels = category$options_code, labels = category$options_label), ifany = TRUE) 
+               }, .names = "category"),
+        across(all_of(numeric_field), .names = "numeric")
+      ) %>% 
+      filter(!is.na(numeric)) %>% #print()
+      group_by(category) %>%
+      summarise(mean = round(sum(numeric)/n(), 1)) %>%
+      transmute("{category$field_label}" := category, "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
+      custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (mean)"))) %>%
+      print()
+  }
+}
 ```
 
