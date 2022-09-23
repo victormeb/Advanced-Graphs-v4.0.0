@@ -36,9 +36,19 @@ library(likert)
 # Used to get good color palettes
 library(RColorBrewer)
 getPalette = colorRampPalette(brewer.pal(8, "Set2"))
+library(viridis)
+
+# Used for tables
+library(kableExtra)
 
 # Necessary for all percents in likert plot
 library(plyr, include.only = c("ddply", "."))
+
+# Used to create maps
+library(leaflet)
+
+# Used to create network graphs
+library(igraph)
 
 # Used to extract trailing numbers from checkboxes
 library(stringr)
@@ -298,7 +308,8 @@ parse_categories <- function(data) {
        # option codes
         options_code = options[,1],
        # option labels
-        options_label = mapply(function(x,y) y, options[,1], options[,2])
+       # Name this by the options_code and fix duplicate names
+        options_label = mapply(function(x,y) y, options[,1], vctrs::vec_as_names(options[,2], repair = "unique", quiet = TRUE))
      )
     },
     data$field_name, 
@@ -480,104 +491,266 @@ custom_scatter <- function(data, field_labels = NULL, date_fields = c()) {
     })
 }
 
-# custom_scatter_date
+# # custom_scatter_date
+# # Author: Joel Cohen
+# # Description:
+# #   
+# #   Takes a dataframe containing a date column as x and a numerical column as y and field labels and returns a scatterplot
+# #
+# #   Input:
+# #     
+# #     A dataframe containing a date column as the first field, a numerical column as the second field and a (optional) list of field labels
+# #
+# #   Output:
+# #     
+# #     A date scatter plot
+# custom_scatter_date <- function(data, field_labels = NULL) {
+#   # If any number of columns other than two is provided, stop
+#   if (ncol(data) != 2) stop(paste0("custom_scatter_date takes a dataframe with two columns, (",ncol(data),") provided."))
+#   
+#   # If field_labels is NULL use the names of the passed dataframes
+#   if (is.null(field_labels)) {
+#     field_labels <- names(data)
+#   } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
+#     stop("field_labels must be a character vector or character list of length 2")
+#   }
+#   
+#   data %>%
+#     na.omit() %>%
+#     (function(data) {
+#       if (nrow(data) != 0) {
+#         plot(
+#           data,
+#           main = paste0(field_labels, collapse = " vs "),
+#           xlab = field_labels[1],
+#           ylab = field_labels[2],
+#           type = "p",
+#           xaxt = "n",
+#           yaxt = "n",
+#           # TODO: Make point sizes increase for repeated (y?) values
+#           #cex= points_to_plot[,3]
+#           pch=19, 
+#           col="blue"
+#         )
+#       }
+#     })
+# }
+
+# custom_bars
 # Author: Joel Cohen
 # Description:
 #   
-#   Takes a dataframe containing a date column as x and a numerical column as y and field labels and returns a scatterplot
+#   Takes a dataframe containing one factor column and one numerical column and creates a  barplot
 #
 #   Input:
 #     
-#     A dataframe containing a date column as the first field, a numerical column as the second field and a (optional) list of field labels
+#     A dataframe containing one factor column as x and one numeric column as y
 #
 #   Output:
 #     
-#     A date scatter plot
-custom_scatter_date <- function(data, field_labels = NULL) {
-  # If any number of columns other than two is provided, stop
-  if (ncol(data) != 2) stop(paste0("custom_scatter_date takes a dataframe with two columns, (",ncol(data),") provided."))
-  
-  # If field_labels is NULL use the names of the passed dataframes
-  if (is.null(field_labels)) {
-    field_labels <- names(data)
-  } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
-    stop("field_labels must be a character vector or character list of length 2")
-  }
-  
-  data %>%
-    na.omit() %>%
-    (function(data) {
-      if (nrow(data) != 0) {
-        plot(
-          data,
-          main = paste0(field_labels, collapse = " vs "),
-          xlab = field_labels[1],
-          ylab = field_labels[2],
-          type = "p",
-          xaxt = "n",
-          yaxt = "n",
-          # TODO: Make point sizes increase for repeated (y?) values
-          #cex= points_to_plot[,3]
-          pch=19, 
-          col="blue"
-        )
-      }
-    })
-}
-
+#     A bar plot
 custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15, angle_rotation = 45, v_just = 0.5, x_title_size = 8, legend_size = 7) {
+  # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
   label2 <- enquo(label2)
   
+  # Get the number of rows in the data
   n_bars <- nrow(data)
+  
+  # Set the size of the label text based on the number of bars
   label_size <- if (n_bars > 7) 3 else 5
+  
+  # If there are more than 25 bars rotate the labels 90 degrees
   if (n_bars > 25) {
     angle_rotation <- 90
     v_just <- 0
-  } 
+  }
   
-  if (rlang::quo_is_null(label2) | n_bars > 25)
+  # If label2 isn't passed or there are more than 25 bars
+  if (rlang::quo_is_null(label2))
+    # If percent is TRUE plot the labels as percents
     if (percent)
       bar_labels <- geom_text(aes(label = scales::percent(!!y)), vjust = -0.5, size = label_size)
+    # If percent is FALSE plot the labels as is
     else
       bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
-  else 
+  # If label2 is passed and there are fewer than 26 bars
+  else if (n_bars < 26)
+    # If percent is TRUE
     if (percent)
+      # Print the y labels as is and plot the second labels as percent
       bar_labels <- geom_text(aes(label=paste0(!!y ," (",scales::percent(!!label2),")")), vjust = -0.5, size = label_size)
     else
+      # If percent is FALSE plot both y and the second labels as is
       bar_labels <- geom_text(aes(label = paste0(!!y ," (",!!label2,")")), vjust = -0.5, size = label_size)
+  # If label2 is passed but there are more than 25 bars
+  else 
+    # Print the labels as if percent wasn't passed
+    bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
   
-
+  # Pass the data to ggplot
   data %>%
+  # Use x and y as out x and y
   ggplot(aes(x=!!x, y = !!y)) +
+      # Create bars
       geom_bar(stat = "identity", color="black", fill= getPalette(n_bars)) +
+            # Add a border
       theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
+            # Adjust the position of the title
             plot.title = element_text(hjust = 0.5),
+            # Set the margins to the margins parameter (default 15)
             plot.margin = margin(margin,margin,margin,margin),
             #axis.title.x = element_text(size=x_title_size),
             axis.text.x = element_text(#size=label_size,
+              # Set the angle of the category labels based on bar count
               angle = angle_rotation,
               vjust = v_just,
+              # Set the colour of the text to black
               colour = "black"
             ),
+            # Set the parameters for the y title
             axis.title.y = element_text(
               size=10,
               colour = "black"
             ),
+            # Add a legend ant set its position
             legend.position = "bottom",
             legend.box = "horizontal"
             )  +
+            # Increase the top of the y-axis so labels don't spill off the plot
             scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
+            # Add the previously created x axis labels
             bar_labels
 }
 
-# fun1 <- function(data, st1 = NULL) {
-# st1 <- enquo(st1)
-#    data %>%
-#       select(!!st1) %>%
-#       print()
-# }
+# custom_stacked
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a dataframe with three columns and produces a stacked bar plot
+#
+#   Input:
+#     
+#     data - a dataframe with two categorical columns and one numeric
+#
+#     x - the categories which will be bars along the x axis
+#
+#     y - the categories which will be stacked on top of the bars
+#
+#     fill - the values used to determine the height of each piece of the stack
+#
+#   Output:
+#     
+#     A stacked bar plot
+custom_stacked <- function(data, x, y, fill, title = "") {
+  # Enquo our passed parameters so they can be used in aes
+  x <- enquo(x)
+  y <- enquo(y)
+  fill <- enquo(fill)
+  
+  # Count the number of bars
+  n_bars = data %>% select(!!x) %>% distinct() %>% nrow()
+  
+  # Count the number of stacks
+  n_stacks = data %>% select(!!y) %>% distinct() %>% nrow()
+  
+  # Set parameters for when there 34 or fewer bars or stacks
+  angle_rotation = 45
+  v_just = 0.5
+  x_size = 8
+  legend_size = 7
+  
+  # If there are more than 34 bars
+  if (n_bars > 34) {
+    # Rotate the x labels to 90 degrees
+    angle_rotation = 90
+    v_just = 0
+  }
+  
+  # If there are more than 34 stacks
+  if (n_stacks > 34) {
+    # Decrease the size of the label text
+    x_size = 7
+    # And decrease the legend size
+    legend_size = 5
+  }
+  
+  # Pass the data to ggplot
+  data %>%
+    # Use the passed parameters
+    # TODO: Swap fill and y?
+    ggplot(aes(x=!!x, fill = !!y, y = !!fill)) +
+    # Add bars
+    geom_bar(position = "stack", color="darkblue", stat = "identity") +
+    # Use a viridis colour scaling
+    scale_fill_viridis(discrete = T, option = "H") +
+    # Add a title to the plot
+    ggtitle(title) +
+    # Remove the title from the guide
+    guides(fill=guide_legend(title='')) +
+    theme(
+      # Add a border
+      panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
+      # Adjust the location of the title
+      plot.title = element_text(hjust = 0.5),
+      # Specify the margin
+      plot.margin = margin(0.15,0.15,0.15,0.15),
+      # Set the size of the x title
+      axis.title.x = element_text(size=x_size),
+      # Set the size, rotation and position of the x labels
+      axis.text.x = element_text(size=x_size,
+                                 angle = angle_rotation,
+                                 vjust = v_just),
+      # Set the size of the y title
+      axis.title.y = element_text(size=10),
+      # Add a legend
+      legend.text = element_text(size=legend_size),
+      # Position the legend at the bottom
+      legend.position = "bottom",
+      # Set the legend to display horizontally
+      legend.box = "horizontal"
+    )
+}
+
+# custom_crosstab
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a dataframe in the style of a contingency table and a label for the 
+#   columns and produces a kable table of that style.
+#
+#   Input:
+#     
+#     A dataframe in the style of a contingency table and a label for the 
+#     columns.
+#
+#   Output:
+#     
+#     A contingency table
+custom_crosstab <- function(data, column_spanner = "Columns") {
+  spanner <- c(1, ncol(data)-1)
+  names(spanner) <- c(" ", column_spanner)
+  
+  data %>%
+    kable() %>%
+    add_header_above(spanner)
+}
+
+custom_map <- function(data, title = "") {
+  data %>%
+    leaflet() %>%
+    addTiles() %>%
+    addCircleMarkers(
+      radius =3,
+      opacity = 1,
+      fillOpacity = 1,
+      fill = TRUE,
+      fillColor = "#FF0000",
+      clusterOptions = markerClusterOptions( spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1))
+    ) %>%
+    addControl(title, position = "bottomleft")
+}
 ```
 
 
@@ -603,7 +776,7 @@ if (params$pid != 0) {
   
   project_info <- data.frame(project_title = c("Sample Data"))
   
-  live_filters <- c()
+  live_filters <- data.frame(c())
   
   # Report data was randomly sampled from Advanced Graphs - Demo Project
   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
@@ -659,12 +832,15 @@ for (likert_group in likert_groups) {
       # Select these fields from the data dictionary and turn them into factors
       transmute(across(all_of(likert_group$field_name), factor, levels = likert_group$options_code, labels = likert_group$options_label, .names = "{likert_group$field_label}")) %>%
       (function(data) {
-       if (any(is.na(data))) { # If any of the fields contain an NA
+        # If any of the fields contain an NA
+       if (any(is.na(data))) { 
          return(
-           transmute(data, across(.fns = addNA)) # Add an NA field to each factor
+           # Add an NA field to each factor
+           transmute(data, across(.fns = addNA)) 
          )
        } 
-        return(data) # Otherwise return the data as is
+        # Otherwise return the data as is
+        return(data) 
       }) %>%
       # Pass this dataframe to the custom likert
       custom_likert() %>%
@@ -734,7 +910,9 @@ for (date_field_x in date_data_fields) {
   
   # For each date_field
   for (date_field_y in date_data_fields) {
+    # If the x date field and y date field are different
     if (date_field_x != date_field_y){
+      # Create a custom scatter plot with the two date fields
       custom_scatter(report_data[,c(date_field_x, date_field_y)], names_to_labels[c(date_field_x, date_field_y)], date_fields = c(date_field_x, date_field_y))
     }
   }
@@ -748,8 +926,6 @@ checkbox_fields <- data_dictionary %>%
   filter(field_type == "checkbox") %>%
   parse_categories()
 
-full_line <- 15
-
 for (checkbox_field in checkbox_fields) {
   # If there is at least on field of the form "field_name___[0-9]+" in the report_data
   # create a plot
@@ -761,7 +937,7 @@ for (checkbox_field in checkbox_fields) {
       pivot_longer(cols = everything())  %>%
       # remove NA entries
       na.omit() %>%
-      group_by(name) %>%
+      group_by(name, .drop = FALSE) %>%
       # Get the count and proportion for each of the checkboxes
       summarise(count = sum(value), percent = count/n())  %>%
       # Use the field label as the name 
@@ -772,9 +948,9 @@ for (checkbox_field in checkbox_fields) {
           factor(checkbox_field$options_label[str_extract(name, "[0-9]+\\b")], levels = checkbox_field$options_label), 
         # Include counts and percents
         count, 
-        percent) #%>%
+        percent) %>%
       # Create a custom bar plot
-      #custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE) %>% print()
+      custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE) %>% print()
   }
 }
 
@@ -801,16 +977,19 @@ for (radio_category in radio_categories) {
              # Turn it into a factor
              function(column) {
                # add an NA level if there are NA's in the column
-               addNA(factor(as.character(column), levels = radio_category$options_code, labels = radio_category$options_label), ifany=TRUE)
+               addNA(factor(as.character(column), 
+                            levels = radio_category$options_code, 
+                            labels = radio_category$options_label), ifany=TRUE)
              },
              # Rename it the field label
              .names = radio_category$field_label)
       ) %>%
     # Get a count of each category
-    group_by_all() %>%
+    group_by_all(.drop = FALSE) %>%
     summarise(count = n()) %>%
+    mutate(percent = count/sum(count)) %>%
     # Create a custom bar plot
-    custom_bars(x = !!sym(radio_category$field_label), y = count) %>%
+    custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE) %>%
     # Print it
     print()
 }
@@ -818,28 +997,182 @@ for (radio_category in radio_categories) {
 ```
 
 ```{r numerical_bar_plots}
+# For each radio category
 for (category in radio_categories) {
+  # If the category column isn't empty
   if (!all(is.na(report_data[[category$field_name]])))
+  # For each numeric field
   for (numeric_field in numerical_data_fields) {
-    #print(paste(category$field_label, names_to_labels[numeric_field], sep = "#-#"))
-    if (
-      !all(is.na(report_data[[numeric_field]]))
-    )
+    # If the numeric column isn't empty
+    if (!all(is.na(report_data[[numeric_field]])))
     report_data %>%
       transmute(
+        # Turn radio category into factor
         across(all_of(category$field_name),
                function(column) {
-                addNA(factor(column, levels = category$options_code, labels = category$options_label), ifany = TRUE) 
+                # add NA level if there are NAs present
+                addNA(factor(column, 
+                             levels = category$options_code, 
+                             labels =  category$options_label), ifany = TRUE) 
                }, .names = "category"),
+        # Select the numeric column
         across(all_of(numeric_field), .names = "numeric")
       ) %>% 
+      # Remove entries where the numeric column is NA
       filter(!is.na(numeric)) %>% #print()
-      group_by(category) %>%
-      summarise(mean = round(sum(numeric)/n(), 1)) %>%
+      # Group by the category and do not drop categories that do no show up in the data
+      # TODO: Is this the behavior we want
+      group_by(category, .drop = FALSE) %>%
+      # Get the mean for each group, 0 if there are no numeric fields
+      summarise(count = n(), mean = round(sum(numeric)/(if (count > 0) count else 1), 1)) %>%
+      # Rename the columns by their respective field labels
       transmute("{category$field_label}" := category, "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
+      # Create a custom bar plot
       custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (mean)"))) %>%
+      # Print it
       print()
   }
 }
 ```
+
+```{r stacked_bars, results='asis'}
+# For each pair of categories
+for (category_x in radio_categories) {
+  for (category_y in radio_categories) {
+    # If the categories aren't the same
+    if (category_x$field_name != category_y$field_name)
+    report_data %>%
+      transmute(
+        # Turn both factors into columns
+        across(c(category_x$field_name), 
+                 function(column) {
+                   # Adding NA as a factor if there are any NAs
+                   addNA(factor(column,
+                                # Using the option codes as the levels
+                                levels = category_x$options_code, 
+                                # Matching them to the labels and repairing empty or duplicate names
+                                labels = category_x$options_label), ifany = TRUE)
+                 },
+               .names = "x_col"
+        ),
+        # Repeat for second column
+        across(c(category_y$field_name), 
+                 function(column) {
+                   addNA(factor(column, 
+                                levels = category_y$options_code, 
+                                labels = category_y$options_label), 
+                         ifany = TRUE)
+                 },
+               .names = "y_col"
+        )
+      ) %>%
+      # Group by both columns and do not drop levels where there are no matches
+      group_by(x_col, y_col, .drop = FALSE) %>%
+      # Get a count of each pair of levels
+      summarise(count = n()) %>%
+      # Ungroup the data to avoid warning from transmute
+      ungroup() %>%
+      # Rename the columns to match the field labels
+      transmute("{category_x$field_label}" := x_col,
+                "{category_y$field_label}" := y_col,
+                count) %>%
+      (function(data) {
+      data %>%
+      # Create a custom stacked bar plot with the data
+        custom_stacked(x = !!sym(category_x$field_label), y = !!sym(category_y$field_label), fill = count, title = paste0(category_x$field_label, " and ", category_y$field_label)) %>%
+        print()
+      
+
+      # data %>%
+      #   # Create a contingency table from the data
+      #   pivot_wider(names_from = all_of(category_y$field_label), values_from = count, names_repair = "unique") %>%
+      #   # Pass it to the custom crosstab function
+      #   custom_crosstab(column_spanner = category_y$field_label) %>%
+      #   # Print the custom crosstab
+      #   print()
+      })
+  }
+}
+```
+
+
+```{r maps, message=FALSE, out.width = "100%", fig.align="center", fig.height=8, fig.width=10}
+longitude_keywords <- c("longitude", "longitud")
+latitude_keywords <- c("latitude", "latitud")
+
+longitudes <- data_dictionary %>%
+  filter(grepl(paste0("*", longitude_keywords,"*", collapse = "|"), field_name)) %>%
+  transmute(field_name, field_label, stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
+
+latitudes <- data_dictionary %>%
+  filter(grepl(paste0("*", latitude_keywords,"*", collapse = "|"), field_name)) %>%
+  transmute(field_name, field_label, stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
+
+coordinate_fields <- inner_join(longitudes, latitudes, by = "stripped_name") %>%
+  {mapply(FUN = function(longitude_name, latitude_name, longitude_label, latitude_label) {
+    list(
+      longitude_name = longitude_name,
+      latitude_name = latitude_name,
+      longitude_label = longitude_label,
+      latitude_label =latitude_label
+    )
+  }, longitude_name = .[,"field_name.x"], latitude_name = .[,"field_name.y"], longitude_label = .[,"field_label.x"], latitude_label = .[,"field_label.y"], SIMPLIFY = FALSE)}
+
+maps <- lapply(coordinate_fields,
+              function(coordinate_field) {
+                report_data %>%
+                  transmute(
+                    across(all_of(coordinate_field$longitude_name), .names = "longitude"),
+                    across(all_of(coordinate_field$latitude_name), .names = "latitude")
+                  ) %>%
+                  na.omit() %>%
+                  group_by_all() %>%
+                  summarise(count = n()) %>%
+                  custom_map(title = paste0(coordinate_field$longitude_label, " vs ", coordinate_field$latitude_label))
+              }
+)
+
+htmltools::tagList(maps)
+```
+
+```{r network_graphs}
+text_fields <- data_dictionary %>%
+  filter(field_type == "text") %>%
+  {mapply(
+    FUN = function(field_name, field_label) {
+      list(
+        field_name = field_name,
+        field_label = field_label
+      )
+    }, .[["field_name"]], .[["field_label"]],
+    SIMPLIFY = FALSE
+  )}
+text_fields <- text_fields[1:20]
+
+for (text_pair in combn(text_fields, 2, simplify = FALSE)) {
+  if(!all(is.na(report_data[[text_pair[[1]]$field_name]]))
+     && !all(is.na(report_data[[text_pair[[2]]$field_name]])))
+    report_data %>%
+            transmute(across(all_of(c(text_pair[[1]]$field_name, text_pair[[2]]$field_name)),
+                      function(column) {
+                        addNA(factor(column), ifany = TRUE)
+                      }
+                        , .names = "{names_to_labels[.col]}")
+            ) %>%
+            graph_from_data_frame(directed = TRUE) %>%
+            plot(edge.width = 2,
+           main = paste0(text_pair[[1]]$field_label, " vs. " ,text_pair[[2]]$field_label),
+           cex.main = 100,
+           sub = "",
+           edge.arrow.width = 0.3,
+           vertex.size = 3,
+           edge.arrow.size = 0.5,
+           vertex.size2 = 3,
+           vertex.label.cex = .75,
+           asp = .65,
+           margin = -0.1)
+}
+```
+
+
 
