@@ -137,8 +137,7 @@ import_data <- function(parameters, record_id, live_filters) {
         returnFormat='csv',
        .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
       ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
-  
-    
+
     # If there are no live_filters active, submit the report_data
     if (nrow(live_filters) == 0) return(report_data)
     
@@ -1097,18 +1096,37 @@ for (category_x in radio_categories) {
 
 
 ```{r maps, message=FALSE, out.width = "100%", fig.align="center", fig.height=8, fig.width=10}
+# If a field_name contains one of these keywords it will be considered a longitude/latitude column
+# ADD keywords in order of longest starting string to shortest
+# e.g. c("longitude", "longitud", "long", "l")
 longitude_keywords <- c("longitude", "longitud")
 latitude_keywords <- c("latitude", "latitud")
 
 longitudes <- data_dictionary %>%
-  filter(grepl(paste0("*", longitude_keywords,"*", collapse = "|"), field_name)) %>%
-  transmute(field_name, field_label, stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
+  # Choose field_names that contain longitude keywords
+  filter(field_name %in% names(report_data) 
+         & grepl(paste0("*", longitude_keywords,"*", collapse = "|"), field_name) ) %>%
+  transmute(
+    # Include the field name
+    field_name,
+    # The field label
+    field_label, 
+    # The name with the latitude keyword removed
+    stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
 
+# Repeat for latitude keywords
 latitudes <- data_dictionary %>%
-  filter(grepl(paste0("*", latitude_keywords,"*", collapse = "|"), field_name)) %>%
-  transmute(field_name, field_label, stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
+  filter(field_name %in% names(report_data)
+         & grepl(paste0("*", latitude_keywords,"*", collapse = "|"), field_name)) %>%
+  transmute(
+    field_name, 
+    field_label, 
+    stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
 
+# Join the latitude and longitude dataframes by the stripped names
 coordinate_fields <- inner_join(longitudes, latitudes, by = "stripped_name") %>%
+  # For each stripped name (e.g. sending_) 
+  # names and labels for the latitudea nd longitude column
   {mapply(FUN = function(longitude_name, latitude_name, longitude_label, latitude_label) {
     list(
       longitude_name = longitude_name,
@@ -1118,26 +1136,35 @@ coordinate_fields <- inner_join(longitudes, latitudes, by = "stripped_name") %>%
     )
   }, longitude_name = .[,"field_name.x"], latitude_name = .[,"field_name.y"], longitude_label = .[,"field_label.x"], latitude_label = .[,"field_label.y"], SIMPLIFY = FALSE)}
 
+# Create a list of maps by
 maps <- lapply(coordinate_fields,
               function(coordinate_field) {
+                # Taking the corespinding latitude and longitude columns from the report data
                 report_data %>%
+                  # Nameing them longitude and latitude respectively
                   transmute(
                     across(all_of(coordinate_field$longitude_name), .names = "longitude"),
                     across(all_of(coordinate_field$latitude_name), .names = "latitude")
                   ) %>%
+                  # Remove na entries
                   na.omit() %>%
+                  # Get a column counting each longitude and latitude
                   group_by_all() %>%
                   summarise(count = n()) %>%
+                  # Send it to our map function
                   custom_map(title = paste0(coordinate_field$longitude_label, " vs ", coordinate_field$latitude_label))
               }
 )
 
+# Use taglist to create a list of maps that can be displayed
 htmltools::tagList(maps)
 ```
 
-```{r network_graphs}
+```{r network_graphs, out.width = "100%", fig.align="center"}
+# Take the text fields from the data dictionary
 text_fields <- data_dictionary %>%
-  filter(field_type == "text") %>%
+  filter(field_type == "text" & field_name %in% names(report_data)) %>%
+  # Create a list of field_names and field_labels
   {mapply(
     FUN = function(field_name, field_label) {
       list(
@@ -1147,19 +1174,26 @@ text_fields <- data_dictionary %>%
     }, .[["field_name"]], .[["field_label"]],
     SIMPLIFY = FALSE
   )}
-text_fields <- text_fields[1:20]
 
+# If there are 2 or more text fields
+if (length(text_fields) > 1)
+# For each text pair
 for (text_pair in combn(text_fields, 2, simplify = FALSE)) {
+  # If both of the columns aren't null
   if(!all(is.na(report_data[[text_pair[[1]]$field_name]]))
      && !all(is.na(report_data[[text_pair[[2]]$field_name]])))
+    # Get the columns from the report data
     report_data %>%
+            # Turn them into factors and add NA as a factor if there are any
             transmute(across(all_of(c(text_pair[[1]]$field_name, text_pair[[2]]$field_name)),
                       function(column) {
                         addNA(factor(column), ifany = TRUE)
                       }
                         , .names = "{names_to_labels[.col]}")
             ) %>%
+            # Create a graph from the data
             graph_from_data_frame(directed = TRUE) %>%
+            # Plot it
             plot(edge.width = 2,
            main = paste0(text_pair[[1]]$field_label, " vs. " ,text_pair[[2]]$field_label),
            cex.main = 100,
