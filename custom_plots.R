@@ -23,6 +23,17 @@ library(igraph)
 # Used to extract trailing numbers from checkboxes
 library(stringr)
 
+
+
+side_by_side <- function(plot1, plot2, title = "") {
+  cat("<center><h4>", title, "</h4></center><div class=\"clearfix\"><div class=\"img-container\">")
+    print(plot1)
+  cat("</div>")
+  cat("<div class=\"img-container\">")
+    print(plot2)
+  cat("</div></div>")
+}
+
 # custom_likert
 # Author: Joel Cohen
 # Description:
@@ -66,48 +77,60 @@ custom_likert <- function(x) {
 #   Output:
 #     
 #     A scatter plot
-custom_scatter <- function(data, field_labels = NULL, date_fields = c()) {
-  # If any number of columns other than two is provided, stop
-  if (ncol(data) != 2) stop(paste0("custom_scatter takes a dataframe with two columns, (",ncol(data),") provided."))
-  
-  # If field_labels is NULL use the names of the passed dataframes
-  if (is.null(field_labels)) {
-    field_labels <- names(data)
-  } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
-    stop("field_labels must be a character vector or character list of length 2")
-  }
+custom_scatter <- function(data, x, y, line = FALSE) {
+  x <- enquo(x)
+  y <- enquo(y)
   
   data %>%
-    mutate(across(all_of(date_fields), as.Date, tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"))) %>%
-    na.omit() %>%
-    (function(fixed_data) {
-      if (nrow(fixed_data) != 0) {
-        plot(
-          fixed_data,
-          main = paste0(field_labels, collapse = " vs "),
-          xlab = field_labels[1],
-          ylab = field_labels[2],
-          type = "p",
-          xaxt = "n",
-          yaxt = "n",
-          # TODO: Make point sizes increase for repeated (y?) values
-          #cex= points_to_plot[,3]
-          pch=19, 
-          col="blue"
-        )
-        if (length(date_fields) == 0) {
-          axis(side = 1, labels = TRUE, las = 1)
-          axis(side = 2, labels = TRUE, las = 1)
-        } else if (length(date_fields) == 1) {
-          axis.Date(side = which(names(fixed_data) == date_fields), fixed_data[[date_fields]], labels = TRUE, las = 1)
-          axis(side = which(names(fixed_data) != date_fields), labels = TRUE, las = 1)
-        } else {
-          axis.Date(side = 1, fixed_data[[date_fields[1]]], labels = TRUE, las = 1)
-          axis.Date(side = 2, fixed_data[[date_fields[2]]], labels = TRUE, las = 1)
-        }
-      }
-    })
+    ggplot(aes(x = !!x, y = !!y)) +
+      if (line == TRUE)
+        geom_line()
+      else
+        geom_point()
 }
+
+# custom_scatter <- function(data, field_labels = NULL, date_fields = c()) {
+#   # If any number of columns other than two is provided, stop
+#   if (ncol(data) != 2) stop(paste0("custom_scatter takes a dataframe with two columns, (",ncol(data),") provided."))
+#   
+#   # If field_labels is NULL use the names of the passed dataframes
+#   if (is.null(field_labels)) {
+#     field_labels <- names(data)
+#   } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
+#     stop("field_labels must be a character vector or character list of length 2")
+#   }
+#   
+#   data %>%
+#     mutate(across(all_of(date_fields), as.Date, tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"))) %>%
+#     na.omit() %>%
+#     (function(fixed_data) {
+#       if (nrow(fixed_data) != 0) {
+#         plot(
+#           fixed_data,
+#           main = paste0(field_labels, collapse = " vs "),
+#           xlab = field_labels[1],
+#           ylab = field_labels[2],
+#           type = "p",
+#           xaxt = "n",
+#           yaxt = "n",
+#           # TODO: Make point sizes increase for repeated (y?) values
+#           #cex= points_to_plot[,3]
+#           pch=19, 
+#           col="blue"
+#         )
+#         if (length(date_fields) == 0) {
+#           axis(side = 1, labels = TRUE, las = 1)
+#           axis(side = 2, labels = TRUE, las = 1)
+#         } else if (length(date_fields) == 1) {
+#           axis.Date(side = which(names(fixed_data) == date_fields), fixed_data[[date_fields]], labels = TRUE, las = 1)
+#           axis(side = which(names(fixed_data) != date_fields), labels = TRUE, las = 1)
+#         } else {
+#           axis.Date(side = 1, fixed_data[[date_fields[1]]], labels = TRUE, las = 1)
+#           axis.Date(side = 2, fixed_data[[date_fields[2]]], labels = TRUE, las = 1)
+#         }
+#       }
+#     })
+# }
 
 # # custom_scatter_date
 # # Author: Joel Cohen
@@ -261,17 +284,17 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15,
 #   Output:
 #     
 #     A stacked bar plot
-custom_stacked <- function(data, x, y, fill, title = "") {
+custom_stacked <- function(data, x, y, fill, title = "", position = "stack", maxgroups = 34, maxcolors = 34, combined_name = "[Excluded]") {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
   y <- enquo(y)
   fill <- enquo(fill)
   
   # Count the number of bars
-  n_bars = data %>% select(!!x) %>% distinct() %>% nrow()
+  x_bars = data %>% select(!!x) %>% distinct() %>% nrow()
   
   # Count the number of stacks
-  n_stacks = data %>% select(!!y) %>% distinct() %>% nrow()
+  y_bars = data %>% select(!!y) %>% distinct() %>% nrow()
   
   # Set parameters for when there 34 or fewer bars or stacks
   angle_rotation = 45
@@ -279,28 +302,77 @@ custom_stacked <- function(data, x, y, fill, title = "") {
   x_size = 8
   legend_size = 7
   
+  x_combine <- . %>% mutate()
+  y_combine <- . %>% mutate()
+  
   # If there are more than 34 bars
-  if (n_bars > 34) {
+  if (x_bars > maxgroups) {
+    x_combine <- . %>%
+      # Add an id to each row to be used as keys later
+      mutate(id = row_number()) %>%
+      # Group by the group we want to pare down
+      group_by(!!x) %>%
+      # Add a column which shows the total count for each group
+      mutate(x_total = sum(!!fill, na.rm = TRUE)) %>%
+      # Group by the other (colors group), this is used to
+      # identify which groups in the paring group will be given the value true
+      group_by(!!y) %>%
+      # Arrange by the total in descending order
+      arrange(desc(x_total)) %>%
+      # Add a variable indicating which rows will be kept and which will be trimmed
+      mutate(keeping = c(rep(TRUE, times = maxgroups), rep(FALSE, times = x_bars - maxgroups))) %>%
+      # Rearrange the rows in their original order
+      arrange(id) %>%
+      # Change the factor to remove the levels of the group to be joined together
+      # and add a level for the pared groups
+      mutate(!!x := factor(as.character(!!x), levels = c(unique((as.character(!!x))[keeping]),combined_name))) %>%
+      # Update the rows which aren't being kept to share the same factor level
+      rows_update(y = (.) %>% 
+                    filter(!keeping) %>%
+                    mutate(!!x := combined_name), by = "id") %>%
+      # Get the totals for the groups that are being pared
+      group_by(!!x, !!y) %>%
+      summarise(!!fill := sum(!!fill))
+
     # Rotate the x labels to 90 degrees
     angle_rotation = 90
     v_just = 0
   }
-  
+
   # If there are more than 34 stacks
-  if (n_stacks > 34) {
+  if (y_bars > maxcolors) {
+    # y_combine uses the same logic as x_combine but swaps x and y
+    y_combine <- . %>%
+      mutate(id = row_number()) %>%
+      group_by(!!y) %>%
+      mutate(x_total = sum(!!fill, na.rm = TRUE)) %>%
+      group_by(!!x) %>%
+      arrange(desc(x_total)) %>%
+      mutate(keeping = c(rep(TRUE, times = maxcolors), rep(FALSE, times = y_bars - maxcolors))) %>%
+      arrange(id) %>%
+      mutate(!!y := factor(as.character(!!y), levels = c(unique((as.character(!!y))[keeping]), combined_name))) %>%
+      rows_update(y = (.) %>% filter(!keeping) %>% mutate(!!y := combined_name), by = "id") %>%
+      group_by(!!y, !!x) %>%
+      summarise(!!fill := sum(!!fill))
+    
     # Decrease the size of the label text
     x_size = 7
     # And decrease the legend size
     legend_size = 5
   }
   
+  
   # Pass the data to ggplot
-  data %>%
+  data %>% 
+    # Combine x group if there are too many
+    x_combine %>%
+    # Combine y group if there are too many
+    y_combine %>%
     # Use the passed parameters
     # TODO: Swap fill and y?
     ggplot(aes(x=!!x, fill = !!y, y = !!fill)) +
     # Add bars
-    geom_bar(position = "stack", color="darkblue", stat = "identity") +
+    geom_bar(position = position, color="darkblue", stat = "identity") +
     # Use a viridis colour scaling
     scale_fill_viridis(discrete = T, option = "H") +
     # Add a title to the plot
@@ -335,24 +407,42 @@ custom_stacked <- function(data, x, y, fill, title = "") {
 # Author: Joel Cohen
 # Description:
 #   
-#   Takes a dataframe in the style of a contingency table and a label for the 
-#   columns and produces a kable table of that style.
+#   Takes a dataframe with the x, y, and total quosures and produces 
+#   an html contingency table.
 #
 #   Input:
 #     
-#     A dataframe in the style of a contingency table and a label for the 
-#     columns.
+#     A dataframe with the x
 #
 #   Output:
 #     
 #     A contingency table
-custom_crosstab <- function(data, column_spanner = "Columns") {
-  spanner <- c(1, ncol(data)-1)
-  names(spanner) <- c(" ", column_spanner)
+custom_crosstab <- function(data, x, y, total, column_spanner = "Columns") {
+  x <- enquo(x)
+  y <- enquo(y)
+  total <- enquo(total)
   
+  y_levels <- levels(data[[rlang::as_label(y)]]) %>% replace_na("NA")
+  spanner <- c(1, length(y_levels), 1)
+  names(spanner) <- c(" ", column_spanner, " ")
+  
+
   data %>%
-    kable() %>%
-    add_header_above(spanner)
+    mutate(!!x := as.character(!!x), !!y := as.character(!!y)) %>%
+    pivot_wider(names_from = !!y, values_from = !!total) %>%
+    rows_insert(
+      colSums(.[,1:length(y_levels)+1]) %>% 
+        t() %>% 
+        data.frame() %>%
+        setNames(y_levels) %>% 
+        mutate(!!sym(rlang::as_label(x)) := "Total"), 
+      by = rlang::as_label(x)) %>%
+    mutate(total = rowSums(.[,1:length(y_levels)+1])) %>%
+    kbl() %>%
+    add_header_above(spanner) %>%
+    htmltools::HTML()
+
+    
 }
 
 custom_map <- function(data, title = "") {

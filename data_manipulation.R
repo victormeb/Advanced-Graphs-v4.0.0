@@ -6,6 +6,10 @@ library(dplyr)
 library(tidyr)
 options(dplyr.summarise.inform = FALSE)
 
+# Used for data manipulation
+# Faster thand dplyr
+#library(data.table)
+
 # title_caps
 # Author: Joel Cohen (Based on previously existing work)
 # Description:
@@ -77,13 +81,16 @@ import_data <- function(parameters, record_id, live_filters) {
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
   ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
   
+  report_names <- colnames(report_data)
+  
+  
   # If there are no live_filters active, submit the report_data
   if (nrow(live_filters) == 0) return(report_data)
   
   # If live filters are selected but there are duplicate entries 
   # in the report column report data_frame, return null
   # live filter records must be merged on the entry ids
-  if (anyDuplicated(report_data)) return(data.frame())
+  # if (anyDuplicated(report_data)) return(data.frame())
   
   # Create filter condition to send request to redcap.
   filter_condition <- paste("[", live_filters$field_name, "] = \"", live_filters$option_code, "\"" ,sep = "", collapse = " AND ")
@@ -106,15 +113,15 @@ import_data <- function(parameters, record_id, live_filters) {
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
   ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
-  
+
   return(
     report_data %>%
       group_by_all() %>%
-      mutate(adv_graph_internal_duplicates_id = row_number()) %>% 
+      mutate(adv_graph_internal_duplicates_id = row_number()) %>%
       inner_join(live_filtered_records %>%
                    select(names(report_data)) %>%
                    group_by_all() %>%
-                   mutate(adv_graph_internal_duplicates_id = row_number())    
+                   mutate(adv_graph_internal_duplicates_id = row_number())
       ) %>%
       select(-adv_graph_internal_duplicates_id)# TODO: Test this solutions
   )
@@ -187,6 +194,8 @@ post_data_dictionary <- function (parameters) {
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
   ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  # Sets the dataframe to a data table
+
 }
 
 # parse_categories
@@ -294,30 +303,32 @@ parse_categories <- function(data) {
 # instrument_one_complete     2	              Complete	       Instrument One
 # ...........................................................................
 parse_live_filters <- function (parameters, categories, data_dictionary,live_filter_status = c("0" = "Incomplete","1"="Unverified","2" = "Complete")) {
-  data.frame(field_name = c(params$dynamic_filter1, params$dynamic_filter2, params$dynamic_filter3), option_code = c(params$lf1, params$lf2, params$lf3)) %>%
+  data.frame(
+    field_name = c(params$dynamic_filter1, params$dynamic_filter2, params$dynamic_filter3),
+    option_code = c(params$lf1, params$lf2, params$lf3)) %>%
     # Remove empty filters
     filter(option_code != "") %>%
     mutate(
       # Match the option_name to match to option_code from the instrument or categories list
       option_name = if_else( # Match titles for filters
         # If the field name ends in _complete
-        substr(field_name, nchar(field_name)-8, nchar(field_name)) == "_complete", 
+        substr(field_name, nchar(field_name)-8, nchar(field_name)) == "_complete",
         # Let the label equal the corresponding status
         live_filter_status[option_code],
         # Otherwise...
-        if_else( 
+        if_else(
           # ... If the options code is equal to [NULL]
           option_code == "[NULL]",
           # Change it to an empty string (this is for the filter condition to send to REDCap)
           "",
           # In all other cases
-          unlist(mapply(     
+          unlist(mapply(
             # Attempt to map the option_name to the corresponding field_name, option_code in the categories list
             function(filter_name, code, options) {
               # If the code is in the corresponding field_name's options
-              if (code %in% options[[filter_name]][["code"]]) 
+              if (code %in% options[[filter_name]][["code"]])
                 # Use the options label corresponding to that code
-                options[[filter_name]][["label"]][which(code == options[[filter_name]][["code"]])] 
+                options[[filter_name]][["label"]][which(code == options[[filter_name]][["code"]])]
               # Otherwise, let it be empty
               else NA
             },
@@ -336,7 +347,4 @@ parse_live_filters <- function (parameters, categories, data_dictionary,live_fil
         right_join(data_dictionary, data.frame(field_name = field_name), by = "field_name")[["field_label"]]
       )
     )
-} 
-
-
-
+}
