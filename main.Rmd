@@ -22,6 +22,7 @@ params:
 ```{=html}
 <style type="text/css">
 .main-container {
+  position: absolute;
   max-width: 100%;
   margin-left: 0%;
   margin-right: 0%;
@@ -31,7 +32,7 @@ params:
 
 ```{r setup, include=FALSE}
 #knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
-knitr::opts_chunk$set(echo = FALSE, eval = FALSE, results = "asis")
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, results = "asis")
 
 
 # Used for connections
@@ -114,6 +115,35 @@ if (params$pid != 0) {
   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
 }
 
+# Fields to ignore if any of these words appear anywhere in the field name
+ignored_names_numeric = c("latitude", "longitude", "latitud", "longitud")
+
+# text validation strings to consider as a numerical column
+accepted_text_validation = c("integer", "number", "float", "decimal")
+
+# Get numerical fields
+numeric_fields <- data_dictionary %>%
+  filter(
+    # The field name is in the report
+    field_name %in% names(report_data)
+    # The field type isn't null
+    & !is.na(field_type) 
+    # If the field type is text but there is no text validation, don't include (text field)
+    & !(field_type == "text" & is.na(text_validation_type_or_show_slider_number)) 
+    # Include only fields where either:
+    & (
+      # The field type is calc
+      field_type == "calc" 
+      # If the field type is text it uses a recognized validation format
+      | (field_type == "text" 
+          & grepl(paste0("*",accepted_text_validation, "*", collapse = "|"), text_validation_type_or_show_slider_number))
+      )
+      # And is not one of the ignored_names
+    & !grepl(paste0("*", ignored_names_numeric, "*", collapse = "|"), field_name)
+  ) %>%
+  select(field_name) %>%
+  unlist()
+
 # Radio or dropdown fields
 radio_categories <- data_dictionary %>%
   # Select fields from the data dictionary
@@ -139,6 +169,7 @@ date_fields <- data_dictionary %>%
   unlist() %>%
   unname()
 
+# Turn columns into factors and date
 report_data <- report_data %>%
   mutate(
     # Select radio-like categories
@@ -230,34 +261,34 @@ for (likert_group in likert_groups) {
 ### Scatter plots  
 
 ```{r scatter_plots, results='asis'}
-# Fields to ignore if any of these words appear anywhere in the field name
-ignored_names = c("latitude", "longitude", "latitud", "longitud")
-
-# text validation strings to consider as a numerical column
-accepted_text_validation = c("integer", "number", "float", "decimal")
-
-# Get numerical fields
-numeric_fields <- data_dictionary %>%
-  filter(
-    # The field name is in the report
-    field_name %in% names(report_data)
-    # The field type isn't null
-    & !is.na(field_type) 
-    # If the field type is text but there is no text validation, don't include (text field)
-    & !(field_type == "text" & is.na(text_validation_type_or_show_slider_number)) 
-    # Include only fields where either:
-    & (
-      # The field type is calc
-      field_type == "calc" 
-      # If the field type is text it uses a recognized validation format
-      | (field_type == "text" 
-          & grepl(paste0("*",accepted_text_validation, "*", collapse = "|"), text_validation_type_or_show_slider_number))
-      )
-      # And is not one of the ignored_names
-    & !grepl(paste0("*", ignored_names, "*", collapse = "|"), field_name)
-  ) %>%
-  select(field_name) %>%
-  unlist()
+# # Fields to ignore if any of these words appear anywhere in the field name
+# ignored_names = c("latitude", "longitude", "latitud", "longitud")
+# 
+# # text validation strings to consider as a numerical column
+# accepted_text_validation = c("integer", "number", "float", "decimal")
+# 
+# # Get numerical fields
+# numeric_fields <- data_dictionary %>%
+#   filter(
+#     # The field name is in the report
+#     field_name %in% names(report_data)
+#     # The field type isn't null
+#     & !is.na(field_type) 
+#     # If the field type is text but there is no text validation, don't include (text field)
+#     & !(field_type == "text" & is.na(text_validation_type_or_show_slider_number)) 
+#     # Include only fields where either:
+#     & (
+#       # The field type is calc
+#       field_type == "calc" 
+#       # If the field type is text it uses a recognized validation format
+#       | (field_type == "text" 
+#           & grepl(paste0("*",accepted_text_validation, "*", collapse = "|"), text_validation_type_or_show_slider_number))
+#       )
+#       # And is not one of the ignored_names
+#     & !grepl(paste0("*", ignored_names, "*", collapse = "|"), field_name)
+#   ) %>%
+#   select(field_name) %>%
+#   unlist()
 
 scatter_fields <- c(date_fields, numeric_fields)
 
@@ -419,7 +450,7 @@ for (radio_category in radio_categories) {
 
 ### Numerical bar plots
 
-```{r numerical_bar_plots}
+```{r numerical_bar_plots, eval=TRUE}
 # For each radio category
 for (category in radio_categories) {
   # If the category column isn't empty
@@ -473,8 +504,8 @@ for (category in radio_categories) {
   }
 }
 ```
-# Stacked and grouped bars
-```{r stacked_bars, results='asis', eval = TRUE, message=FALSE}
+### Stacked and grouped bars
+```{r stacked_bars, results='asis', message=FALSE}
 # A "New names:" warning is introduced by the custom_crosstabs function
 # TODO: Fix warning from custom_crosstabs
 
@@ -571,6 +602,7 @@ if (length(radio_categories) > 1) {
 
 ```
 
+### Maps
 
 ```{r maps, message=FALSE, out.width = "100%", fig.align="center", fig.height=8, fig.width=10}
 # If a field_name contains one of these keywords it will be considered a longitude/latitude column
@@ -645,6 +677,8 @@ htmltools::tagList(maps)
 }
 ```
 
+### Network graphs
+
 ```{r network_graphs, out.width = "100%", fig.align="center"}
 # Take the text fields from the data dictionary
 text_fields <- data_dictionary %>%
@@ -679,7 +713,7 @@ for (text_pair in combn(text_fields, 2, simplify = FALSE)) {
             # Create a graph from the data
             graph_from_data_frame(directed = TRUE) %>%
             # Plot it
-            plot(edge.width = 2,
+            plot(edge.width = 1,
            main = paste0(text_pair[[1]]$field_label, " vs. " ,text_pair[[2]]$field_label),
            cex.main = 100,
            sub = "",
