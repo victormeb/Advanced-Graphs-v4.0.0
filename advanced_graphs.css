@@ -1,16 +1,61 @@
 .img-container {
   float: left;
   width: 50%;
-  max-height: 800px;
-  padding: 0px;
+  max-height: 600px;
+  padding-left: 25px;
   overflow: auto;
 }
 
 .img-container table {
   position: sticky;
-  border-collapse: collapse;
+  border: 1px solid;
   width: 100%;
 }
+
+.img-container thead tr:last-child {
+  border: 1px solid;
+  border-color: black;
+}
+
+.img-container tbody td:last-child {
+  color: #e90000;
+  border-left: 1px solid;
+  border-color: black;
+}
+
+.img-container thead tr:last-child th:first-child {
+  border-right: 1px solid;
+  border-color: black;
+}
+
+.img-container thead tr:last-child th:last-child {
+  border-left: 1px solid;
+  border-color: black;
+}
+
+.img-container tbody td:first-child {
+  border-right: 1px solid;
+  border-color: black;
+}
+
+.img-container tbody tr:last-child  {
+  color: #e90000;
+  border: 1px solid;
+  border-color: black;
+}
+
+
+.img-container tbody tr:last-child td:first-child {
+  font-weight: bold;
+  color: black;
+}
+
+.img-container tbody tr:last-child td:last-child {
+  font-weight: bold;
+  color: #e90000;
+}
+
+
 
 .clearfix::after {
   content: "";
