@@ -9,6 +9,7 @@ library(likert)
 library(RColorBrewer)
 getPalette = colorRampPalette(brewer.pal(8, "Set2"))
 library(viridis)
+library(viridisLite)
 # Used for tables
 library(kableExtra)
 # Necessary for all percents in likert plot
@@ -31,7 +32,7 @@ side_by_side <- function(plot1, plot2, title = "") {
   cat("</div>")
   cat("<div class=\"img-container\">")
     print(plot2)
-  cat("</div></div>")
+  cat("</div></div>\n\n")
 }
 
 # custom_likert
@@ -50,9 +51,10 @@ side_by_side <- function(plot1, plot2, title = "") {
 custom_likert <- function(x) {
   likert.bar.plot(likert(x),
                   as.percent = TRUE,
-                  low.color="forestgreen",
-                  high.color = "red3",
-                  neutral.color = "lightgoldenrod",
+                  colors = turbo(length(levels(x[[1]]))),
+                  # low.color="forestgreen",
+                  # high.color = "red3",
+                  # neutral.color = "lightgoldenrod",
                   horizontal=TRUE,
                   plot.percents = TRUE,
                   xscale.components=xscale.components.top.HH,
@@ -84,9 +86,9 @@ custom_scatter <- function(data, x, y, line = FALSE) {
   data %>%
     ggplot(aes(x = !!x, y = !!y)) +
       if (line == TRUE)
-        geom_line()
+        geom_line(colour = "blue")
       else
-        geom_point()
+        geom_point(colour = "blue", shape = 19)
 }
 
 # custom_scatter <- function(data, field_labels = NULL, date_fields = c()) {
@@ -190,7 +192,7 @@ custom_scatter <- function(data, x, y, line = FALSE) {
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15, angle_rotation = 45, v_just = 0.5, x_title_size = 8, legend_size = 7) {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15, angle_rotation = 45, v_just = 0.5, x_title_size = 8, legend_size = 7, max_bars = 25, combined_name = "[Excluded]") {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -202,8 +204,29 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15,
   # Set the size of the label text based on the number of bars
   label_size <- if (n_bars > 7) 3 else 5
   
+  group_bars <- . %>% mutate()
+  
   # If there are more than 25 bars rotate the labels 90 degrees
-  if (n_bars > 25) {
+  if (n_bars > max_bars) {
+    group_bars <- . %>%
+      # Add an id to each row to be used as keys later
+      mutate(id = row_number()) %>%
+      # Arrange the bars in decending order
+      arrange(desc(!!y)) %>%
+      mutate(
+        # Add a column indicating which will be left and which will be kept
+        keeping = c(rep(TRUE, times = max_bars), rep(FALSE, times = n_bars - max_bars)),
+        # Remove dropped factors from x
+        !!x := factor(as.character(!!x), levels = c(unique(as.character(!!x)[keeping]), combined_name))
+        ) %>%
+      # Update combined rows to have the same level
+      rows_update(y = (.) %>% 
+                    filter(!keeping) %>%
+                    mutate(!!x := combined_name), by = "id") %>%
+      # Get the sum of the new group
+      group_by(!!x) %>%
+      summarise(!!y := sum(!!y))
+      
     angle_rotation <- 90
     v_just <- 0
   }
@@ -232,10 +255,14 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15,
   
   # Pass the data to ggplot
   data %>%
+    # If there are too many bars make them one group
+    group_bars %>%
     # Use x and y as out x and y
-    ggplot(aes(x=!!x, y = !!y)) +
+    ggplot(aes(x=!!x, y = !!y, fill = !!x)) +
     # Create bars
-    geom_bar(stat = "identity", color="black", fill= getPalette(n_bars)) +
+    geom_bar(stat = "identity") +
+    # Add viridis colors
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey") + 
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
           # Adjust the position of the title
@@ -330,6 +357,8 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
       rows_update(y = (.) %>% 
                     filter(!keeping) %>%
                     mutate(!!x := combined_name), by = "id") %>%
+      # If there are still NAs in x after adding the combined levels add an NA level
+      mutate(!!y := addNA(!!y, ifany = TRUE)) %>%
       # Get the totals for the groups that are being pared
       group_by(!!x, !!y) %>%
       summarise(!!fill := sum(!!fill))
@@ -352,6 +381,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
       arrange(id) %>%
       mutate(!!y := factor(as.character(!!y), levels = c(unique((as.character(!!y))[keeping]), combined_name))) %>%
       rows_update(y = (.) %>% filter(!keeping) %>% mutate(!!y := combined_name), by = "id") %>%
+      mutate(!!y := addNA(!!y, ifany = TRUE)) %>%
       group_by(!!y, !!x) %>%
       summarise(!!fill := sum(!!fill))
     
@@ -437,8 +467,8 @@ custom_crosstab <- function(data, x, y, total, column_spanner = "Columns") {
         setNames(y_levels) %>% 
         mutate(!!sym(rlang::as_label(x)) := "Total"), 
       by = rlang::as_label(x)) %>%
-    mutate(total = rowSums(.[,1:length(y_levels)+1])) %>%
-    kbl() %>%
+    mutate(Total = rowSums(.[,1:length(y_levels)+1])) %>%
+    kbl(format = "html", align = c("l", rep("c", times = length(y_levels)+1))) %>%
     add_header_above(spanner) %>%
     htmltools::HTML()
 
