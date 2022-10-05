@@ -64,9 +64,7 @@ title_caps <- function (string_vec) {
 # A dataframe containing the report fields with any applicable live filter.
 #
 # NOTE: entry ID MUST be a field in the report for this to work!
-# TODO: Make local files non-static
 import_data <- function(parameters, record_id, live_filters) {
-  # TODO: We could filter locally if we didn't have to worry abour fields that aren't in the report
   #### REDCap Report ####
   report_data <- read.csv(text = postForm(
     uri=parameters$server_url,
@@ -81,16 +79,8 @@ import_data <- function(parameters, record_id, live_filters) {
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
   ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
   
-  report_names <- colnames(report_data)
-  
-  
   # If there are no live_filters active, submit the report_data
   if (nrow(live_filters) == 0) return(report_data)
-  
-  # If live filters are selected but there are duplicate entries 
-  # in the report column report data_frame, return null
-  # live filter records must be merged on the entry ids
-  # if (anyDuplicated(report_data)) return(data.frame())
   
   # Create filter condition to send request to redcap.
   filter_condition <- paste("[", live_filters$field_name, "] = \"", live_filters$option_code, "\"" ,sep = "", collapse = " AND ")
@@ -117,13 +107,18 @@ import_data <- function(parameters, record_id, live_filters) {
   return(
     report_data %>%
       group_by_all() %>%
+      # Add a row number for each identical row in the report data
       mutate(adv_graph_internal_duplicates_id = row_number()) %>%
+      # Join the report_data and the filtered records keeping only
+      # rows in the report data that have a match in the filtered data
       inner_join(live_filtered_records %>%
                    select(names(report_data)) %>%
                    group_by_all() %>%
+                   # Add row number for each identical row in filtered data
                    mutate(adv_graph_internal_duplicates_id = row_number())
       ) %>%
-      select(-adv_graph_internal_duplicates_id)# TODO: Test this solutions
+      # Remove the duplicates id column
+      select(-adv_graph_internal_duplicates_id)
   )
 }
 
@@ -131,7 +126,7 @@ import_data <- function(parameters, record_id, live_filters) {
 # Author: Joel Cohen
 # Description:
 # 
-# Uses the relevant parameters to request a the project info from REDCap
+# Uses the relevant parameters to request the project info from REDCap
 # 
 # Input: 
 #   params:

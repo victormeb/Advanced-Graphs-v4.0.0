@@ -17,8 +17,7 @@ params:
   lf2: ""
   lf3: ""
 ---
-
-# Test
+<!-- The following block is used so we can use the full width of the page -->
 ```{=html}
 <style type="text/css">
 .main-container {
@@ -31,58 +30,33 @@ params:
 ```
 
 ```{r setup, include=FALSE}
-#knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
-knitr::opts_chunk$set(echo = FALSE, eval = TRUE, results = "asis")
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, results = "asis")
 
-
-# Used for connections
+# Used for connections to get data from redcap
 library(RCurl)
 
 # --- Used for creating plots ---
-# Used for many nice looking plots
-library(ggplot2)
-
-# Used for likert plots
-library(likert)
-
-# Used to get good color palettes
-library(RColorBrewer)
-getPalette = colorRampPalette(brewer.pal(8, "Set2"))
-library(viridis)
-
-# Used for tables
-library(kableExtra)
-
 # Necessary for all percents in likert plot
 library(plyr, include.only = c("ddply", "."))
 
-# Used to create maps
-library(leaflet)
-
-# Used to create network graphs
-library(igraph)
-
 # Used to extract trailing numbers from checkboxes
 library(stringr)
-
 # -------------------------------
 
 # --- Used for data manipulation ---
 library(dplyr)
 library(tidyr)
+# This allows us to group by all without
+# being warned which groups are bing used
 options(dplyr.summarise.inform = FALSE)
-
-# Used to create dataframe with category lists for likert
-# library(data.table, exclude = c("hour", "isoweek", "mday", "minute", "month", "quarter", "second", "wday", "week", "yday", "year"))
 # ----------------------------------
 ```
 
-```{r data_processing_functions, eval = TRUE}
+```{r data_processing_functions, include = FALSE, eval = TRUE}
 source("./data_manipulation.R")
-
 ```
 
-```{r custom_plots, eval = TRUE}
+```{r custom_plots, include = FALSE, eval = TRUE}
 source("./custom_plots.R")
 ```
 
@@ -115,7 +89,37 @@ if (params$pid != 0) {
   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
 }
 
+##### Get likert groups #####
+# field_types that are candidates for likert
+like_likert <- c("dropdown", "radio")
+# If any of the following keywords are contained in the options
+# it will be considered a likert category
+key_likert_words <- c("not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "in\u00fatil", "completamente inutil", "completamente in\u00fatil", "dificil", "dif\u00edcil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo")
+
+# From the data dictionary
+likert_groups <- data_dictionary %>%
+  filter(
+    # Select only the fields that are in the report
+    field_name %in% names(report_data)
+    # That have a field type that can be likert
+    & field_type %in% like_likert
+    # And whose options contain a likert keyword
+    & grepl(paste0("*",tolower(key_likert_words), "*", collapse = "|"), tolower(select_choices_or_calculations))
+  ) %>%
+  # Group the fields that have the same options
+  group_by(select_choices_or_calculations) %>%
+  # Take a list of field names and labels
+  summarise(field_name = list(field_name), field_label = list(field_label)) %>%
+  # Parse the categories into a useful format
+  parse_categories()
+
+#############################
+
+
+##### Get numeric fields #####
+
 # Fields to ignore if any of these words appear anywhere in the field name
+# when searching for numeric fields
 ignored_names_numeric = c("latitude", "longitude", "latitud", "longitud")
 
 # text validation strings to consider as a numerical column
@@ -134,22 +138,29 @@ numeric_fields <- data_dictionary %>%
     & (
       # The field type is calc
       field_type == "calc" 
-      # If the field type is text it uses a recognized validation format
+      # or field type is text it and it uses a recognized validation format
       | (field_type == "text" 
           & grepl(paste0("*",accepted_text_validation, "*", collapse = "|"), text_validation_type_or_show_slider_number))
       )
-      # And is not one of the ignored_names
+      # And does not contain one of the ignored keywords
     & !grepl(paste0("*", ignored_names_numeric, "*", collapse = "|"), field_name)
   ) %>%
   select(field_name) %>%
   unlist()
+
+##############################
+
+##### Get categorical fields #####
+
+# The field types to be considered categorical variables
+categorical_types <- c("radio", "dropdown", "yesno", "truefalse")
 
 # Radio or dropdown fields
 radio_categories <- data_dictionary %>%
   # Select fields from the data dictionary
   filter(
     # Where they are of "radio" type
-    field_type %in% c("radio", "dropdown", "yesno", "truefalse")
+    field_type %in% categorical_types
     # The field name is in the report data
     & field_name %in% names(report_data)
     # And there are options
@@ -169,7 +180,9 @@ date_fields <- data_dictionary %>%
   unlist() %>%
   unname()
 
-# Turn columns into factors and date
+##################################
+
+# Turn factor and date columns into factors and date types
 report_data <- report_data %>%
   mutate(
     # Select radio-like categories
@@ -190,51 +203,29 @@ report_data <- report_data %>%
   
 
 # Create list of labels
+# This is used to extract the text labels from the field names
 names_to_labels <- data_dictionary$field_label
 names(names_to_labels) <- data_dictionary$field_name
 ```
 
 ## Advanced Graphs 
 
-### `r project_info$project_title`
-#### project pid `r params$pid`
-#### Number of results returned: `r nrow(report_data)`
-##### Live filter(s)
-###### `r if (nrow(live_filters) > 0) paste0(live_filters$field_title, " = ", live_filters$option_name, collapse = "\n")`
-<!--TODO: fix '=' when no live filters selected -->
-```{r, eval = FALSE}
-# TODO: Delete
-# print(project_info)
-print(data_dictionary)
-# print(categories)
-print(live_filters)
-print(report_data)
+```{r, results='asis', eval = TRUE}
+cat("\n###", project_info$project_title)
+cat("\n### project pid", params$pid)
+cat("\n#### Number of records returned:", nrow(report_data))
+cat("\n##### Live filter(s): ")
+if (nrow(live_filters) > 0 ) {
+  cat("\n######", paste0(live_filters$field_title, " = ", live_filters$option_name, collapse = "\n######"))
+} else {
+  cat("\n###### None")
+}
 ```
+
 
 ### Likert plots
 
 ```{r likert_plots}
-# Likert types
-like_likert <- c("dropdown", "radio")
-key_likert_words <- c("not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "in\u00fatil", "completamente inutil", "completamente in\u00fatil", "dificil", "dif\u00edcil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo")
-
-# From the data dictionary
-likert_groups <- data_dictionary %>%
-  filter(
-    # Select only the fields that are in the report
-    field_name %in% names(report_data)
-    # That have a field type that can be likert
-    & field_type %in% like_likert
-    # And whose options contain a likert keyword
-    & grepl(paste0("*",tolower(key_likert_words), "*", collapse = "|"), tolower(select_choices_or_calculations))
-  ) %>%
-  # Group the fields that have the same options
-  group_by(select_choices_or_calculations) %>%
-  # Take a list of field names and labels
-  summarise(field_name = list(field_name), field_label = list(field_label)) %>%
-  # Parse the categories into a useful format
-  parse_categories()
-
 # For each set of fields that share options
 for (likert_group in likert_groups) {
     report_data %>%
@@ -261,35 +252,6 @@ for (likert_group in likert_groups) {
 ### Scatter plots  
 
 ```{r scatter_plots, results='asis'}
-# # Fields to ignore if any of these words appear anywhere in the field name
-# ignored_names = c("latitude", "longitude", "latitud", "longitud")
-# 
-# # text validation strings to consider as a numerical column
-# accepted_text_validation = c("integer", "number", "float", "decimal")
-# 
-# # Get numerical fields
-# numeric_fields <- data_dictionary %>%
-#   filter(
-#     # The field name is in the report
-#     field_name %in% names(report_data)
-#     # The field type isn't null
-#     & !is.na(field_type) 
-#     # If the field type is text but there is no text validation, don't include (text field)
-#     & !(field_type == "text" & is.na(text_validation_type_or_show_slider_number)) 
-#     # Include only fields where either:
-#     & (
-#       # The field type is calc
-#       field_type == "calc" 
-#       # If the field type is text it uses a recognized validation format
-#       | (field_type == "text" 
-#           & grepl(paste0("*",accepted_text_validation, "*", collapse = "|"), text_validation_type_or_show_slider_number))
-#       )
-#       # And is not one of the ignored_names
-#     & !grepl(paste0("*", ignored_names, "*", collapse = "|"), field_name)
-#   ) %>%
-#   select(field_name) %>%
-#   unlist()
-
 scatter_fields <- c(date_fields, numeric_fields)
 
 for (x_field in scatter_fields) {
@@ -300,93 +262,44 @@ for (x_field in scatter_fields) {
       # Excluding field_x = field_y and empty y_field
       if ((y_field != x_field)& !all(is.na(report_data[,y_field]))) {
           report_data %>%
+            # Get x and y fields and name them by their respective labels
             transmute(
               across(all_of(x_field), .names = "{names_to_labels[x_field]}"),
               across(all_of(y_field), .names = "{names_to_labels[y_field]}")
             ) %>%
+            # Remove NA entries from the data
             na.omit() %>%
           (function(data) {
+            # If there is data to plot
             if (nrow(data) > 0) {
-              cat("<center><h4>", 
-                  names_to_labels[y_field], "vs", names_to_labels[x_field],
-                  "</h4></center><div class=\"clearfix\"><div class=\"img-container\">")
-              data %>%
-              custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = FALSE) %>%
-                plot()
-              cat("</div>")
-              cat("<div class=\"img-container\">")
-              data %>%
-              custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = TRUE) %>%
-                plot()
-              cat("</div></div>")
+              # Plot the scatter plot and line plot side by side
+              side_by_side(
+                data %>%
+                  custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = FALSE)
+              ,
+                data %>%
+              custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = TRUE)
+              ,
+              title = paste0(names_to_labels[y_field], " vs ", names_to_labels[x_field])
+              )
             }
           })
       }
     } 
 }
 
-# # Get date fields
-# date_data_fields <- data_dictionary %>%
-#   # Select only fields in the report
-#   filter(field_name %in% names(report_data)
-#          # Select only fields that start with 'date'
-#          & substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
-#   # Select the field name
-#   select(field_name) %>%
-#   # Return field names in vector
-#   unlist()
-# 
-# # if (length(date_data_fields) > 1)
-# #   date_pairs <- combn(date_data_fields, 2, simplify = FALSE)
-# #   else date_pairs <- combn(date_data_fields, 2)
-# 
-# # For each date_field (x in date - date plots)
-# for (date_field in date_data_fields) {
-#   # If the date field isn't empty
-#   for (numeric_field in numerical_data_fields) {
-#     report_data %>%
-#       transmute(
-#         # Get the date field
-#         across(all_of(date_field),
-#                # Convert name to label
-#                .names = "{names_to_labels[.col]}"),
-#         across(all_of(numeric_field), .names = "{names_to_labels[.col]}")
-#       ) %>%
-#       na.omit() %>%
-#       (function(data) {
-#         if (nrow(data) > 0) {
-#               
-#         }
-#       })
-#       # Plot date as x and numeric as y
-#       custom_scatter(report_data[,c(..date_field_x, ..numeric_field)], names_to_labels[c(date_field_x, numeric_field)], date_fields = date_field_x)
-#       # Plot numeric as x and date as y
-#       # custom_scatter(report_data[,c(..numeric_field, ..date_field_x)], names_to_labels[c(numeric_field, date_field_x)], date_fields = date_field_x)
-#   }
-# }
-# 
-#   # For each date_field
-#   for (date_field_y in date_data_fields) {
-#     # If the x date field and y date field are different
-#     if (date_field_x != date_field_y){
-#       # Create a custom scatter plot with the two date fields
-#       custom_scatter(report_data[,c(..date_field_x, ..date_field_y)], names_to_labels[c(date_field_x, date_field_y)], date_fields = c(date_field_x, date_field_y))
-#     }
-#   }
-# }
-
 ```
 
 ### Category counts
 
 ```{r bar_plots}
-# Get a parsed list of each checkbox field
+# Get a parsed list of each check box field
 checkbox_fields <- data_dictionary %>%
   filter(field_type == "checkbox") %>%
   parse_categories()
 
 for (checkbox_field in checkbox_fields) {
-  # If there is at least on field of the form "field_name___[0-9]+" in the report_data
+  # If there is at least one field of the form "field_name___[0-9]+" in the report_data
   # create a plot
   if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
     checkbox_plot <- report_data %>%
@@ -413,19 +326,6 @@ for (checkbox_field in checkbox_fields) {
   }
 }
 
-# # Radio or dropdown fields
-# radio_categories <- data_dictionary %>%
-#   # Select fields from the data dictionary
-#   filter(
-#     # Where they are of "radio" type
-#     field_type %in% c("radio", "dropdown", "yesno", "truefalse")
-#     # The field name is in the report data
-#     & field_name %in% names(report_data)
-#     # And there are options
-#     & select_choices_or_calculations != "") %>%
-#   # Turn them into a list of category attributes
-#   parse_categories()
-
 for (radio_category in radio_categories) {
   # If the entire column isn't NA
   if (!all(is.na(report_data[[radio_category$field_name]])))
@@ -439,6 +339,7 @@ for (radio_category in radio_categories) {
     # Get a count of each category
     group_by_all(.drop = FALSE) %>%
     summarise(count = n()) %>%
+    # Add a percent column
     mutate(percent = count/sum(count)) %>%
     # Create a custom bar plot
     custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE) %>%
@@ -450,7 +351,7 @@ for (radio_category in radio_categories) {
 
 ### Numerical bar plots
 
-```{r numerical_bar_plots, eval=TRUE}
+```{r numerical_bar_plots}
 # For each radio category
 for (category in radio_categories) {
   # If the category column isn't empty
@@ -461,18 +362,18 @@ for (category in radio_categories) {
     if (!all(is.na(report_data[[numeric_field]])))
     report_data %>%
       transmute(
-        # Turn radio category into factor
+        # Select the cateorical column
         across(all_of(category$field_name), .names = "category"),
         # Select the numeric column
         across(all_of(numeric_field), .names = "numeric")
       ) %>% 
       # Remove entries where the numeric column is NA
-      filter(!is.na(numeric)) %>% #print()
+      filter(!is.na(numeric)) %>%
       # Group by the category and do not drop categories that do no show up in the data
-      # TODO: Is this the behavior we want
+      # TODO: Do we want to drop or keep empty levels
       group_by(category, .drop = FALSE) %>%
       # Get the mean for each group, 0 if there are no numeric fields
-      summarise(sum = sum(numeric, na.rm = TRUE), count = n(), mean = round(sum/(if (count > 0) count else 1), 1)) %>%
+      summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else mean(numeric, na.rm = TRUE)) %>%
       (function (data){
         # Create side by side plots
         side_by_side(
@@ -509,10 +410,11 @@ for (category in radio_categories) {
 # A "New names:" warning is introduced by the custom_crosstabs function
 # TODO: Fix warning from custom_crosstabs
 
-if (length(radio_categories) > 1) {
+# If there are at least two categories
+if (length(radio_categories) >= 2) {
+  # Get the combination of these two categories
   radio_pairs <- combn(radio_categories, 2, simplify = FALSE)
-
-
+  # For each pair of radio categories
   for (radio_pair in radio_pairs) {
     report_data %>%
       transmute(
@@ -549,7 +451,7 @@ if (length(radio_categories) > 1) {
                            title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label),
                            # position = dodge indicates grouped bar plot
                            position = "dodge",
-                           maxgroups = 17)
+                           max_bars = 17)
           ,
           # The title to include
           title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label)
@@ -573,27 +475,26 @@ if (length(radio_categories) > 1) {
               fill = count, 
               title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label),
               position = "dodge",
-              maxgroups = 17)
+              max_bars = 17)
           ,
           title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label)
         )
 
+      # Plot a custom crosstab for either direction of the categorical variables
       side_by_side(
         data %>%
-          # Pass it to the custom crosstab function
+          # Pass the data to the custom_crosstab function
           custom_crosstab(
             x = !!sym(radio_pair[[1]]$field_label),
             y = !!sym(radio_pair[[2]]$field_label),
-            total = count,
-            column_spanner = radio_pair[[2]]$field_label)
+            total = count)
         ,
         data %>%
-          # Pass it to the custom crosstab function
+          # Pass the data to the custom_crosstab function
           custom_crosstab(
             x = !!sym(radio_pair[[2]]$field_label),
             y = !!sym(radio_pair[[1]]$field_label),
-            total = count,
-            column_spanner = radio_pair[[1]]$field_label)
+            total = count)
       )
     })
 
@@ -604,13 +505,14 @@ if (length(radio_categories) > 1) {
 
 ### Maps
 
-```{r maps, message=FALSE, out.width = "100%", fig.align="center", fig.height=8, fig.width=10}
+```{r maps, eval = T}
 # If a field_name contains one of these keywords it will be considered a longitude/latitude column
 # ADD keywords in order of longest starting string to shortest
 # e.g. c("longitude", "longitud", "long", "l")
 longitude_keywords <- c("longitude", "longitud")
 latitude_keywords <- c("latitude", "latitud")
 
+# Create a dataframe of the field names containing the longitude keywords
 longitudes <- data_dictionary %>%
   # Choose field_names that contain longitude keywords
   filter(field_name %in% names(report_data) 
@@ -623,7 +525,7 @@ longitudes <- data_dictionary %>%
     # The name with the latitude keyword removed
     stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
 
-# Repeat for latitude keywords
+# Create a dataframe of the field names containing the latitude keywords
 latitudes <- data_dictionary %>%
   filter(field_name %in% names(report_data)
          & grepl(paste0("*", latitude_keywords,"*", collapse = "|"), field_name)) %>%
@@ -633,14 +535,17 @@ latitudes <- data_dictionary %>%
     stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
 
 # Join the latitude and longitude dataframes by the stripped names
+# e.g. sending_longitude and sending_latidute => sending_
+# so they share a row in the coordinates field dataframe
 coordinate_fields <- inner_join(longitudes, latitudes, by = "stripped_name") 
 
+# If there is more than one coordinate_field
 if (nrow(coordinate_fields) > 0) {
+  # Create a list of coordinate fields where each item has...
   coordinate_fields <- coordinate_fields %>%
-  # For each stripped name (e.g. sending_) 
-  # names and labels for the latitudea nd longitude column
   {mapply(FUN = function(longitude_name, latitude_name, longitude_label, latitude_label) {
     list(
+      # The following attributes
       longitude_name = longitude_name,
       latitude_name = latitude_name,
       longitude_label = longitude_label,
@@ -659,27 +564,30 @@ maps <- lapply(coordinate_fields,
                 report_data %>%
                   # Nameing them longitude and latitude respectively
                   transmute(
-                    across(all_of(coordinate_field$longitude_name), .names = "longitude"),
-                    across(all_of(coordinate_field$latitude_name), .names = "latitude")
+                    across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name)), .names = "{names_to_labels[.col]}")
                   ) %>%
                   # Remove na entries
                   na.omit() %>%
-                  # Get a column counting each longitude and latitude
-                  group_by_all() %>%
-                  summarise(count = n()) %>%
+                  # # Get a column counting each longitude and latitude
+                  # group_by_all() %>%
+                  # summarise(count = n()) %>%
                   # Send it to our map function
-                  custom_map(title = paste0(coordinate_field$longitude_label, " vs ", coordinate_field$latitude_label))
+                  custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label)
               }
 )
-
-# Use taglist to create a list of maps that can be displayed
+# Use htmltools to print the maps
 htmltools::tagList(maps)
 }
+
+# if (length(coordinate_fields) >= 2) {
+#   maps <- mapply(custom_network_map, combn(coordinate_fields, 2, simplify = FALSE), MoreArgs = list(data = report_data, both = TRUE), SIMPLIFY = FALSE)
+#   htmltools::tagList(maps)
+# } 
 ```
 
 ### Network graphs
 
-```{r network_graphs, out.width = "100%", fig.align="center"}
+```{r network_graphs, out.width = "100%", fig.align="center", eval = T}
 # Take the text fields from the data dictionary
 text_fields <- data_dictionary %>%
   filter(field_type == "text" & field_name %in% names(report_data)) %>%
@@ -710,20 +618,14 @@ for (text_pair in combn(text_fields, 2, simplify = FALSE)) {
                       }
                         , .names = "{names_to_labels[.col]}")
             ) %>%
-            # Create a graph from the data
-            graph_from_data_frame(directed = TRUE) %>%
-            # Plot it
-            plot(edge.width = 1,
-           main = paste0(text_pair[[1]]$field_label, " vs. " ,text_pair[[2]]$field_label),
-           cex.main = 100,
-           sub = "",
-           edge.arrow.width = 0.3,
-           vertex.size = 3,
-           edge.arrow.size = 0.5,
-           vertex.size2 = 3,
-           vertex.label.cex = .75,
-           asp = .65,
-           margin = -0.1)
+            {side_by_side(
+            custom_network(., x = !!sym(text_pair[[1]]$field_label), y = !!sym(text_pair[[2]]$field_label))
+            ,
+            plot2 = custom_network(., x = !!sym(text_pair[[2]]$field_label), y = !!sym(text_pair[[1]]$field_label))
+            ,
+            title = paste0(text_pair[[1]]$field_label, " vs ", text_pair[[2]]$field_label)
+            )}
+            
 }
 ```
 

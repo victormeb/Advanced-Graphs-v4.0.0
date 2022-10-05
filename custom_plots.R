@@ -18,14 +18,30 @@ library(plyr, include.only = c("ddply", "."))
 # Used to create maps
 library(leaflet)
 
+# Used to create arrows
+library(leaflet.extras2)
+
 # Used to create network graphs
 library(igraph)
 
 # Used to extract trailing numbers from checkboxes
 library(stringr)
 
+# Used to evaluate quosures in plotting functions
+library(rlang)
 
 
+# side_by_side
+# Author: Joel Cohen
+# Description:
+#
+#   Takes two objects and prints them side by side
+#
+#   Input:
+#
+#   plot1, plot2 - objects to be plotted side by side
+#
+#   title - the title of the side by side plots
 side_by_side <- function(plot1, plot2, title = "") {
   cat("<center><h4>", title, "</h4></center><div class=\"clearfix\"><div class=\"img-container\">")
     print(plot1)
@@ -33,6 +49,121 @@ side_by_side <- function(plot1, plot2, title = "") {
   cat("<div class=\"img-container\">")
     print(plot2)
   cat("</div></div>\n\n")
+}
+
+# n_spaced
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a vector "elements" and the maximum number of elements to
+#   take from said vector "n" and returns n elements evenly spaced
+#   from the vector.
+#
+#   Input:
+#     
+#     elements - A vector
+#
+#     n - The number of evenly spaced elements to take from the vector
+#
+#   Output:
+#     
+#     n evenly spaced elements from the vector elements
+#
+# Used in custom_bars and custom_stacked to remove labels
+n_spaced <- function(elements, n) {
+  elements[unique(round(seq(1, length(elements), by = length(elements)/n)))]
+}
+
+
+# n_levels
+# Author: Joel Cohen
+# Description:
+#   
+#   Merges the levels of a factor that are smaller than the n greatest
+#   factor levels by weight into a single factor using the given grouping
+#   function.
+#
+#   Input:
+#     
+#     data - A data frame
+#
+#     x - The column whose levels should be paired down to n (as a symbol)
+#
+#     weight - The column used to determine the rankings of the levels (as a symbol)
+#     
+#     n - The levels from the original data which should be left in x
+#
+#     kept_factors (optional) - Factor columns in the data frame which 
+#     should be preservered
+#     
+#     combined_name (optional) - The name of the factor level of the combined
+#     levels. (as symbols)
+#     Default: "[Excluded]"
+#
+#     grouping_fn (optional) - The function used to summarize the dropped levels
+#     Default: sum
+#
+#   Output:
+#     
+#     data with the x column paired to only n levels, only includes x, kept_factors and weight.
+#
+#   Warnings:
+#   - There should be an equal amount of x records for each of the kept_factors
+#     grouped level.
+#     e.g. If target group "A" has 4 levels, and kept_factors "B" has 3 levels
+#     each level in B should have a record for each of A's levels
+#
+#   Used for:
+#     - Grouping together bars when there are too many (not currently in use)
+n_levels <- function(data, x, weight, n, kept_factors = NULL, combined_name = "[Excluded]", grouping_fn = sum) {
+  # Enquo the x and weight and kept_factors columns
+  x <- enquo(x)
+  weight <- enquo(weight)
+  kept_factors <- enquos(kept_factors)
+  
+  # Get a count of the levels of x
+  level_count <- eval_tidy(x, data) %>% unique() %>% length()
+  
+  # If x already has n or fewer levels return the data
+  if (level_count <= n) return(data)
+  
+  # Otherwise, group the bottom (n-level_count) columns by weight
+  # and return the them as a single level summarized by the 
+  # grouping_fn function
+  return(
+    ## Logic for combining least significant bars
+    data %>%
+      # Ungroup the data in case it is already grouped
+      ungroup() %>%
+      # Add an id to each row to be used as keys later
+      mutate(id = row_number()) %>%
+      # Group by the group we want to pare down
+      group_by(!!x) %>%
+      # Add a column which shows the total count for each group
+      mutate(x_total = sum(!!weight, na.rm = TRUE)) %>%
+      # Group by the other group, this is used to
+      # identify which groups in the paring group will be given the value true
+      group_by(!!!kept_factors) %>%
+      # Arrange by the total in descending order
+      arrange(desc(x_total)) %>%
+      # Add a variable indicating which rows will be kept and which will be trimmed
+      mutate(keeping = c(rep(TRUE, times = n), rep(FALSE, times = level_count - n))) %>%
+      # Rearrange the rows in their original order
+      ungroup() %>%
+      arrange(id) %>%
+      # Change the factor to remove the levels of the group to be joined together
+      # and add a level for the pared groups
+      mutate(!!x := factor(as.character(!!x), levels = c(unique((as.character(!!x))[keeping]),combined_name))) %>%
+      # Update the rows which aren't being kept to share the same factor level
+      rows_update(y = (.) %>%
+                    filter(!keeping) %>%
+                    mutate(!!x := combined_name), by = "id") %>%
+      # If there are still NAs in x after adding the combined levels add an NA level
+      mutate(!!x := addNA(!!x, ifany = TRUE)) %>%
+      # Get the totals for the groups that are being pared
+      group_by(!!x, !!!kept_factors) %>%
+      summarise(!!weight := grouping_fn(!!weight))
+  )
 }
 
 # custom_likert
@@ -80,123 +211,57 @@ custom_likert <- function(x) {
 #     
 #     A scatter plot
 custom_scatter <- function(data, x, y, line = FALSE) {
+  # Enquo the x and y columns
   x <- enquo(x)
   y <- enquo(y)
   
+  # Pass the data to ggplot
   data %>%
     ggplot(aes(x = !!x, y = !!y)) +
       if (line == TRUE)
+        # If line is true add a line
         geom_line(colour = "blue")
       else
+        # Otherwise add points
         geom_point(colour = "blue", shape = 19)
 }
-
-# custom_scatter <- function(data, field_labels = NULL, date_fields = c()) {
-#   # If any number of columns other than two is provided, stop
-#   if (ncol(data) != 2) stop(paste0("custom_scatter takes a dataframe with two columns, (",ncol(data),") provided."))
-#   
-#   # If field_labels is NULL use the names of the passed dataframes
-#   if (is.null(field_labels)) {
-#     field_labels <- names(data)
-#   } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
-#     stop("field_labels must be a character vector or character list of length 2")
-#   }
-#   
-#   data %>%
-#     mutate(across(all_of(date_fields), as.Date, tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"))) %>%
-#     na.omit() %>%
-#     (function(fixed_data) {
-#       if (nrow(fixed_data) != 0) {
-#         plot(
-#           fixed_data,
-#           main = paste0(field_labels, collapse = " vs "),
-#           xlab = field_labels[1],
-#           ylab = field_labels[2],
-#           type = "p",
-#           xaxt = "n",
-#           yaxt = "n",
-#           # TODO: Make point sizes increase for repeated (y?) values
-#           #cex= points_to_plot[,3]
-#           pch=19, 
-#           col="blue"
-#         )
-#         if (length(date_fields) == 0) {
-#           axis(side = 1, labels = TRUE, las = 1)
-#           axis(side = 2, labels = TRUE, las = 1)
-#         } else if (length(date_fields) == 1) {
-#           axis.Date(side = which(names(fixed_data) == date_fields), fixed_data[[date_fields]], labels = TRUE, las = 1)
-#           axis(side = which(names(fixed_data) != date_fields), labels = TRUE, las = 1)
-#         } else {
-#           axis.Date(side = 1, fixed_data[[date_fields[1]]], labels = TRUE, las = 1)
-#           axis.Date(side = 2, fixed_data[[date_fields[2]]], labels = TRUE, las = 1)
-#         }
-#       }
-#     })
-# }
-
-# # custom_scatter_date
-# # Author: Joel Cohen
-# # Description:
-# #   
-# #   Takes a dataframe containing a date column as x and a numerical column as y and field labels and returns a scatterplot
-# #
-# #   Input:
-# #     
-# #     A dataframe containing a date column as the first field, a numerical column as the second field and a (optional) list of field labels
-# #
-# #   Output:
-# #     
-# #     A date scatter plot
-# custom_scatter_date <- function(data, field_labels = NULL) {
-#   # If any number of columns other than two is provided, stop
-#   if (ncol(data) != 2) stop(paste0("custom_scatter_date takes a dataframe with two columns, (",ncol(data),") provided."))
-#   
-#   # If field_labels is NULL use the names of the passed dataframes
-#   if (is.null(field_labels)) {
-#     field_labels <- names(data)
-#   } else if (length(field_labels) != 2 || typeof(field_labels) != "character") {
-#     stop("field_labels must be a character vector or character list of length 2")
-#   }
-#   
-#   data %>%
-#     na.omit() %>%
-#     (function(data) {
-#       if (nrow(data) != 0) {
-#         plot(
-#           data,
-#           main = paste0(field_labels, collapse = " vs "),
-#           xlab = field_labels[1],
-#           ylab = field_labels[2],
-#           type = "p",
-#           xaxt = "n",
-#           yaxt = "n",
-#           # TODO: Make point sizes increase for repeated (y?) values
-#           #cex= points_to_plot[,3]
-#           pch=19, 
-#           col="blue"
-#         )
-#       }
-#     })
-# }
 
 # custom_bars
 # Author: Joel Cohen
 # Description:
 #   
-#   Takes a dataframe containing one factor column and one numerical column and creates a  barplot
+#   Takes a dataframe containing one factor column and one numerical column and creates a barplot
 #
 #   Input:
 #     
-#     A dataframe containing one factor column as x and one numeric column as y
+#     data - A datframe containing a categorical and numerical column
+#     
+#     x - The categorical column in data, passed as a symbol
+#
+#     y - The numerical column in data, passed as a symbol
+#
+#     (OPTIONAL)
+#
+#     label2 - The symbol for a column in data to be used as second label for
+#       the bars. e.g. y (label2). Default: NULL (No second label)
+#
+#     percent - Should percents be plotted? If True and label2 is NULL
 #
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15, angle_rotation = 45, v_just = 0.5, x_title_size = 8, legend_size = 7, max_bars = 25, combined_name = "[Excluded]") {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 15) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
   label2 <- enquo(label2)
+  
+  margin = 15
+  angle_rotation = 45
+  v_just = 0.5
+  x_title_size = 8
+  
+  bar_breaks <- n_spaced(eval_tidy(x, data = data), max_bars)
   
   # Get the number of rows in the data
   n_bars <- nrow(data)
@@ -231,38 +296,37 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15,
     v_just <- 0
   }
   
-  # If label2 isn't passed or there are more than 25 bars
+  # If label2 isn't passed or there are more than max_bars
   if (rlang::quo_is_null(label2))
     # If percent is TRUE plot the labels as percents
     if (percent)
       bar_labels <- geom_text(aes(label = scales::percent(!!y)), vjust = -0.5, size = label_size)
-  # If percent is FALSE plot the labels as is
-  else
-    bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
+    # If percent is FALSE plot the labels as is
+    else
+      bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
   # If label2 is passed and there are fewer than 26 bars
-  else if (n_bars < 26)
+  else if (n_bars <= max_bars)
     # If percent is TRUE
     if (percent)
       # Print the y labels as is and plot the second labels as percent
       bar_labels <- geom_text(aes(label=paste0(!!y ," (",scales::percent(!!label2),")")), vjust = -0.5, size = label_size)
-  else
     # If percent is FALSE plot both y and the second labels as is
-    bar_labels <- geom_text(aes(label = paste0(!!y ," (",!!label2,")")), vjust = -0.5, size = label_size)
-  # If label2 is passed but there are more than 25 bars
+    else
+      bar_labels <- geom_text(aes(label = paste0(!!y ," (",!!label2,")")), vjust = -0.5, size = label_size)
+  # If label2 is passed but there are more than maxbars
   else 
     # Print the labels as if percent wasn't passed
     bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
   
   # Pass the data to ggplot
   data %>%
-    # If there are too many bars make them one group
-    group_bars %>%
     # Use x and y as out x and y
     ggplot(aes(x=!!x, y = !!y, fill = !!x)) +
     # Create bars
     geom_bar(stat = "identity") +
     # Add viridis colors
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey") + 
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks) + 
+    scale_x_discrete(breaks = bar_breaks) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
           # Adjust the position of the title
@@ -283,11 +347,12 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15,
             colour = "black"
           ),
           # Add a legend ant set its position
-          legend.position = "bottom",
-          legend.box = "horizontal"
+         legend.position = "bottom",
+         legend.box = "horizontal",
+         legend.title = element_blank()
     )  +
     # Increase the top of the y-axis so labels don't spill off the plot
-    scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
+    scale_y_continuous(expand = expansion(c(0,0.2))) +
     # Add the previously created x axis labels
     bar_labels
 }
@@ -308,14 +373,35 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, margin = 15,
 #
 #     fill - the values used to determine the height of each piece of the stack
 #
+#     (Optional)
+#     
+#     title - The title for the plot
+#     Default: ""
+#
+#     position - "stack" (default) for stacked bar plot
+#                "dodge" for grouped bar plot
+#
+#     max_bars - The maximum number of bars (stacked) or group of bars (grouped)
+#     Default: 20
+#
+#     max_colors - The maximum number of stacks/colours (stacked) or
+#     bars per group (grouped).
+#     Default: 20
+#
 #   Output:
 #     
 #     A stacked bar plot
-custom_stacked <- function(data, x, y, fill, title = "", position = "stack", maxgroups = 34, maxcolors = 34, combined_name = "[Excluded]") {
+custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20) {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
   y <- enquo(y)
   fill <- enquo(fill)
+  
+  # Returns max_bars evenly spaced bar labels
+  bar_breaks <- n_spaced(eval_tidy(x, data = data) %>% unique(), max_bars)
+  
+  # Returns evenly spaced vector for the bar colours
+  color_breaks <- n_spaced(eval_tidy(y, data = data) %>% unique(), max_colors)
   
   # Count the number of bars
   x_bars = data %>% select(!!x) %>% distinct() %>% nrow()
@@ -329,82 +415,35 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   x_size = 8
   legend_size = 7
   
-  x_combine <- . %>% mutate()
-  y_combine <- . %>% mutate()
-  
-  # If there are more than 34 bars
-  if (x_bars > maxgroups) {
-    x_combine <- . %>%
-      # Add an id to each row to be used as keys later
-      mutate(id = row_number()) %>%
-      # Group by the group we want to pare down
-      group_by(!!x) %>%
-      # Add a column which shows the total count for each group
-      mutate(x_total = sum(!!fill, na.rm = TRUE)) %>%
-      # Group by the other (colors group), this is used to
-      # identify which groups in the paring group will be given the value true
-      group_by(!!y) %>%
-      # Arrange by the total in descending order
-      arrange(desc(x_total)) %>%
-      # Add a variable indicating which rows will be kept and which will be trimmed
-      mutate(keeping = c(rep(TRUE, times = maxgroups), rep(FALSE, times = x_bars - maxgroups))) %>%
-      # Rearrange the rows in their original order
-      arrange(id) %>%
-      # Change the factor to remove the levels of the group to be joined together
-      # and add a level for the pared groups
-      mutate(!!x := factor(as.character(!!x), levels = c(unique((as.character(!!x))[keeping]),combined_name))) %>%
-      # Update the rows which aren't being kept to share the same factor level
-      rows_update(y = (.) %>% 
-                    filter(!keeping) %>%
-                    mutate(!!x := combined_name), by = "id") %>%
-      # If there are still NAs in x after adding the combined levels add an NA level
-      mutate(!!y := addNA(!!y, ifany = TRUE)) %>%
-      # Get the totals for the groups that are being pared
-      group_by(!!x, !!y) %>%
-      summarise(!!fill := sum(!!fill))
-
-    # Rotate the x labels to 90 degrees
+  # If there are more than max_bars bars (or groups)
+  if (x_bars > max_bars) {
+    # Rotate the x labels to 90 degrees an set vjust to 0
     angle_rotation = 90
     v_just = 0
   }
 
-  # If there are more than 34 stacks
-  if (y_bars > maxcolors) {
-    # y_combine uses the same logic as x_combine but swaps x and y
-    y_combine <- . %>%
-      mutate(id = row_number()) %>%
-      group_by(!!y) %>%
-      mutate(x_total = sum(!!fill, na.rm = TRUE)) %>%
-      group_by(!!x) %>%
-      arrange(desc(x_total)) %>%
-      mutate(keeping = c(rep(TRUE, times = maxcolors), rep(FALSE, times = y_bars - maxcolors))) %>%
-      arrange(id) %>%
-      mutate(!!y := factor(as.character(!!y), levels = c(unique((as.character(!!y))[keeping]), combined_name))) %>%
-      rows_update(y = (.) %>% filter(!keeping) %>% mutate(!!y := combined_name), by = "id") %>%
-      mutate(!!y := addNA(!!y, ifany = TRUE)) %>%
-      group_by(!!y, !!x) %>%
-      summarise(!!fill := sum(!!fill))
-    
+  # If there are more than max_colors stacks (or bars per group)
+  if (y_bars > max_colors) {
     # Decrease the size of the label text
     x_size = 7
     # And decrease the legend size
     legend_size = 5
   }
-  
-  
+
   # Pass the data to ggplot
   data %>% 
-    # Combine x group if there are too many
-    x_combine %>%
-    # Combine y group if there are too many
-    y_combine %>%
-    # Use the passed parameters
-    # TODO: Swap fill and y?
     ggplot(aes(x=!!x, fill = !!y, y = !!fill)) +
-    # Add bars
-    geom_bar(position = position, color="darkblue", stat = "identity") +
+    # Add bars, don't add blue outline for stacked bars
+    (if (position == "dodge")
+      geom_bar(position = position, stat = "identity")
+    else 
+      geom_bar(position = position, color="darkblue", stat = "identity")) +
     # Use a viridis colour scaling
-    scale_fill_viridis(discrete = T, option = "H") +
+    scale_fill_viridis(discrete = T, option = "H", 
+                       # Only include max_colour colours in the legend
+                       breaks = color_breaks) +
+    # Only include labels for max_bars bars
+    scale_x_discrete(breaks = bar_breaks) +
     # Add a title to the plot
     ggtitle(title) +
     # Remove the title from the guide
@@ -442,50 +481,214 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
 #
 #   Input:
 #     
-#     A dataframe with the x
+#     data - A data frame containing 2 categorical columns and a total column
+#
+#     x - The categorical column that will have a row for each level
+#     passed as a symbol
+#
+#     y - The categorical column that will have a column for each level
+#     passed as a symbol
+#   
+#     total - The column idendifying the total for each pair of levels
+#
+#     (Optional)
+#     column_spanner - The text to be used for the y columns of the table
+#     Default: NULL (used the label for the y column)
 #
 #   Output:
 #     
 #     A contingency table
-custom_crosstab <- function(data, x, y, total, column_spanner = "Columns") {
+custom_crosstab <- function(data, x, y, total, column_spanner = NULL) {
+  # Enquo, x, y, and total columns
   x <- enquo(x)
   y <- enquo(y)
   total <- enquo(total)
   
+  column_spanner <- if (is.null(column_spanner)) as_label(y) else column_spanner
+  
+  # Get the levels of the y variable to be used as column names
   y_levels <- levels(data[[rlang::as_label(y)]]) %>% replace_na("NA")
+  
+  # Create a vector for the spanner where the middle value is the number
+  # of columns in y
   spanner <- c(1, length(y_levels), 1)
+  
+  # Don't name the outide spanners but name the 
+  # middle spanner the name of y
   names(spanner) <- c(" ", column_spanner, " ")
   
 
   data %>%
+    # Convert x and y to character vectors
     mutate(!!x := as.character(!!x), !!y := as.character(!!y)) %>%
+    # Transform the table so the y levels are columns
     pivot_wider(names_from = !!y, values_from = !!total) %>%
+    # Add a row of totals by...
     rows_insert(
+      # Taking the colSums of the data
       colSums(.[,1:length(y_levels)+1]) %>% 
+        # Transmute the data
         t() %>% 
+        # Convert it to data.frame
         data.frame() %>%
+        # Set the column names to y_levels
         setNames(y_levels) %>% 
+        # Add a column named the same as x with the values having "Total"
         mutate(!!sym(rlang::as_label(x)) := "Total"), 
+      # Use "Total" as the name for this row insertion
       by = rlang::as_label(x)) %>%
+    # Add a column of row sums
     mutate(Total = rowSums(.[,1:length(y_levels)+1])) %>%
+    # Create a kable table
     kbl(format = "html", align = c("l", rep("c", times = length(y_levels)+1))) %>%
+    # Add the spanner
     add_header_above(spanner) %>%
+    # Output as html
     htmltools::HTML()
 
     
 }
 
-custom_map <- function(data, title = "") {
+# custom_map
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a dataframe with the latidutes, and longitudes
+#   an html contingency table.
+#
+#   Input:
+#     
+#     data - A data frame containing a latitude and longitude column
+#
+#     lat - The latitude column as a string
+#
+#     lng - The longitude column as a string
+#
+#     (Optional)
+#     count - A column giving the counts for each location
+#     Default: NULL
+#
+#   Output:
+#     
+#     A map
+custom_map <- function(data, lat, lng, count = NULL) {
   data %>%
-    leaflet() %>%
+    leaflet(height = 800,) %>%
     addTiles() %>%
     addCircleMarkers(
+      lng = data[[lng]],
+      lat = data[[lat]],
+      weight = (if (is.null(count)) 5 else data[[count]]),
       radius =3,
       opacity = 1,
+      stroke = FALSE,
       fillOpacity = 1,
       fill = TRUE,
       fillColor = "#FF0000",
       clusterOptions = markerClusterOptions( spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1))
     ) %>%
-    addControl(title, position = "bottomleft")
+    addControl(paste0(lng, " vs ", lat), position = "bottomleft")
 }
+
+custom_network <- function(data, x, y) {
+  x <- enquo(x)
+  y <- enquo(y)
+  
+  data %>%
+    select(!!x, !!y) %>%
+  # Create a graph from the data
+    graph_from_data_frame(directed = TRUE) %>%
+    # Plot it
+    plot(edge.width = 1,
+         main = paste0(as_label(x), " -> " , as_label(y)),
+         cex.main = 100,
+         sub = "",
+         edge.arrow.width = 0.5,
+         vertex.size = 5,
+         edge.arrow.size = 0.5,
+         edge.color = "black",
+         vertex.size2 = 3,
+         vertex.label.cex = .40,
+         vertex.color = "cadetblue3",
+         asp = 0)
+}
+## IN PROGRESS: NETWORK MAPS
+# make_arrows <- function(p1.lng, p1.lat, p2.lng, p2.lat,  shift = 0.1) {
+#   dist <- sqrt((p1.lng - p2.lng)^2 + (p1.lat - p2.lat)^2)
+#   dy <- shift*(p1.lat - p2.lat)/dist
+#   dx <- shift*(p1.lng - p2.lng)/dist
+#   return(tibble(
+#     from.lng = p1.lng - dy, 
+#     from.lat = p1.lat + dx, 
+#     to.lng = p2.lng - dy, 
+#     to.lat = p2.lat + dx,
+#     center.lng = (from.lng+ to.lng)/2,
+#     center.lat = (from.lat+ to.lat)/2
+#     )
+#   )
+# }
+# 
+# add_arrows <- function(map, data) {
+#   map %>%
+#     htmlwidgets::onRender(
+#       "
+#       function(el, x) {
+#         this.add()
+#       }
+#       "
+#     )
+# }
+# 
+# custom_network_map <- function(data, coord_pair, both = FALSE) {
+#   long_data <- data %>%
+#     transmute(across(coord_pair[[1]]$longitude_name, .names = "x.lng"),
+#               across(coord_pair[[1]]$latitude_name, .names = "x.lat"), 
+#               across(coord_pair[[2]]$longitude_name, .names = "y.lng"),
+#               across(coord_pair[[2]]$latitude_name, .names = "y.lat")
+#               ) %>%
+#     group_by(x.lng, x.lat, y.lng, y.lat) %>%
+#     summarize(center.count = n()) %>%
+#     ungroup() %>%
+#     transmute(make_arrows(x.lng, x.lat, y.lng, y.lat), center.count) %>%
+#     pivot_longer(cols = everything(), names_to = c("set", ".value"), names_pattern = "([^.]+)[.](.*)")
+#   
+#   arrows <- long_data %>%
+#     filter(set != "center")
+# 
+#   labels <- long_data %>%
+#     filter(set == "center")
+#   # print(arrows[["lng"]], digits = 6)
+#   # print(typeof(arrows[,"lng"] %>% unlist()))
+#   # return(data)
+#   return(data %>%
+#     leaflet(height = 800) %>%
+#     addTiles() %>%
+#     addArrowhead(
+#       lng = arrows[["lng"]],
+#       lat = arrows[["lat"]],
+#       weight = 2,
+#       color = "orange",
+#       opacity = 1,
+#       
+#     ) %>%
+#     addLabelOnlyMarkers(
+#       lng = labels[["lng"]],
+#       lat = labels[["lat"]],
+#       label = htmltools::htmlEscape(labels[["count"]]),
+#       labelOptions = labelOptions(noHide = T))
+#     ) %>%
+#     add
+#     htmlwidgets::onRender(
+#       " 
+#         function(el, x) {
+#           this.bindPopup(\"Popup content\");
+#           this.on('mouseover', function (e) {
+#               this.openPopup();
+#           });
+#           this.on('mouseout', function (e) {
+#               this.closePopup();
+#           });
+#         }
+#       "
+#     )
+# }
