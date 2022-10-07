@@ -44,34 +44,49 @@ library(rlang)
 #   title - the title of the side by side plots
 side_by_side <- function(plot1, plot2, title = "") {
   cat("<center><h4>", title, "</h4></center><div class=\"clearfix\"><div class=\"img-container\">")
-    print(plot1)
+    if (class(plot1)[1] == "list")
+      for (item in plot1)
+        if (class(item)[1] == "character")
+          cat(item)
+        else
+          print(item)
+    else
+      print(plot1)
   cat("</div>")
   cat("<div class=\"img-container\">")
-    print(plot2)
-  cat("</div></div>\n\n")
+    if (class(plot2)[1] == "list")
+      for (item in plot2)
+        if (class(item)[1] == "character")
+          cat(item)
+        else
+           print(item)
+      else
+        print(plot2)
+  cat("\n\n</div></div>\n\n")
 }
 
-# n_spaced
+# n_spaced_indices
 # Author: Joel Cohen
 # Description:
 #   
-#   Takes a vector "elements" and the maximum number of elements to
-#   take from said vector "n" and returns n elements evenly spaced
-#   from the vector.
+#   Takes m, the number of elements 
+#   take from said vector "n" and returns the indexes
+#   for an evenly spaced vector
 #
 #   Input:
 #     
-#     elements - A vector
+#     m - The number of elements to take a subset of
 #
 #     n - The number of evenly spaced elements to take from the vector
 #
 #   Output:
 #     
-#     n evenly spaced elements from the vector elements
+#     The indexes for the evenly spaced elements
 #
 # Used in custom_bars and custom_stacked to remove labels
-n_spaced <- function(elements, n) {
-  elements[unique(round(seq(1, length(elements), by = length(elements)/n)))]
+n_spaced_indices <- function(m, n) {
+  unique(((0:(n-1))*(m-1))%/%(n-1) + 1)
+  # elements[unique(round(seq(1, length(elements), by = length(elements)/n)))]
 }
 
 
@@ -261,7 +276,9 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
   v_just = 0.5
   x_title_size = 8
   
-  bar_breaks <- n_spaced(eval_tidy(x, data = data), max_bars)
+  categories <- eval_tidy(x, data = data)
+  
+  bar_breaks <- categories[n_spaced_indices(length(categories), max_bars)]
   
   # Get the number of rows in the data
   n_bars <- nrow(data)
@@ -271,52 +288,57 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
   
   group_bars <- . %>% mutate()
   
-  # If there are more than 25 bars rotate the labels 90 degrees
-  if (n_bars > max_bars) {
-    group_bars <- . %>%
-      # Add an id to each row to be used as keys later
-      mutate(id = row_number()) %>%
-      # Arrange the bars in decending order
-      arrange(desc(!!y)) %>%
-      mutate(
-        # Add a column indicating which will be left and which will be kept
-        keeping = c(rep(TRUE, times = max_bars), rep(FALSE, times = n_bars - max_bars)),
-        # Remove dropped factors from x
-        !!x := factor(as.character(!!x), levels = c(unique(as.character(!!x)[keeping]), combined_name))
-        ) %>%
-      # Update combined rows to have the same level
-      rows_update(y = (.) %>% 
-                    filter(!keeping) %>%
-                    mutate(!!x := combined_name), by = "id") %>%
-      # Get the sum of the new group
-      group_by(!!x) %>%
-      summarise(!!y := sum(!!y))
-      
-    angle_rotation <- 90
-    v_just <- 0
-  }
-  
   # If label2 isn't passed or there are more than max_bars
   if (rlang::quo_is_null(label2))
     # If percent is TRUE plot the labels as percents
     if (percent)
-      bar_labels <- geom_text(aes(label = scales::percent(!!y)), vjust = -0.5, size = label_size)
+      bar_labels <- geom_text(aes(label = replace(scales::percent(!!y), (1:length(!!y))[-n_spaced_indices(length(!!y), max_bars)], "")),
+                              vjust = -0.5,
+                              size = label_size)
     # If percent is FALSE plot the labels as is
     else
-      bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
+      bar_labels <- geom_text(aes(label = replace(!!y, (1:length(!!y))[-n_spaced_indices(length(!!y), max_bars)], "")), vjust = -0.5, size = label_size)
   # If label2 is passed and there are fewer than 26 bars
   else if (n_bars <= max_bars)
     # If percent is TRUE
     if (percent)
       # Print the y labels as is and plot the second labels as percent
-      bar_labels <- geom_text(aes(label=paste0(!!y ," (",scales::percent(!!label2),")")), vjust = -0.5, size = label_size)
+      bar_labels <- geom_text(aes(
+        label=paste0(
+          replace(!!y, (1:length(!!y))[-n_spaced_indices(length(!!y), max_bars)], ""),
+          " (",
+          replace(scales::percent(!!label2), (1:length(!!label2))[-n_spaced_indices(length(!!label2), max_bars)], ""),
+          ")")),
+        vjust = -0.5,
+        size = label_size)
     # If percent is FALSE plot both y and the second labels as is
     else
-      bar_labels <- geom_text(aes(label = paste0(!!y ," (",!!label2,")")), vjust = -0.5, size = label_size)
+      bar_labels <- geom_text(aes(
+        label = paste0(
+                replace(!!y,
+                        (1:length(!!y))[-n_spaced_indices(length(!!y), max_bars)],
+                        "") ,
+                " (",
+                replace(!!label2, 
+                        (1:length(!!label2))[-n_spaced_indices(length(!!label2), max_bars)],
+                        ""),
+                ")")),
+        vjust = -0.5,
+        size = label_size)
   # If label2 is passed but there are more than maxbars
   else 
     # Print the labels as if percent wasn't passed
-    bar_labels <- geom_text(aes(label = !!y), vjust = -0.5, size = label_size)
+    bar_labels <- geom_text(aes(
+      label = replace(!!y,
+                    (1:length(!!y))[-n_spaced_indices(length(!!y), max_bars)],
+                    "")),
+      vjust = -0.5,
+      size = label_size)
+  # If there are more than 25 bars rotate the labels 90 degrees
+if (n_bars > max_bars) {
+  angle_rotation <- 90
+  v_just <- 0
+}
   
   # Pass the data to ggplot
   data %>%
@@ -326,7 +348,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
     geom_bar(stat = "identity") +
     # Add viridis colors
     scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks) + 
-    scale_x_discrete(breaks = bar_breaks) +
+    scale_x_discrete(breaks = bar_breaks, expand = expansion(c(0.05,0.05))) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
           # Adjust the position of the title
@@ -398,10 +420,13 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   fill <- enquo(fill)
   
   # Returns max_bars evenly spaced bar labels
-  bar_breaks <- n_spaced(eval_tidy(x, data = data) %>% unique(), max_bars)
+  bar_names <- eval_tidy(x, data = data) %>% unique()
+  bar_breaks <- bar_names[n_spaced_indices(length(bar_names), max_bars)]
   
   # Returns evenly spaced vector for the bar colours
-  color_breaks <- n_spaced(eval_tidy(y, data = data) %>% unique(), max_colors)
+  color_names <- eval_tidy(y, data = data) %>% unique()
+  color_breaks <- color_names[n_spaced_indices(length(color_names), max_colors)]
+  
   
   # Count the number of bars
   x_bars = data %>% select(!!x) %>% distinct() %>% nrow()
@@ -429,21 +454,25 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     # And decrease the legend size
     legend_size = 5
   }
+  
+
+
 
   # Pass the data to ggplot
-  data %>% 
+  p <- list(data %>% 
     ggplot(aes(x=!!x, fill = !!y, y = !!fill)) +
     # Add bars, don't add blue outline for stacked bars
     (if (position == "dodge")
-      geom_bar(position = position, stat = "identity")
+      geom_bar(position = position, stat = "identity", width = 0.9)
     else 
       geom_bar(position = position, color="darkblue", stat = "identity")) +
     # Use a viridis colour scaling
     scale_fill_viridis(discrete = T, option = "H", 
+                       na.value = "grey",
                        # Only include max_colour colours in the legend
                        breaks = color_breaks) +
     # Only include labels for max_bars bars
-    scale_x_discrete(breaks = bar_breaks) +
+    scale_x_discrete(labels = replace(as.character(eval_tidy(x, data = data)), !(eval_tidy(x, data = data) %in% bar_breaks), "")) +
     # Add a title to the plot
     ggtitle(title) +
     # Remove the title from the guide
@@ -469,7 +498,33 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
       legend.position = "bottom",
       # Set the legend to display horizontally
       legend.box = "horizontal"
-    )
+    ) +
+      (if (position == "dodge") 
+        geom_text(aes(x = !!x, y = !!fill + 0.03*max(!!fill), label = replace(!!fill, !!fill == 0, "")),
+                  position = (position_dodge(width = 0.9)))
+       else
+         geom_text(aes(x = !!x, y = !!fill, label = replace(!!fill, !!fill == 0, "")),
+                   position = (position_stack(vjust = 0.5)), color = "white")) +
+        (if (position == "stack")
+          geom_text(aes(x = !!x, y = !!fill + 0.05*max(!!fill), fill = NULL, label = replace(!!fill, !!fill == 0, "")),
+                   data = data %>%
+                     group_by(!!x) %>%
+                     summarise(!!fill := sum(!!fill)))
+         else
+           geom_blank())
+    #geom_text(aes(label = !!x)) +
+    # geom_text(aes(x = !!x, y = !!fill, label = !!fill, fill = NULL), data = data %>% group_by(!!x) %>% summarise(!!fill := sum(!!fill)), position = position)
+  )
+  
+  if (x_bars > max_bars) 
+    p <- p %>%
+      append("<figcaption><b>Warning: too many groups were plotted so some bar lables have been removed</b></figcaption>")
+  
+   if (y_bars > max_colors)
+     p <- p %>%
+        append("<figcaption><b>Warning: too many groups were plotted so some colours have been removed from the legend</b></figcaption>")
+  
+  return(p)
 }
 
 # custom_crosstab
@@ -498,7 +553,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
 #   Output:
 #     
 #     A contingency table
-custom_crosstab <- function(data, x, y, total, column_spanner = NULL) {
+custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = FALSE) {
   # Enquo, x, y, and total columns
   x <- enquo(x)
   y <- enquo(y)
@@ -520,7 +575,7 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL) {
 
   data %>%
     # Convert x and y to character vectors
-    mutate(!!x := as.character(!!x), !!y := as.character(!!y)) %>%
+    transmute(!!x := as.character(!!x), !!y := as.character(!!y), !!total := !!total) %>%
     # Transform the table so the y levels are columns
     pivot_wider(names_from = !!y, values_from = !!total) %>%
     # Add a row of totals by...
@@ -539,6 +594,7 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL) {
       by = rlang::as_label(x)) %>%
     # Add a column of row sums
     mutate(Total = rowSums(.[,1:length(y_levels)+1])) %>%
+    mutate(across(-c(1), (if (percent) scales::percent else ~.x))) %>%
     # Create a kable table
     kbl(format = "html", align = c("l", rep("c", times = length(y_levels)+1))) %>%
     # Add the spanner
@@ -599,7 +655,7 @@ custom_network <- function(data, x, y) {
   # Create a graph from the data
     graph_from_data_frame(directed = TRUE) %>%
     # Plot it
-    plot(edge.width = 1,
+    plot.igraph(edge.width = 1,
          main = paste0(as_label(x), " -> " , as_label(y)),
          cex.main = 100,
          sub = "",

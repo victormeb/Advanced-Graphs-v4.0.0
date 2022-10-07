@@ -77,49 +77,76 @@ import_data <- function(parameters, record_id, live_filters) {
     exportCheckboxLabel='false',
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  ), header = TRUE, sep = ",", stringsAsFactors = FALSE) %>%
+    group_by()
   
-  # If there are no live_filters active, submit the report_data
-  if (nrow(live_filters) == 0) return(report_data)
-  
-  # Create filter condition to send request to redcap.
-  filter_condition <- paste("[", live_filters$field_name, "] = \"", live_filters$option_code, "\"" ,sep = "", collapse = " AND ")
-  
-  
-  # Create the array of field names to be returned from redcap
-  report_fields <- toString(names(report_data))
-  
-  # All records matching live filter
-  live_filtered_records <- read.csv(text = postForm(
+  # Retrieve all records from the project
+  all_records <- read.csv(text = postForm(
     uri=parameters$server_url,
     token=parameters$token,
     content='record',
-    fields= report_fields,
     format='csv',
-    filterLogic = filter_condition,
     rawOrLabel='raw',
     rawOrLabelHeaders='raw',
     exportCheckboxLabel='false',
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
   ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
-
-  return(
+  
+  # From all the records, take the rows that are in report_data, include the ID column
+  report_data_flattened <- inner_join(
+    all_records %>%
+      select(1, all_of(names(report_data))) %>%
+      group_by(across(all_of(names(report_data)))) %>%
+      # Add row number for each identical row the records (only counting fields in the report)
+      mutate(adv_graph_internal_duplicates_id = row_number())
+    ,
     report_data %>%
-      group_by_all() %>%
+      group_by(across(everything())) %>%
       # Add a row number for each identical row in the report data
-      mutate(adv_graph_internal_duplicates_id = row_number()) %>%
-      # Join the report_data and the filtered records keeping only
-      # rows in the report data that have a match in the filtered data
-      inner_join(live_filtered_records %>%
-                   select(names(report_data)) %>%
-                   group_by_all() %>%
-                   # Add row number for each identical row in filtered data
-                   mutate(adv_graph_internal_duplicates_id = row_number())
-      ) %>%
-      # Remove the duplicates id column
-      select(-adv_graph_internal_duplicates_id)
-  )
+      mutate(adv_graph_internal_duplicates_id = row_number())
+    ,
+    by = c(names(report_data), "adv_graph_internal_duplicates_id")
+  ) %>%
+    # Flatten the each event into a single row
+    group_by(across(1)) %>%
+    summarise(across(.fns = function(column) first(sort(na.omit(column), decreasing = TRUE)))) %>%
+    ungroup() %>%
+    select(names(report_data))
+  
+  # If there are no live_filters active, return the flattened report_data
+  if (nrow(live_filters) == 0) return(report_data_flattened)
+  
+  # Otherwise
+
+  # Flatten all the records, so there is one row per ID
+  records_flattened_filtered <- all_records %>%
+    group_by(across(1)) %>%
+    summarise(across(.fns = function(column) first(sort(na.omit(column), decreasing = TRUE)))) %>%
+    ungroup() %>%
+    # Filter the flattened records by the live filters
+    filter(eval(rlang::parse_expr(paste0(live_filters$filter_string, collapse = "&"))))
+    
+  # Join the flattened report_data with the flattened filtered records
+  report_data <- inner_join(
+    report_data_flattened %>%
+      select(all_of(names(report_data))) %>%
+      group_by(across(all_of(names(report_data)))) %>%
+      mutate(adv_graph_internal_duplicates_id = row_number())
+    ,
+    records_flattened_filtered %>%
+      select(all_of(names(report_data))) %>%
+      group_by(across(all_of(names(report_data)))) %>%
+      mutate(adv_graph_internal_duplicates_id = row_number())
+    ,
+    by = c(names(report_data), "adv_graph_internal_duplicates_id")
+  ) %>% 
+    # remove the duplicate_id column
+    select(names(report_data))  %>% 
+    # Store it as a dataframe
+    as.data.frame()
+
+  return(report_data)
 }
 
 # post_project_info
@@ -298,48 +325,38 @@ parse_categories <- function(data) {
 # instrument_one_complete     2	              Complete	       Instrument One
 # ...........................................................................
 parse_live_filters <- function (parameters, categories, data_dictionary,live_filter_status = c("0" = "Incomplete","1"="Unverified","2" = "Complete")) {
+  # Create a dataframe containing the live_filter information
   data.frame(
-    field_name = c(params$dynamic_filter1, params$dynamic_filter2, params$dynamic_filter3),
-    option_code = c(params$lf1, params$lf2, params$lf3)) %>%
-    # Remove empty filters
-    filter(option_code != "") %>%
-    mutate(
-      # Match the option_name to match to option_code from the instrument or categories list
-      option_name = if_else( # Match titles for filters
-        # If the field name ends in _complete
-        substr(field_name, nchar(field_name)-8, nchar(field_name)) == "_complete",
-        # Let the label equal the corresponding status
-        live_filter_status[option_code],
-        # Otherwise...
-        if_else(
-          # ... If the options code is equal to [NULL]
-          option_code == "[NULL]",
-          # Change it to an empty string (this is for the filter condition to send to REDCap)
-          "",
-          # In all other cases
-          unlist(mapply(
-            # Attempt to map the option_name to the corresponding field_name, option_code in the categories list
-            function(filter_name, code, options) {
-              # If the code is in the corresponding field_name's options
-              if (code %in% options[[filter_name]][["code"]])
-                # Use the options label corresponding to that code
-                options[[filter_name]][["label"]][which(code == options[[filter_name]][["code"]])]
-              # Otherwise, let it be empty
-              else NA
-            },
-            field_name, option_code, MoreArgs = list(options = categories)
-          ))
-        )
-      ),
-      # Add a pretty field title
-      field_title = if_else(
-        # If the field_name ends in _complete
-        substr(field_name, nchar(field_name)-8, nchar(field_name)) == "_complete",
-        # Remove _complete, split it over underscores, and capitalize the first letter of each word\
-        # e.g. Example_instrument_complete => Example Instrument
-        gsub("_", " ", substr(field_name, 0, nchar(field_name)-9)) %>% title_caps(),
-        # Otherwise try to match it with field label from the data_dictionary
-        right_join(data_dictionary, data.frame(field_name = field_name), by = "field_name")[["field_label"]]
-      )
-    )
+    field_name = c(parameters$dynamic_filter1, parameters$dynamic_filter2, parameters$dynamic_filter3),
+    options_code = c(parameters$lf1, parameters$lf2, parameters$lf3)
+    ) %>%
+    # Only include filters whose option codes aren't empty
+    filter(options_code != "") %>%
+    (function(data) {
+      if (nrow(data) > 0)
+        data %>%
+          rowwise() %>%
+          mutate(
+            # If the field name ends in "_complete", make it a capitalized field name - the complete
+            field_label = (
+              if (substr(field_name, nchar(field_name)-8, nchar(field_name)) == "_complete") 
+                title_caps(gsub("_", " ", substr(field_name, 0, nchar(field_name)-9)))
+              else 
+                # Otherwise use the corresponding category name
+                categories[[field_name]]$field_label
+            ),
+            # If the field name ends in "_complete", use the corresponding label for the options code
+            options_label = (
+              if (substr(field_name, nchar(field_name)-8, nchar(field_name)) == "_complete") 
+                live_filter_status[options_code] 
+              else
+                # Otherwise use the corresponding options label from categories
+                categories[[field_name]]$options_label[options_code]
+            ),
+            # Create a filtering string for each filter
+            filter_string = (if (options_code == "[NULL]") paste0("is.na(", field_name, ")") else paste0(field_name, "==",options_code))
+          )
+      else
+        data
+    })
 }

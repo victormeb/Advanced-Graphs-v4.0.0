@@ -30,7 +30,7 @@ params:
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, eval = FALSE, results = "asis")
+knitr::opts_chunk$set(echo = FALSE, eval = F, results = "asis")
 
 # Used for connections to get data from redcap
 library(RCurl)
@@ -198,8 +198,8 @@ report_data <- report_data %>%
            .fns = as.Date, 
            # Try these formats
            tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"),
-           .names = "{col}")    
-    )
+           .names = "{.col}")    
+    ) 
   
 
 # Create list of labels
@@ -210,16 +210,18 @@ names(names_to_labels) <- data_dictionary$field_name
 
 ## Advanced Graphs 
 
-```{r, results='asis', eval = TRUE}
+```{r, results = 'asis', eval = TRUE}
 cat("\n###", project_info$project_title)
 cat("\n### project pid", params$pid)
 cat("\n#### Number of records returned:", nrow(report_data))
+cat("\n##### **Note: events have been flattened into a single record**")
 cat("\n##### Live filter(s): ")
 if (nrow(live_filters) > 0 ) {
-  cat("\n######", paste0(live_filters$field_title, " = ", live_filters$option_name, collapse = "\n######"))
+  cat("\n######", paste0(live_filters$field_label, " = ", live_filters$options_label, collapse = "\n\n###### "))
 } else {
   cat("\n###### None")
 }
+
 ```
 
 
@@ -229,6 +231,7 @@ if (nrow(live_filters) > 0 ) {
 # For each set of fields that share options
 for (likert_group in likert_groups) {
     report_data %>%
+      data.frame() %>%
       # Select these fields from the data dictionary
       transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
       (function(data) {
@@ -373,7 +376,7 @@ for (category in radio_categories) {
       # TODO: Do we want to drop or keep empty levels
       group_by(category, .drop = FALSE) %>%
       # Get the mean for each group, 0 if there are no numeric fields
-      summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else mean(numeric, na.rm = TRUE)) %>%
+      summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else round(mean(numeric, na.rm = TRUE), 2)) %>%
       (function (data){
         # Create side by side plots
         side_by_side(
@@ -406,7 +409,7 @@ for (category in radio_categories) {
 }
 ```
 ### Stacked and grouped bars
-```{r stacked_bars, results='asis', message=FALSE}
+```{r stacked_bars, results='asis', message=FALSE, eval = T}
 # A "New names:" warning is introduced by the custom_crosstabs function
 # TODO: Fix warning from custom_crosstabs
 
@@ -429,6 +432,7 @@ if (length(radio_categories) >= 2) {
       summarise(count = n()) %>%
       # Ungroup data
       ungroup() %>%
+      mutate(percent = count/sum(count)) %>%
       (function(data) {
         # Create a custom stacked  and a grouped bar plot 
         # with the first field as x and print them side by side
@@ -481,21 +485,39 @@ if (length(radio_categories) >= 2) {
         )
 
       # Plot a custom crosstab for either direction of the categorical variables
-      side_by_side(
-        data %>%
-          # Pass the data to the custom_crosstab function
-          custom_crosstab(
-            x = !!sym(radio_pair[[1]]$field_label),
-            y = !!sym(radio_pair[[2]]$field_label),
-            total = count)
-        ,
-        data %>%
-          # Pass the data to the custom_crosstab function
-          custom_crosstab(
-            x = !!sym(radio_pair[[2]]$field_label),
-            y = !!sym(radio_pair[[1]]$field_label),
-            total = count)
-      )
+      # side_by_side(
+      #   data %>%
+      #     # Pass the data to the custom_crosstab function
+      #     custom_crosstab(
+      #       x = !!sym(radio_pair[[1]]$field_label),
+      #       y = !!sym(radio_pair[[2]]$field_label),
+      #       total = count)
+      #   ,
+      #   data %>%
+      #     # Pass the data to the custom_crosstab function
+      #     custom_crosstab(
+      #       x = !!sym(radio_pair[[2]]$field_label),
+      #       y = !!sym(radio_pair[[1]]$field_label),
+      #       total = count)
+      # )
+      # 
+      # side_by_side(
+      #   data %>%
+      #     # Pass the data to the custom_crosstab function
+      #     custom_crosstab(
+      #       x = !!sym(radio_pair[[1]]$field_label),
+      #       y = !!sym(radio_pair[[2]]$field_label),
+      #       total = percent,
+      #       percent = TRUE)
+      #   ,
+      #   data %>%
+      #     # Pass the data to the custom_crosstab function
+      #     custom_crosstab(
+      #       x = !!sym(radio_pair[[2]]$field_label),
+      #       y = !!sym(radio_pair[[1]]$field_label),
+      #       total = percent,
+      #       percent = TRUE)
+      # )
     })
 
   }
@@ -587,7 +609,7 @@ htmltools::tagList(maps)
 
 ### Network graphs
 
-```{r network_graphs, out.width = "100%", fig.align="center", eval = T}
+```{r network_graphs, out.width = "100%", fig.align="center"}
 # Take the text fields from the data dictionary
 text_fields <- data_dictionary %>%
   filter(field_type == "text" & field_name %in% names(report_data)) %>%
