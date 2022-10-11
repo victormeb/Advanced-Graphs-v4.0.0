@@ -276,8 +276,10 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
   v_just = 0.5
   x_title_size = 8
   
+  # Get list of categories
   categories <- eval_tidy(x, data = data)
   
+  # Get the evenly spaced categories which will be included as labels
   bar_breaks <- categories[n_spaced_indices(length(categories), max_bars)]
   
   # Get the number of rows in the data
@@ -285,8 +287,6 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
   
   # Set the size of the label text based on the number of bars
   label_size <- if (n_bars > 7) 3 else 5
-  
-  group_bars <- . %>% mutate()
   
   # If label2 isn't passed or there are more than max_bars
   if (rlang::quo_is_null(label2))
@@ -298,7 +298,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
     # If percent is FALSE plot the labels as is
     else
       bar_labels <- geom_text(aes(label = replace(!!y, (1:length(!!y))[-n_spaced_indices(length(!!y), max_bars)], "")), vjust = -0.5, size = label_size)
-  # If label2 is passed and there are fewer than 26 bars
+  # If label2 is passed and there are fewer than max_bars
   else if (n_bars <= max_bars)
     # If percent is TRUE
     if (percent)
@@ -325,7 +325,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
                 ")")),
         vjust = -0.5,
         size = label_size)
-  # If label2 is passed but there are more than maxbars
+  # If label2 is passed but there are more than max_bars
   else 
     # Print the labels as if percent wasn't passed
     bar_labels <- geom_text(aes(
@@ -334,7 +334,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
                     "")),
       vjust = -0.5,
       size = label_size)
-  # If there are more than 25 bars rotate the labels 90 degrees
+  # If there are more than max_bars bars rotate the labels 90 degrees
 if (n_bars > max_bars) {
   angle_rotation <- 90
   v_just <- 0
@@ -351,7 +351,7 @@ if (n_bars > max_bars) {
     scale_x_discrete(breaks = bar_breaks, expand = expansion(c(0.05,0.05))) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
-          # Adjust the position of the title
+          # Adjust the position of the title to be centered
           plot.title = element_text(hjust = 0.5),
           # Set the margins to the margins parameter (default 15)
           plot.margin = margin(margin,margin,margin,margin),
@@ -440,6 +440,34 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   x_size = 8
   legend_size = 7
   
+  # If they are grouped bar plots
+  if (position == "dodge") {
+    # Set the size of the bar text based on the number of bars
+    bar_text <-  max(1, 8 -7*x_bars*y_bars/(50))
+    # Create a geom for the bar labels
+    bar_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(!!fill, !!fill == 0, "")),
+                            position = (position_dodge(width = 0.9)), size = bar_text, vjust = -0.2)
+    # Make the stack_labels blank
+    stack_labels <- geom_blank()
+  # Otherwise if they are stacked bar plots
+  } else {
+    # Set the size of the bar text based on the number of bars
+    bar_text <- max(1, 8 - 7*x_bars/(50))
+    # Create a geom for the bar labels
+    bar_labels <- geom_text(aes(x = !!x, y = !!fill, fill = NULL, label = replace(!!fill, !!fill == 0, "")),
+              data = data %>%
+                group_by(!!x) %>%
+                summarise(!!fill := sum(!!fill)), size = bar_text, vjust = -0.2)
+    # Add stack labels
+      # Get the sizes for the individual stacks
+    stack_size <- eval_tidy(fill, data = data)
+      # Set the size for the text based off the bar size
+    stack_text <- 1 + (bar_text-1)*stack_size/max(stack_size)
+      # Create a geom of labels
+    stack_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(!!fill, !!fill == 0, "")),
+              position = (position_stack(vjust = 0.5)), color = "white", size = stack_text)
+  }
+  
   # If there are more than max_bars bars (or groups)
   if (x_bars > max_bars) {
     # Rotate the x labels to 90 degrees an set vjust to 0
@@ -456,8 +484,6 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   }
   
 
-
-
   # Pass the data to ggplot
   p <- list(data %>% 
     ggplot(aes(x=!!x, fill = !!y, y = !!fill)) +
@@ -472,7 +498,8 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
                        # Only include max_colour colours in the legend
                        breaks = color_breaks) +
     # Only include labels for max_bars bars
-    scale_x_discrete(labels = replace(as.character(eval_tidy(x, data = data)), !(eval_tidy(x, data = data) %in% bar_breaks), "")) +
+    scale_x_discrete(labels = replace(as.character(bar_names), !(bar_names %in% bar_breaks), "")) +
+    scale_y_continuous(expand = expansion(c(0, 0.25))) +
     # Add a title to the plot
     ggtitle(title) +
     # Remove the title from the guide
@@ -499,30 +526,23 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
       # Set the legend to display horizontally
       legend.box = "horizontal"
     ) +
-      (if (position == "dodge") 
-        geom_text(aes(x = !!x, y = !!fill + 0.03*max(!!fill), label = replace(!!fill, !!fill == 0, "")),
-                  position = (position_dodge(width = 0.9)))
-       else
-         geom_text(aes(x = !!x, y = !!fill, label = replace(!!fill, !!fill == 0, "")),
-                   position = (position_stack(vjust = 0.5)), color = "white")) +
-        (if (position == "stack")
-          geom_text(aes(x = !!x, y = !!fill + 0.05*max(!!fill), fill = NULL, label = replace(!!fill, !!fill == 0, "")),
-                   data = data %>%
-                     group_by(!!x) %>%
-                     summarise(!!fill := sum(!!fill)))
-         else
-           geom_blank())
-    #geom_text(aes(label = !!x)) +
-    # geom_text(aes(x = !!x, y = !!fill, label = !!fill, fill = NULL), data = data %>% group_by(!!x) %>% summarise(!!fill := sum(!!fill)), position = position)
+    # Add bar labels
+    bar_labels +
+    # Add stack labels
+    stack_labels
   )
   
+  # If there were too many bars
   if (x_bars > max_bars) 
+    # Add a warning under the plot
     p <- p %>%
       append("<figcaption><b>Warning: too many groups were plotted so some bar lables have been removed</b></figcaption>")
   
-   if (y_bars > max_colors)
-     p <- p %>%
-        append("<figcaption><b>Warning: too many groups were plotted so some colours have been removed from the legend</b></figcaption>")
+  # If there were too many groups
+  if (y_bars > max_colors)
+    # Add a warning under the plot
+    p <- p %>%
+      append("<figcaption><b>Warning: too many groups were plotted so some colours have been removed from the legend</b></figcaption>")
   
   return(p)
 }
@@ -627,22 +647,39 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = 
 #   Output:
 #     
 #     A map
-custom_map <- function(data, lat, lng, count = NULL) {
+custom_map <- function(data, lat, lng, location, count) {
   data %>%
     leaflet(height = 800,) %>%
     addTiles() %>%
     addCircleMarkers(
+      # Use the given longitude and latitude columns
       lng = data[[lng]],
       lat = data[[lat]],
-      weight = (if (is.null(count)) 5 else data[[count]]),
-      radius =3,
+      # Use the location factor to create colors
+      color = colorFactor(turbo(length(unique(data[[location]]))), domain = unique(data[[location]]))(data[[location]]),
+      # Make the size of the circles appropriate to the count column
+      weight = 1 + 20*data[[count]]/max(data[[count]]),
+      # Add labels to each cirlce
+      label = data[[count]],
+      labelOptions = labelOptions(
+        # Always show labels
+        noHide = T, 
+        # Only sho text
+        textOnly = T, 
+        # Set the color of the text to be white
+        style = list(color = "white"), 
+        # Place labels at center of circle
+        direction = "center"
+      ),
+      # Make cirlce opaque
       opacity = 1,
-      stroke = FALSE,
+      stroke = TRUE,
       fillOpacity = 1,
       fill = TRUE,
-      fillColor = "#FF0000",
+      # Cluster nearby circles together
       clusterOptions = markerClusterOptions( spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1))
     ) %>%
+    # Add a title
     addControl(paste0(lng, " vs ", lat), position = "bottomleft")
 }
 
