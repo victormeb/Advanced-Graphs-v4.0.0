@@ -584,17 +584,21 @@ maps <- lapply(coordinate_fields,
               function(coordinate_field) {
                 # Taking the corespinding latitude and longitude columns from the report data
                 report_data %>%
-                  # Nameing them longitude and latitude respectively
+                  # Naming them longitude and latitude respectively
                   transmute(
                     across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name)), .names = "{names_to_labels[.col]}")
                   ) %>%
                   # Remove na entries
                   na.omit() %>%
-                  # # Get a column counting each longitude and latitude
-                  # group_by_all() %>%
-                  # summarise(count = n()) %>%
-                  # Send it to our map function
-                  custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label)
+                  # group by pairs of longitudes and latidudes
+                  group_by(across(everything())) %>%
+                  # Add a location id to each latidude/longitude combination
+                  # and add a count for the number of entries per location
+                  summarise(location = cur_group_id(), count = n()) %>%
+                  # Ungroup the output
+                  ungroup() %>%
+                  # Create a custom map
+                  custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, location = "location", count = "count")
               }
 )
 # Use htmltools to print the maps
