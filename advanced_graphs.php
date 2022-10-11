@@ -100,24 +100,16 @@ if(!is_numeric($pid) || !is_numeric($report_id) || $report_id<1) {
 							$r_path = $r_path[0];
 						}
 						
-						$pandocPath = $module->getSystemSetting("pandoc-path");
-						
-						// --- TODO: delete this test ---
-						$test_file = fopen("test_pandoc.txt", "w");
-						fwrite($test_file, $pandocPath);
-						fwrite($test_file, "Wsaa it too empty?");
-						fclose($test_file);
-						// ------------------------------
+						$pandocPath = $pandocPath = $module->getSystemSetting("pandoc-path");
 						
 						if(is_array($pandocPath)){
 							$pandocPath = $pandocPath[0];
 						}
+						
 						if($pandocPath!="") {
-							// $pandocPath = "Sys.setenv(RSTUDIO_PANDOC='$pandocPath');"; 
-							$pandocPath = "Sys.setenv(RSTUDIO_PANDOC='C:/Program Files/RStudio/bin/quarto/bin/tools');"; // TODO: Automate this
-							// The problem most likely has to do with there being many available versions of pandoc available on the machine
-							// and he first one in the $module->getSystemSetting("pandoc-path"); array is the oldest version.
+							$pandocPath = "Sys.setenv(RSTUDIO_PANDOC='$pandocPath');";
 						}
+
 
 						$arr_libPaths = $module->getSystemSetting("r-libraries-path");
 						if(is_array($arr_libPaths)){
