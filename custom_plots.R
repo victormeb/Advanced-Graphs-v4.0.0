@@ -341,7 +341,7 @@ if (n_bars > max_bars) {
 }
   
   # Pass the data to ggplot
-  data %>%
+  p <- list(data %>%
     # Use x and y as out x and y
     ggplot(aes(x=!!x, y = !!y, fill = !!x)) +
     # Create bars
@@ -376,7 +376,12 @@ if (n_bars > max_bars) {
     # Increase the top of the y-axis so labels don't spill off the plot
     scale_y_continuous(expand = expansion(c(0,0.2))) +
     # Add the previously created x axis labels
-    bar_labels
+    bar_labels)
+  
+  if (n_bars > max_bars)
+    p <- p %>% append("<figcaption><b>Warning: too many bars were plotted so some bar labels have been removed</b></figcaption>")
+
+  return(p)  
 }
 
 # custom_stacked
@@ -704,6 +709,7 @@ custom_network <- function(data, x, y) {
          vertex.label.cex = .40,
          vertex.color = "cadetblue3",
          asp = 0)
+  return(list())
 }
 ## IN PROGRESS: NETWORK MAPS
 # make_arrows <- function(p1.lng, p1.lat, p2.lng, p2.lat,  shift = 0.1) {

@@ -354,7 +354,7 @@ for (radio_category in radio_categories) {
 
 ### Numerical bar plots
 
-```{r numerical_bar_plots}
+```{r numerical_bar_plots, eval = T}
 # For each radio category
 for (category in radio_categories) {
   # If the category column isn't empty
@@ -376,7 +376,7 @@ for (category in radio_categories) {
       # TODO: Do we want to drop or keep empty levels
       group_by(category, .drop = FALSE) %>%
       # Get the mean for each group, 0 if there are no numeric fields
-      summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else round(mean(numeric, na.rm = TRUE), 2)) %>%
+      summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else round(mean(numeric, na.rm = TRUE), 2), min = if (n() == 0) 0 else min(numeric, na.rm = TRUE), max = if (n() == 0) 0 else max(numeric, na.rm = TRUE)) %>%
       (function (data){
         # Create side by side plots
         side_by_side(
@@ -403,13 +403,39 @@ for (category in radio_categories) {
         # Title for side by side plots
         title = paste0(names_to_labels[numeric_field], " per ", category$field_label)
         )
+        
+        # Create side by side plots
+        side_by_side(
+          data %>%
+            # Rename the fields based on their field names
+            transmute(
+              "{category$field_label}" := category, 
+              # Get the mean
+              "{paste0(names_to_labels[numeric_field], \" (min)\")}" := min) %>%
+          # Create a custom bar plot
+          custom_bars(x = !!sym(category$field_label), 
+                      y = !!sym(paste0(names_to_labels[numeric_field], " (min)")))
+          # End of plot 1
+          ,
+          # Beginning of plot 2
+          data %>%
+            transmute(
+              "{category$field_label}" := category, 
+              # Get the sum (total)
+              "{paste0(names_to_labels[numeric_field], \" (max)\")}" := max) %>%
+          # Create a custom bar plot
+          custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (max)")))
+        ,
+        # Title for side by side plots
+        title = paste0(names_to_labels[numeric_field], " per ", category$field_label)
+        )
 
       })
   }
 }
 ```
 ### Stacked and grouped bars
-```{r stacked_bars, results='asis', message=FALSE, eval = T}
+```{r stacked_bars, results='asis', message=FALSE}
 # A "New names:" warning is introduced by the custom_crosstabs function
 # TODO: Fix warning from custom_crosstabs
 
@@ -485,39 +511,39 @@ if (length(radio_categories) >= 2) {
         )
 
       # Plot a custom crosstab for either direction of the categorical variables
-      # side_by_side(
-      #   data %>%
-      #     # Pass the data to the custom_crosstab function
-      #     custom_crosstab(
-      #       x = !!sym(radio_pair[[1]]$field_label),
-      #       y = !!sym(radio_pair[[2]]$field_label),
-      #       total = count)
-      #   ,
-      #   data %>%
-      #     # Pass the data to the custom_crosstab function
-      #     custom_crosstab(
-      #       x = !!sym(radio_pair[[2]]$field_label),
-      #       y = !!sym(radio_pair[[1]]$field_label),
-      #       total = count)
-      # )
-      # 
-      # side_by_side(
-      #   data %>%
-      #     # Pass the data to the custom_crosstab function
-      #     custom_crosstab(
-      #       x = !!sym(radio_pair[[1]]$field_label),
-      #       y = !!sym(radio_pair[[2]]$field_label),
-      #       total = percent,
-      #       percent = TRUE)
-      #   ,
-      #   data %>%
-      #     # Pass the data to the custom_crosstab function
-      #     custom_crosstab(
-      #       x = !!sym(radio_pair[[2]]$field_label),
-      #       y = !!sym(radio_pair[[1]]$field_label),
-      #       total = percent,
-      #       percent = TRUE)
-      # )
+      side_by_side(
+        data %>%
+          # Pass the data to the custom_crosstab function
+          custom_crosstab(
+            x = !!sym(radio_pair[[1]]$field_label),
+            y = !!sym(radio_pair[[2]]$field_label),
+            total = count)
+        ,
+        data %>%
+          # Pass the data to the custom_crosstab function
+          custom_crosstab(
+            x = !!sym(radio_pair[[2]]$field_label),
+            y = !!sym(radio_pair[[1]]$field_label),
+            total = count)
+      )
+
+      side_by_side(
+        data %>%
+          # Pass the data to the custom_crosstab function
+          custom_crosstab(
+            x = !!sym(radio_pair[[1]]$field_label),
+            y = !!sym(radio_pair[[2]]$field_label),
+            total = percent,
+            percent = TRUE)
+        ,
+        data %>%
+          # Pass the data to the custom_crosstab function
+          custom_crosstab(
+            x = !!sym(radio_pair[[2]]$field_label),
+            y = !!sym(radio_pair[[1]]$field_label),
+            total = percent,
+            percent = TRUE)
+      )
     })
 
   }
