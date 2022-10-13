@@ -18,9 +18,6 @@ library(plyr, include.only = c("ddply", "."))
 # Used to create maps
 library(leaflet)
 
-# Used to create arrows
-library(leaflet.extras2)
-
 # Used to create network graphs
 library(igraph)
 
@@ -749,83 +746,3 @@ custom_network <- function(data, x, y) {
          asp = 0)
   return(list())
 }
-## IN PROGRESS: NETWORK MAPS
-# make_arrows <- function(p1.lng, p1.lat, p2.lng, p2.lat,  shift = 0.1) {
-#   dist <- sqrt((p1.lng - p2.lng)^2 + (p1.lat - p2.lat)^2)
-#   dy <- shift*(p1.lat - p2.lat)/dist
-#   dx <- shift*(p1.lng - p2.lng)/dist
-#   return(tibble(
-#     from.lng = p1.lng - dy, 
-#     from.lat = p1.lat + dx, 
-#     to.lng = p2.lng - dy, 
-#     to.lat = p2.lat + dx,
-#     center.lng = (from.lng+ to.lng)/2,
-#     center.lat = (from.lat+ to.lat)/2
-#     )
-#   )
-# }
-# 
-# add_arrows <- function(map, data) {
-#   map %>%
-#     htmlwidgets::onRender(
-#       "
-#       function(el, x) {
-#         this.add()
-#       }
-#       "
-#     )
-# }
-# 
-# custom_network_map <- function(data, coord_pair, both = FALSE) {
-#   long_data <- data %>%
-#     transmute(across(coord_pair[[1]]$longitude_name, .names = "x.lng"),
-#               across(coord_pair[[1]]$latitude_name, .names = "x.lat"), 
-#               across(coord_pair[[2]]$longitude_name, .names = "y.lng"),
-#               across(coord_pair[[2]]$latitude_name, .names = "y.lat")
-#               ) %>%
-#     group_by(x.lng, x.lat, y.lng, y.lat) %>%
-#     summarize(center.count = n()) %>%
-#     ungroup() %>%
-#     transmute(make_arrows(x.lng, x.lat, y.lng, y.lat), center.count) %>%
-#     pivot_longer(cols = everything(), names_to = c("set", ".value"), names_pattern = "([^.]+)[.](.*)")
-#   
-#   arrows <- long_data %>%
-#     filter(set != "center")
-# 
-#   labels <- long_data %>%
-#     filter(set == "center")
-#   # print(arrows[["lng"]], digits = 6)
-#   # print(typeof(arrows[,"lng"] %>% unlist()))
-#   # return(data)
-#   return(data %>%
-#     leaflet(height = 800) %>%
-#     addTiles() %>%
-#     addArrowhead(
-#       lng = arrows[["lng"]],
-#       lat = arrows[["lat"]],
-#       weight = 2,
-#       color = "orange",
-#       opacity = 1,
-#       
-#     ) %>%
-#     addLabelOnlyMarkers(
-#       lng = labels[["lng"]],
-#       lat = labels[["lat"]],
-#       label = htmltools::htmlEscape(labels[["count"]]),
-#       labelOptions = labelOptions(noHide = T))
-#     ) %>%
-#     add
-#     htmlwidgets::onRender(
-#       " 
-#         function(el, x) {
-#           this.bindPopup(\"Popup content\");
-#           this.on('mouseover', function (e) {
-#               this.openPopup();
-#           });
-#           this.on('mouseout', function (e) {
-#               this.closePopup();
-#           });
-#         }
-#       "
-#     )
-# }

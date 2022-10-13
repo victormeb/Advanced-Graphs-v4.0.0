@@ -6,10 +6,6 @@ library(dplyr)
 library(tidyr)
 options(dplyr.summarise.inform = FALSE)
 
-# Used for data manipulation
-# Faster thand dplyr
-#library(data.table)
-
 # title_caps
 # Author: Joel Cohen (Based on previously existing work)
 # Description:
