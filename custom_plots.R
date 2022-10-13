@@ -65,6 +65,19 @@ side_by_side <- function(plot1, plot2, title = "") {
   cat("\n\n</div></div>\n\n")
 }
 
+print_single <- function(plot, title = "") {
+  cat("<h4>", title,"</h4><div class=\"clearfix\">")
+  if (class(plot)[1] == "list")
+    for (item in plot)
+      if (class(item)[1] == "character")
+        cat(item)
+      else
+        print(item)
+  else
+    print(plot)
+  cat("\n\n</div>\n\n")
+}
+
 # n_spaced_indices
 # Author: Joel Cohen
 # Description:
@@ -380,7 +393,7 @@ if (n_bars > max_bars) {
   
   if (n_bars > max_bars)
     p <- p %>% append("<figcaption><b>Warning: too many bars were plotted so some bar labels have been removed</b></figcaption>")
-
+  
   return(p)  
 }
 
@@ -652,7 +665,33 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = 
 #   Output:
 #     
 #     A map
-custom_map <- function(data, lat, lng, location, count) {
+custom_map <- function(data, lat, lng, type = NULL, count = NULL) {
+  color = "#03F"
+  weight = 5
+  label = NULL
+  labelOptions = NULL
+  
+  if (!is.null(type)) {
+    pal = colorFactor(turbo(length(unique(data[[type]]))), domain = unique(data[[type]]))
+    color = pal(data[[type]])
+  }
+  
+  if (!is.null(count)) {
+    weight = 1 + 20*data[[count]]/max(data[[count]])
+    label = data[[count]]
+    labelOptions = labelOptions(
+      # Always show labels
+      noHide = T, 
+      # Only sho text
+      textOnly = T, 
+      # Set the color of the text to be white
+      style = list(color = "white"), 
+      # Place labels at center of circle
+      direction = "center"
+    )
+  }
+    
+  
   data %>%
     leaflet(height = 800,) %>%
     addTiles() %>%
@@ -661,21 +700,12 @@ custom_map <- function(data, lat, lng, location, count) {
       lng = data[[lng]],
       lat = data[[lat]],
       # Use the location factor to create colors
-      color = colorFactor(turbo(length(unique(data[[location]]))), domain = unique(data[[location]]))(data[[location]]),
+      color = color,
       # Make the size of the circles appropriate to the count column
-      weight = 1 + 20*data[[count]]/max(data[[count]]),
-      # Add labels to each cirlce
-      label = data[[count]],
-      labelOptions = labelOptions(
-        # Always show labels
-        noHide = T, 
-        # Only sho text
-        textOnly = T, 
-        # Set the color of the text to be white
-        style = list(color = "white"), 
-        # Place labels at center of circle
-        direction = "center"
-      ),
+      weight = weight,
+      # Add labels to each circle
+      label = label,
+      labelOptions = labelOptions,
       # Make cirlce opaque
       opacity = 1,
       stroke = TRUE,
@@ -683,6 +713,14 @@ custom_map <- function(data, lat, lng, location, count) {
       fill = TRUE,
       # Cluster nearby circles together
       clusterOptions = markerClusterOptions( spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1))
+    ) %>%
+    (
+      function(map) {
+        if (!is.null(type))
+          addLegend(map, "bottomright", pal = pal, values = data[[type]])
+        else
+          map
+      }
     ) %>%
     # Add a title
     addControl(paste0(lng, " vs ", lat), position = "bottomleft")
