@@ -112,6 +112,8 @@ The maximum number of this kind of graphs that can be displayed in a given repor
 
 ![Stacked Bars](./img/stacked_bars.png)
 
+![Grouped_Bars](./img/grouped_bars.png)
+
 ![Tabulations](./img/tabulation.png)
 
 <hr>
