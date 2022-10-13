@@ -7,7 +7,7 @@ This REDCap module displays additional advanced graphs from a report in an easy 
 
 ## Prerequisites
 - REDCap >= 8.10.12 (It hasn't been tested for previous versions but it may still work for some recent ones).
-- R Software for stats >= v 3.5.3 and libraries stringi, RColorBrewer, expss, formattable, ggplot2, htmltools, htmlwidgets, leaflet, likert, plyr, psych, RCurl, HH, stringr, igraph and tidyr 
+- R Software for stats >= v 4.1.0 and libraries RCurl, plyr, stringr, dplyr, tidyr, rlang, htmltools, htmlwidgets, leaflet, likert, igraph, viridis, viridisLite, kableExtra, scales, vctrs
 - Export API for each project to use the module
 
 
@@ -16,7 +16,7 @@ This REDCap module displays additional advanced graphs from a report in an easy 
 
 
 ## Manual Installation
-- Clone this repo into `<redcap-root>/modules/advanced_graphs_v2.0.0`.
+- Clone this repo into `<redcap-root>/modules`.
 - Go to **Control Center > External Modules** and enable Advanced Graphs.
 - To activate this module for a particular project, go to the project home page, click on the **External Modules** link, and then enable Advanced Graphs for that project.
 
@@ -36,8 +36,6 @@ The graphs displayed are selected automatically from the **type of fields** incl
 Fields considered are **categorical** (radio buttons, dropdown lists or checkboxes) or **numeric**, **dates**, **calculated fields** and **plain text fields**; 
 the External Module also considers **key words** in the field name or existing options (for Likert scale graphs or geographic maps, for example). Key words considered are in English and Spanish.
 
-In several cases a **couple of graphs** are displayed showing each field involved in a bi-dimensional graph in each of the **horizontal/vertical axes**.
-
 It is recommended to use all features in reports to get adequate graphs. In particular, **filters** are useful to eliminate undesired cases (when appropriate).
 
 Since graphs are generated automatically, their number depends on the number of fields considered in the report. it is recommended to **limit the number of fields** in a report in order to prevent an overflow of graphs. 
@@ -52,11 +50,13 @@ Advanced Graphs takes into consideration live filters selected within the report
 
 Checkboxes in graphs do not work if options are combined into a single column.
 
-yes/no, true/false, signature, file upload, slider, descriptive and dynamic SQL fields are not considered for graphing.
+signature, file upload, slider, descriptive and dynamic SQL fields are not considered for graphing.
 
-Avoid including a great proportion of empty cells in a report or very large reports, as they may cause the graphs to break (removing causes are coming in future versions).
+### Events and Repeated events/instruments 
 
-**Events and Repeated events/instruments** are not considered explicitly in this version. This means that Advanced Graphs works for longitudinal studies but do not consider events or repeated forms/events as a variable in the graphs.
+#### Events
+
+When there are multiple events included in the report, records will be flattened into a single row by choosing the first non-empty row per record ID. If there are repeating instruments **It is necessary to check the "Include the repeating instance fields"** under **Additional report options** in the report editor.
 
 Default reports **A** and **B** from "Data Exports, Reports, and Stats" are not considered in Advanced Graphs.
 
@@ -67,12 +67,8 @@ The possible types of graphs and tables this module can generate are:
 **BAR GRAPHS**
 <hr>
 Bar graphs are displayed horizontally for radio buttons, drop-down list and checkboxes, using different colors and showing value/percentage for each bar.<br /><br/>
-The maximum number of this kind of bar graphs that can be displayed in a given report is 20.<br/><br/>
 When there are many bars, percentage is ommitted.<br/><br/> 
-When there  is an option "other" in a checkbox and there is an associated description field included in the report, 
-that field responses are shown in a table below the graph if the field is labeled as "Please describe other", 
-"Please describe", "Describe other", "Other",
-"Por favor describa otro", "Por favor describa", "Describa otro" or "Otro".<br/><br/>
+
 ![Bar Graph](./img/bar_graph.png)
 
 <hr>
@@ -82,13 +78,13 @@ These are bar graphs specifically designed for preference (ordinal with positive
 It detects if in a radio or dropdown field there is an option with any of the phrases 
 "not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", 
 "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", 
-"worse", "severely ill", 
-"inutil", "in\u00fatil", "completamente inutil", "completamente in\u00fatil", "dificil", "dif\u00edcil", 
+"worse", "severely ill", "inutil", "infatil", "completamente inutil", "completamente infatil", "dificil", 
 "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", 
 "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", 
 "gravemente enfermo"<br /><br />
 It groups all fields included in the report with the same type of response and 
 order them from most positive to less positive responses<br /><br />
+
 ![Likert Scale](./img/likert_scale.png)
 
 <hr>
@@ -104,12 +100,13 @@ It skips fields with "longitude" or "latitude" ("longitud" or "latitud", in Span
 
 
 <hr>
-**STACKED BARS AND TABULATIONS**
+**STACKED BARS, GROUPED BARS AND TABULATIONS**
 <hr>
 These are bars relating two fields.<br /><br />
 Each bar represents the frequency of a category for a radio or dropdown field, 
 broken by parts representing the frequency of another categorical field.<br /><br />
 A couple of graphs are displayed showing each field involved in the graph in the horizontal and in the vertical axes.
+A graph is created for both stacked bars and grouped bars.
 It also presents a cross tabulation of the frequencies.<br /><br />
 The maximum number of this kind of graphs that can be displayed in a given report is 20 (pairs).<br/><br/>
 
@@ -141,7 +138,7 @@ some combinations may just represent responses for each record connected between
 
 ## Testing instrument
 
-This project includes an [Example Instrument](../../modules/advanced_graphs_v1.0.0/docs/AdvancedGraphsDemoProject_2020-01-15.zip) that includes fields, data and reports that can be used to produce each of the type of graphs included in Advanced Graphs. 
+This project includes an [Example Instrument](../../modules/advanced_graphs_v4.0.0/docs/AdvancedGraphsDemoProject_2020-01-15.zip) that includes fields, data and reports that can be used to produce each of the type of graphs included in Advanced Graphs. 
 It has to be added in the configuration. This is suitable for testing or demonstration purposes.
 
 
@@ -150,3 +147,4 @@ It has to be added in the configuration. This is suitable for testing or demonst
  * The plugin to trigger the graphs was written by Alvaro Ciganda and converted to an external module.
  * Alvaro Ciganda greatly contributed to improve efficiency in the R code.
  * Victor Espinosa collaborated in documenting the external module.
+ * Joel Cohen contributed by updating and adding new graph types.
