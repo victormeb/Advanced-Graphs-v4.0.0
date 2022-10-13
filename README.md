@@ -123,7 +123,17 @@ It identifies a couple of fields with the same label, except for the words "long
 The resulting map can be zoomed in or out.<br /><br />
 The maximum number of this kind of graphs that can be displayed in a given report is 20.<br/><br/>
 
+**Location Counts**
+
 ![Geo Maps](./img/geo_map.png)
+
+**Location Clusters**
+
+![Geo Map Cluster](./img/geo_map_cluster)
+
+**Location Cateogries**
+
+![Geo Map Categories](./img/geo_map_categories)
 
 <br/>
 <hr>
