@@ -109,7 +109,7 @@ import_data <- function(parameters, record_id, live_filters) {
     by = c(names(report_data), "adv_graph_internal_duplicates_id")
   ) %>%
     # Flatten the each event into a single row
-    group_by(across(1)) %>%
+    group_by(across(c(1, any_of(c("redcap_repeat_instrument", "redcap_repeat_instance"))))) %>%
     summarise(across(.fns = function(column) first(sort(na.omit(column), decreasing = TRUE)))) %>%
     ungroup() %>%
     select(names(report_data))
