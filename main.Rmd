@@ -30,7 +30,7 @@ params:
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, eval = F, results = "asis")
+knitr::opts_chunk$set(echo = FALSE, eval = T, results = "asis")
 
 # Used for connections to get data from redcap
 library(RCurl)
@@ -305,7 +305,7 @@ for (checkbox_field in checkbox_fields) {
   # If there is at least one field of the form "field_name___[0-9]+" in the report_data
   # create a plot
   if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
-    checkbox_plot <- report_data %>%
+    (report_data %>%
       # Select each column of the report data that matches the current checkbox field
       select(matches(paste0(checkbox_field$field_name, "___[0-9]+\\b"))) %>%
       # Let each column be it's own level in a factor column
@@ -325,14 +325,14 @@ for (checkbox_field in checkbox_fields) {
         count, 
         percent) %>%
       # Create a custom bar plot
-      custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE) %>% print()
+      custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE)) %>% print_single(paste0("Count of ", checkbox_field$field_label))
   }
 }
 
 for (radio_category in radio_categories) {
   # If the entire column isn't NA
   if (!all(is.na(report_data[[radio_category$field_name]])))
-  report_data %>%
+  (report_data %>%
     transmute(
       # Select the column
       across(all_of(radio_category$field_name),
@@ -345,16 +345,16 @@ for (radio_category in radio_categories) {
     # Add a percent column
     mutate(percent = count/sum(count)) %>%
     # Create a custom bar plot
-    custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE) %>%
+    custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE)) %>%
     # Print it
-    print()
+    print_single(title = paste0("Count of ", radio_category$field_label))
 }
 
 ```
 
 ### Numerical bar plots
 
-```{r numerical_bar_plots, eval = T}
+```{r numerical_bar_plots}
 # For each radio category
 for (category in radio_categories) {
   # If the category column isn't empty
@@ -553,7 +553,7 @@ if (length(radio_categories) >= 2) {
 
 ### Maps
 
-```{r maps, eval = T}
+```{r maps}
 # If a field_name contains one of these keywords it will be considered a longitude/latitude column
 # ADD keywords in order of longest starting string to shortest
 # e.g. c("longitude", "longitud", "long", "l")
@@ -606,31 +606,59 @@ if (nrow(coordinate_fields) > 0) {
 
 if (length(coordinate_fields) > 0) {
 # Create a list of maps by
-maps <- lapply(coordinate_fields,
-              function(coordinate_field) {
-                # Taking the corespinding latitude and longitude columns from the report data
-                report_data %>%
+maps <- list()
+
+for (coordinate_field in coordinate_fields) {
+  maps <- maps %>%
+    append(
+      report_data %>%
+        # Naming them longitude and latitude respectively
+        transmute(
+          across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name)), .names = "{names_to_labels[.col]}")
+        ) %>%
+        # Remove na entries
+        na.omit() %>%
+        (function (data) {
+          list(
+            data%>%
+             # group by pairs of longitudes and latitudes
+              group_by(across(everything())) %>%
+              # Add a location id to each latitude/longitude combination
+              # and add a count for the number of entries per location
+              summarise(location = cur_group_id(), count = n()) %>%
+              # Ungroup the output
+              ungroup() %>%
+              # Create a custom map with each location having its own color
+              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = "location", count = "count"),
+            # Create a custom map that clusters the locations
+            data %>%
+              # Create a custom map with each location having its own color
+              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label)
+          )
+        })
+      )
+                  
+                  
+                        
+  
+  if (!any(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name)])))
+    maps <- maps %>%
+      append(lapply(
+        radio_categories,
+        function(category) {
+          report_data %>%
                   # Naming them longitude and latitude respectively
                   transmute(
-                    across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name)), .names = "{names_to_labels[.col]}")
-                  ) %>%
-                  # Remove na entries
-                  na.omit() %>%
-                  # group by pairs of longitudes and latidudes
-                  group_by(across(everything())) %>%
-                  # Add a location id to each latidude/longitude combination
-                  # and add a count for the number of entries per location
-                  summarise(location = cur_group_id(), count = n()) %>%
-                  # Ungroup the output
-                  ungroup() %>%
-                  # Create a custom map
-                  custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, location = "location", count = "count")
-              }
-)
+                    across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)), .names = "{names_to_labels[.col]}")
+                  ) %>% mutate(count = 1) %>%
+                  filter(!is.na(!!sym(coordinate_field$longitude_label)) & !is.na(!!sym(coordinate_field$latitude_label))) %>%
+            custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category$field_label)
+        }))
+}
 # Use htmltools to print the maps
+
 htmltools::tagList(maps)
 }
-
 # if (length(coordinate_fields) >= 2) {
 #   maps <- mapply(custom_network_map, combn(coordinate_fields, 2, simplify = FALSE), MoreArgs = list(data = report_data, both = TRUE), SIMPLIFY = FALSE)
 #   htmltools::tagList(maps)
