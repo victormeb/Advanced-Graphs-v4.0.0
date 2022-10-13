@@ -1,0 +1,245 @@
+"","field_name","form_name","section_header","field_type","field_label","select_choices_or_calculations","field_note","text_validation_type_or_show_slider_number","text_validation_min","text_validation_max","identifier","branching_logic","required_field","custom_alignment","question_number","matrix_group_name","matrix_ranking","field_annotation"
+"1","phn","patient_pcp_information","","text","PHN","","","",NA,NA,"y","","",NA,NA,NA,NA,""
+"2","last_name","patient_pcp_information","Patient Demographics","text","Patient Last Name","","","",NA,NA,"y","","y",NA,NA,NA,NA,""
+"3","first_name","patient_pcp_information","","text","Patient First Name","","","",NA,NA,"y","","y",NA,NA,NA,NA,""
+"4","dob","patient_pcp_information","","text","DOB","","","date_ymd",NA,NA,"y","","y",NA,NA,NA,NA,""
+"5","phone","patient_pcp_information","","text","Patient Phone","","Use hyphens between sections 123-456-7890","phone",NA,NA,"","","",NA,NA,NA,NA,""
+"6","email","patient_pcp_information","","text","Patient Email","","","email",NA,NA,"","","",NA,NA,NA,NA,""
+"7","referring_pcp","patient_pcp_information","Primary Care Provider (PCP) Information","radio","Referring PCP","1, GP|2, Nurse Practitioner (NP)","","",NA,NA,"","","y",NA,NA,NA,NA,""
+"8","referring_pcp_name","patient_pcp_information","","text","Referring PCP name","","last name, first name","",NA,NA,"y","","y",NA,NA,NA,NA,""
+"9","referring_pcp_msp","patient_pcp_information","","text","Referring PCP MSP number","","","integer",NA,NA,"","","y",NA,NA,NA,NA,""
+"10","referring_clinic","patient_pcp_information","","text","Referring clinic","","","",NA,NA,"","","y",NA,NA,NA,NA,""
+"11","city","patient_pcp_information","","dropdown","PCP City","81, Victoria|1, Alert Bay|2, Black Creek|3, Bowser|4, Brentwood Bay|6, Campbell River|7, Cassidy|8, Castlegar|9, Cedar|10, Chemainus|11, Chetwynd|12, Chilanko Fork|13, Cobble Hill|14, Colwood|15, Comox|16, Coombs|91, Cortes Island|18, Courtenay|19, Cowichan Bay|20, Crofton|21, Cumberland|22, Dawson Creek|23, Deep Bay|24, Denman Island|25, Duncan|26, Errington|93, Fanny Bay|27, Fort St. John|28, Gabriola Island|90, Galiano|29, Hornby Island|31, Koksilah|45, Lady Minto|32, Ladysmith|33, Lake Cowichan|35, Lantzville|36, Lazo|37, Malahat|38, Mayne Island|40, Merville|41, Messachie Lake|42, Mill Bay|43, Moberly Lake|44, Nanaimo|46, Nanoose Bay|47, North Saanich|50, Parksville|51, Pender Island|52, Port Alberni|54, Port Alice|55, Port Hardy|56, Port McNeill|57, Powell River|58, Quadra Island|59, Qualicum|60, Qualicum Beach|61, Quathiaski Cove|62, Queen Charlotte City|63, Quesnel|65, Royston|66, Saanichton|67, Salt Spring Island|69, Shawnigan Lake|70, Sidney|71, Sointula|72, Sooke|73, St. Georges - Granada, West Indies|75, Tahsis|76, Thetis Island|77, Tofino|82, Weyburn|84, Woss|85, Youbou|92, Ucluelet|86, Unknown|99, Other","","",NA,NA,"","","",NA,NA,NA,NA,""
+"12","other_city","patient_pcp_information","","text","Other city","","","",NA,NA,"","[city] = '99'","",NA,NA,NA,NA,""
+"13","city_latitude","patient_pcp_information","","calc","City Latitude","if([city]=1, 50.5895753752962, 
+if([city]=2, 49.8394956985018, 
+if([city]=3, 49.4424216868679, 
+if([city]=4, 48.5730171936812, 
+if([city]=6, 50.0244, 
+if([city]=7, 49.0543892886883, 
+if([city]=8, 49.3256, 
+if([city]=9, 49.0853, 
+if([city]=10, 48.9311968861862, 
+if([city]=11, 55.6972, 
+if([city]=12, 52.1692724003629, 
+if([city]=13, 48.6887803683946, 
+if([city]=14, 48.4236, 
+if([city]=15, 49.6733, 
+if([city]=16, 49.3008, 
+if([city]=91, 50.1178285296944, 
+if([city]=18, 49.6878, 
+if([city]=19, 48.7666, 
+if([city]=20, 48.8654083971926, 
+if([city]=21, 49.6206, 
+if([city]=22, 55.7606, 
+if([city]=23, 49.4538585618689, 
+if([city]=24, 49.567670311891, 
+if([city]=25, 48.7787, 
+if([city]=26, 49.2874, 
+if([city]=93, 49.4950862311109, 
+if([city]=27, 56.2465, 
+if([city]=28, 49.1606084203066, 
+if([city]=90, 48.9306486215845, 
+if([city]=29, 49.537656284934, 
+if([city]=31, 48.7595790083773, 
+if([city]=45, 48.862129261484, 
+if([city]=32, 48.9975, 
+if([city]=33, 48.8258, 
+if([city]=35, 49.2512384586029, 
+if([city]=36, 49.7183396839928, 
+if([city]=37, 48.5456336295859, 
+if([city]=38, 48.8409521536522, 
+if([city]=40, 49.7929000906088, 
+if([city]=41, 48.8171548600884, 
+if([city]=42, 48.6517358780643, 
+if([city]=43, 55.8275665832313, 
+if([city]=44, 49.1642, 
+if([city]=46, 49.2742079072023, 
+if([city]=47, 48.6142, 
+if([city]=50, 49.315, 
+if([city]=51, 48.7897478424918, 
+if([city]=52, 49.2339, 
+if([city]=54, 50.4339483194549, 
+if([city]=55, 50.7225, 
+if([city]=56, 50.5903, 
+if([city]=57, 49.8353, 
+if([city]=58, 50.215440298451, 
+if([city]=59, 49.3570200030669, 
+if([city]=60, 49.35, 
+if([city]=61, 50.0516062888886, 
+if([city]=62, 53.2563533452003, 
+if([city]=63, 52.9784, 
+if([city]=65, 49.6405, 
+if([city]=66, 48.484, 
+if([city]=67, 48.8213218130781, 
+if([city]=69, 48.6391944510965, 
+if([city]=70, 48.6506, 
+if([city]=71, 50.6311518913646, 
+if([city]=72, 48.3761, 
+if([city]=73, 48.3761, 
+if([city]=75, 49.8481172751992, 
+if([city]=76, 49.001055493456, 
+if([city]=77, 49.1275, 
+if([city]=81, 48.4283, 
+if([city]=82, 49.6646199889226, 
+if([city]=84, 50.2161271172222, 
+if([city]=85, 48.8562, 
+if([city]=92, 48.9358,""""
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+))))","","",NA,NA,"","","",NA,NA,NA,NA,"@HIDDEN"
+"14","city_longitude","patient_pcp_information","","calc","City longitude","if([city]=1, -126.922789632127, 
+if([city]=2, -125.130188551, 
+if([city]=3, -124.682727664483, 
+if([city]=4, -123.451869991439, 
+if([city]=6, -125.2475, 
+if([city]=7, -123.883708276987, 
+if([city]=8, -117.6661, 
+if([city]=9, -123.8259, 
+if([city]=10, -123.733960586295, 
+if([city]=11, -121.6333, 
+if([city]=12, -124.037268550553, 
+if([city]=13, -123.602976087799, 
+if([city]=14, -123.4958, 
+if([city]=15, -124.9022, 
+if([city]=16, -124.4049, 
+if([city]=91, -124.948700607116, 
+if([city]=18, -124.9944, 
+if([city]=19, -123.6743, 
+if([city]=20, -123.645756858844, 
+if([city]=21, -125.0261, 
+if([city]=22, -120.2356, 
+if([city]=23, -124.710862193402, 
+if([city]=24, -124.797165727034, 
+if([city]=25, -123.7079, 
+if([city]=26, -124.3433, 
+if([city]=93, -124.819466785971, 
+if([city]=27, -120.8476, 
+if([city]=28, -123.789027553319, 
+if([city]=90, -123.442063375298, 
+if([city]=29, -124.676325865766, 
+if([city]=31, -123.682336363054, 
+if([city]=45, -123.508345022946, 
+if([city]=32, -123.8203, 
+if([city]=33, -124.0542, 
+if([city]=35, -124.07484991072, 
+if([city]=36, -124.910778371531, 
+if([city]=37, -123.564627055225, 
+if([city]=38, -123.286615878014, 
+if([city]=40, -125.0482454472, 
+if([city]=41, -124.127790983353, 
+if([city]=42, -123.557362901652, 
+if([city]=43, -121.789625977652, 
+if([city]=44, -123.9364, 
+if([city]=46, -124.192329582716, 
+if([city]=47, -123.42, 
+if([city]=50, -124.312, 
+if([city]=51, -123.289954095307, 
+if([city]=52, -124.805, 
+if([city]=54, -127.487085641404, 
+if([city]=55, -127.4928, 
+if([city]=56, -127.0847, 
+if([city]=57, -124.5247, 
+if([city]=58, -125.265104156528, 
+if([city]=59, -124.441824113076, 
+if([city]=60, -124.4333, 
+if([city]=61, -125.218776700515, 
+if([city]=62, -132.086738619858, 
+if([city]=63, -122.4927, 
+if([city]=65, -124.9406, 
+if([city]=66, -123.381, 
+if([city]=67, -123.497168482127, 
+if([city]=69, -123.64046017944, 
+if([city]=70, -123.3986, 
+if([city]=71, -127.018285531525, 
+if([city]=72, -123.7378, 
+if([city]=73, -123.7378, 
+if([city]=75, -126.610756764087, 
+if([city]=76, -123.679849458548, 
+if([city]=77, -125.8852, 
+if([city]=81, -123.3647, 
+if([city]=82, -103.852832918653, 
+if([city]=84, -126.589562785089, 
+if([city]=85, -124.1731, 
+if([city]=92, -125.5433,"""" 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+)))))))))) 
+))))","","",NA,NA,"","","",NA,NA,NA,NA,"@HIDDEN"
+"15","referral_complete_yn","phase_1_referral","","yesno","Referral complete / appropriate","","Process immediately, even if incomplete. Do not process if 'inappropriate'","",NA,NA,"","","y",NA,NA,NA,NA,""
+"16","incomplete_reason","phase_1_referral","","checkbox","Referral incomplete/ inappropriate reason/s","1, Imaging missing|2, Patient not aware of diagnosis|3, Section incomplete|4, Incorrect referral form|5, Inappropriate referral, not within inclusion criteria|99, Other {incomplete_other_reason}","Check ALL that apply. Process even if incomplete. Do not process if inappropriate","",NA,NA,"","[referral_complete_yn] = '0'","y",NA,NA,NA,NA,""
+"17","incomplete_other_reason","phase_1_referral","","text","Other reason","","","",NA,NA,"","[incomplete_reason(99)] = 1","",NA,NA,NA,NA,""
+"18","status_update_on_incomplet","phase_1_referral","","checkbox","Status Update on Incomplete Referral Information","1, Outstanding information received and sent to PA|2, No response from PCP after 3 days of phone/ fax attempts; follow-up discontinued","Upload Referral form & documents once complete","",NA,NA,"","[referral_complete_yn] = '0'","y",NA,NA,NA,NA,""
+"19","patient_age","phase_1_referral","","calc","Patient age","rounddown(datediff([dob], ""today"", ""y""), 0)","Full years","",NA,NA,"","","",NA,NA,NA,NA,""
+"20","patient_under_40_mssg","phase_1_referral","","descriptive","<div class=""rich-text-field-label""><p><span style=""color: #e67e23;"">Patient is under the age of 41</span></p></div>","","","",NA,NA,"","[patient_age] < 41","",NA,NA,NA,NA,""
+"21","fas_or_physicians_named","phase_1_referral","","radio","FAS or specific physician request","1, FAS|2, Requested Physicians","","",NA,NA,"","","y",NA,NA,NA,NA,""
+"22","fas_cycle","phase_1_referral","","text","FAS cycle","","Refer to cycle tracker","integer",NA,NA,"","[fas_or_physicians_named] = '1'","y",NA,NA,NA,NA,""
+"23","surgeons","phase_1_referral","","descriptive","<div class=""rich-text-field-label""><p>Surgeons:</p> <table style=""border-collapse: collapse; width: 100%;"" border=""1""> <tbody> <tr> <td style=""width: 50%;"">Originally requested</td> <td style=""width: 50%;"">Allocated</td> </tr> <tr> <td style=""width: 50%;"">{original_request_physician}</td> <td style=""width: 50%;"">{surgeon_allocated}</td> </tr> </tbody> </table></div>","","","",NA,NA,"","","",NA,NA,NA,NA,""
+"24","original_request_physician","phase_1_referral","","checkbox","Originally requested Surgeons","1, Dr. Bradley Amson|2, Dr. Darren Biberdorf|3, Dr. Johann Cunningham|4, Dr. Heather Emmerton-Coughlin|5, Dr. Allen Hayashi|6, Dr. Sohrab Khorasani|7, Dr. Elaine Lam|8, Dr. Alison Ross|9, Dr. Bao Tang","","",NA,NA,"","[fas_or_physicians_named] = '2'","y",NA,NA,NA,NA,""
+"25","same_surgeons_warning","phase_1_referral","","descriptive","<div class=""rich-text-field-label""><p><span style=""color: #ba372a;""><span style=""color: #e03e2d;"">Warning: </span></span><span style=""color: #ba372a; font-weight: normal;"">Since this patient was switch to FAS, originally requested physician and designated one </span><span style=""color: #ba372a;""><em>cannot be the same</em></span></p></div>","","","",NA,NA,"","[follow_up_response_from_gp] = 1 AND (
+(  [surgeon_allocated] = 1  and [original_request_physician(1)]  = 1  )   or 
+(  [surgeon_allocated] = 2  and [original_request_physician(2)]  = 1  )   or 
+(  [surgeon_allocated] = 3  and [original_request_physician(3)]  = 1  )   or 
+(  [surgeon_allocated] = 4  and [original_request_physician(4)]  = 1  )   or 
+(  [surgeon_allocated] = 5  and [original_request_physician(5)]  = 1  )   or 
+(  [surgeon_allocated] = 6  and [original_request_physician(6)]  = 1  )   or 
+(  [surgeon_allocated] = 7  and [original_request_physician(7)]  = 1  )   or 
+(  [surgeon_allocated] = 8  and [original_request_physician(8)]  = 1  )   or 
+(  [surgeon_allocated] = 9  and [original_request_physician(9)]  = 1  )
+)","",NA,NA,NA,NA,""
+"26","referral_received","phase_1_referral","","text","Date Referral received at Central Intake","","","date_ymd",NA,NA,"","","y",NA,NA,NA,NA,""
+"27","specific_surgeon_date","phase_1_referral","","text","Tentative Specific Surgeon Surgery Date","","","date_ymd",NA,NA,"","[fas_or_physicians_named] = '2'","y",NA,NA,NA,NA,""
+"28","number_days_to_spec_surg","phase_1_referral","","calc","Number of days wait for Specific Surgeon request","datediff( [specific_surgeon_date], [referral_received], ""d"" )","Auto-calculated","",NA,NA,"","[specific_surgeon_date] <> ''","",NA,NA,NA,NA,""
+"29","tnttve_centl_referral_date","phase_1_referral","","text","Tentative First Available Surgery (FAS) Date ","","","date_ymd",NA,NA,"","[fas_or_physicians_named] = 1 or [follow_up_response_from_gp] = 1","y",NA,NA,NA,NA,""
+"30","spec_surg_n_fas_gt_7","phase_1_referral","","yesno","Difference between Specific Surgeon request date and FAS date 7 days or greater?","","","",NA,NA,"","[fas_or_physicians_named] = 2 and [number_days_to_spec_surg] > 28","y",NA,NA,NA,NA,""
+"31","date_waittime_sent_pcp","phase_1_referral","","text","Date ""Wait Time Notification Letter"" Sent to PCP","","","date_ymd",NA,NA,"","[fas_or_physicians_named] = '2' and [spec_surg_n_fas_gt_7] = 1","y",NA,NA,NA,NA,""
+"32","date_fna_follow_up","phase_1_referral","","text","Date PCP confirmed ""wait > 28 day"" decision or date Clerk processed due to ""no response""","","","date_ymd",NA,NA,"","[date_waittime_sent_pcp] <> ''","y",NA,NA,NA,NA,""
+"33","follow_up_response_from_gp","phase_1_referral","","radio","Follow up  response from PCP, if wait beyond 28 days","1, Switch to FAS|2, Wait for Surgeon|3, No response within 3 days, processed as per original","","",NA,NA,"","[number_days_to_spec_surg] > 28 and [spec_surg_n_fas_gt_7] = 1","",NA,NA,NA,NA,""
+"34","pcp_decision_documentation","phase_1_referral","","file","Wait Time Notification/ PCP Decision Letter re: Wait > 28 days","","Upload documents","",NA,NA,"","[number_days_to_spec_surg] > 28 and [spec_surg_n_fas_gt_7] = 1","",NA,NA,NA,NA,""
+"35","number_days_to_fas_date","phase_1_referral","","calc","Number of days to FAS Date","if([fas_or_physicians_named] = '1' or [follow_up_response_from_gp] = '1',
+datediff( [tnttve_centl_referral_date], [referral_received], ""d"" ),'')","Auto-calculated","",NA,NA,"","[fas_or_physicians_named] = '1' or [follow_up_response_from_gp] = '1'","",NA,NA,NA,NA,""
+"36","surgeon_allocated","phase_1_referral","","radio","Surgeon Allocated","1, Dr. Bradley Amson|2, Dr. Darren Biberdorf|3, Dr. Johann Cunningham|4, Dr. Heather Emmerton-Coughlin|5, Dr. Allen Hayashi|6, Dr. Sohrab Khorasani|7, Dr. Elaine Lam|8, Dr. Alison Ross|9, Dr. Bao Tang","","",NA,NA,"","","y",NA,NA,NA,NA,""
+"37","date_referral_sent_pa_bhc","phase_1_referral","","text","Date Referral Sent to PA & BHC","","","date_ymd",NA,NA,"","","y",NA,NA,NA,NA,""
+"38","weekend_statutory","phase_1_referral","","checkbox","Referral Processing Over Weekends/ Stats?","1, Weekend (2 days)|2, Stat holidays, number of days: {number_statutory_days}","Only if applicable","",NA,NA,"","","",NA,NA,NA,NA,""
+"39","number_statutory_days","phase_1_referral","","text","Number of statutory days","","","integer",NA,NA,"","[weekend_statutory(2)] = 1","",NA,NA,NA,NA,""
+"40","number_days_clrk_proces","phase_1_referral","","calc","Number of  pure processing days for Clerk  to process the referral (Wait Time Notification Excluded)","datediff( [date_referral_sent_pa_bhc], [referral_received], ""d"" ) + 1 -      (    rounddown(   datediff( [date_referral_sent_pa_bhc], [referral_received], ""d"" )     /7) * 2                                    )  -    (           datediff( [date_fna_follow_up], [date_waittime_sent_pcp], ""d"" )           -      (    rounddown(   datediff( [date_fna_follow_up], [date_waittime_sent_pcp], ""d"" )     /7) * 2                                    )        )","Auto-calculated, obvious weekend days removed (when dates differ  for more than 7 days)","",NA,NA,"","","",NA,NA,NA,NA,"@HIDDEN"
+"41","number_days_clrk_proces_2","phase_1_referral","","calc","Number of  pure processing days for Clerk  to process the referral (Wait Time Notification Excluded)","max(   if( [date_referral_sent_pa_bhc] <> '' and [referral_received] <> '', datediff( [date_referral_sent_pa_bhc], [referral_received], ""d"" ) , 0)        -     sum(        if( [date_fna_follow_up] <> '' and [date_waittime_sent_pcp] <> '',     datediff( [date_fna_follow_up], [date_waittime_sent_pcp], ""d"" )   , 0)           ,   [number_statutory_days]  ,  2 *  [weekend_statutory(1)]   ),    0)","Auto-calculated. Review date fields if negative #","",NA,NA,"","","",NA,NA,NA,NA,""
+"42","days_for_pcp_rspnd_letter","phase_1_referral","","calc","Number of days for PCP to respond to Wait Time Notification letter","if( [date_fna_follow_up] <> '' and [date_waittime_sent_pcp] <> '',     datediff( [date_fna_follow_up], [date_waittime_sent_pcp], ""d"" )   , 0)","Auto-calculated. Review date fields if negative #","",NA,NA,"","","",NA,NA,NA,NA,""
+"43","reason_processing_delay","phase_1_referral","","notes","Reason for referral processing delay over 2 business days, not including Wait Time Notification :","","","",NA,NA,"","[number_days_clrk_proces] > 2","y",NA,NA,NA,NA,""
+"44","referral_notes","phase_1_referral","","notes","Referral notes, if applicable","","If applicable","",NA,NA,"","","",NA,NA,NA,NA,""
+"45","referral_form","phase_1_referral","","file","Referral form","","Upload form here","",NA,NA,"","","",NA,NA,NA,NA,""
+"46","phase_1_info","phase_2_consult","","descriptive","<div class=""rich-text-field-label""><p><span style=""color: #236fa1;"">Referral info:</span><br /><br /><span style=""color: #236fa1; font-weight: normal;"">Date Referral received at Central Intake: [referral_received][last-instance]","","","",NA,NA,"","","",NA,NA,NA,NA,""
+"47","consult_date","phase_2_consult","","text","Consult date","","","date_ymd",NA,NA,"","","y",NA,NA,NA,NA,""
+"48","date_bhc_contact","phase_2_consult","","text","Date of BHC first contact","","","date_ymd",NA,NA,"","","y",NA,NA,NA,NA,""
+"49","number_of_business_days","phase_2_consult","","text","<div class=""rich-text-field-label""><p>Manual count of number of<span style=""text-decoration: underline;""> business</span> days to BHC contact </p></div>","","Begin with day 1 as the day AFTER he referral was sent to BHC & the day of contact counting as the last day.  Note '0' if BHC contacted before Referral received","",NA,NA,"","","",NA,NA,NA,NA,""
+"50","how_contact_initiated","phase_2_consult","","radio","How was contact initiated between the BHC and patient?","1, Standard SIIBCP Program Procedures|2, Contact Initiated Otherwise","Standard process: Referral triggers contact which is default, note if otherwise","",NA,NA,"","","y",NA,NA,NA,NA,""
+"51","intake_form","phase_2_consult","","file","Intake Form","","Upload form here","",NA,NA,"","","",NA,NA,NA,NA,""
+"52","phase_1_2_info","phase_3_surgery","","descriptive","<div class=""rich-text-field-label""><p><span style=""color: #236fa1;"">Referral info:</span><br /><br /><span style=""font-weight: normal; color: #236fa1;"">Date Referral received at Central Intake: [referral_received][last-instance]</span><br /><span style=""font-weight: normal; color: #236fa1;"">Tentative FAS date: [tnttve_centl_referral_date][last-instance]</span></p> <p><span style=""font-weight: normal; color: #236fa1;"">Tentative Specific Surgeon date: [specific_surgeon_date][last-instance]</span></p> <p><span style=""font-weight: normal; color: #236fa1;"">Original Surgeon allocated: [original_request_physician][last-instance]</span></p> <p><span style=""font-weight: normal; color: #236fa1;"">Surgeon allocated, FAS or if there was a switch: [surgeon_allocated][last-instance]</span></p> <p><span style=""color: #236fa1;"">Consult info:</span><br /><br /><span style=""color: #236fa1; font-weight: normal;"">Consult date: [consult_date]</span><br /><br /></p></div>","","","",NA,NA,"","","",NA,NA,NA,NA,""
+"53","surgery_delayed_cancel","phase_3_surgery","","radio","Surgery delayed or cancelled?","1, Surgery not proceeding, please specify: {reason_not_proceeding}|2, Delayed","Only complete if cancelled or delay from FAS/Tentative date","",NA,NA,"","","",NA,NA,NA,NA,""
+"54","reason_not_proceeding","phase_3_surgery","","text","Reason for not proceeding, please specify:","","","",NA,NA,"","","",NA,NA,NA,NA,""
+"55","reason_delaying","phase_3_surgery","","checkbox","Reason for delay obtained from surgeon consult ","1, Neoadjuvent, specify # of days including washout|2, Investigations, specify # of days|3, Patient delay, specify # of days|4, Surgeon delay, specify # of days|99, Other, specify # of days","","",NA,NA,"","[surgery_delayed_cancel] = '2'","",NA,NA,NA,NA,""
+"56","days_delay_neoadj","phase_3_surgery","","text","Please specify Neoadjuvent number of days of  delay","","","integer",NA,NA,"","[reason_delaying(1)] = '1'","y",NA,NA,NA,NA,""
+"57","days_delay_invest","phase_3_surgery","","text","Please specify Investigations number of days of  delay","","","integer",NA,NA,"","[reason_delaying(2)] = '1'","y",NA,NA,NA,NA,""
+"58","days_delay_patient","phase_3_surgery","","text","Please specify Patient's number of days of  delay","","","integer",NA,NA,"","[reason_delaying(3)] = '1'","y",NA,NA,NA,NA,""
+"59","days_delay_surgeon","phase_3_surgery","","text","Please specify Surgeon's number of days of  delay","","","integer",NA,NA,"","[reason_delaying(4)] = '1'","y",NA,NA,NA,NA,""
+"60","days_delay_other","phase_3_surgery","","text","Please specify Other number of days of  delay","","","integer",NA,NA,"","[reason_delaying(99)] = '1'","y",NA,NA,NA,NA,""
+"61","site_surgery_conducted","phase_3_surgery","","radio","Hospital site surgery conducted","1, VGH|2, RJH|3, SPH","","",NA,NA,"","","y",NA,NA,NA,NA,""
+"62","fine_wire_surgery","phase_3_surgery","","radio","Fine Wire Surgery","1, Yes|2, No","obtain from consult notes","",NA,NA,"","","",NA,NA,NA,NA,""
+"63","actual_surgery_date","phase_3_surgery","","text","Actual Surgery Date","","","date_ymd",NA,NA,"","","",NA,NA,NA,NA,""
+"64","actual_wait_for_surgery","phase_3_surgery","","calc","Actual Wait for Surgery","datediff( [date_referral_sent_pa_bhc], [actual_surgery_date], ""d"" )","","",NA,NA,"","","",NA,NA,NA,NA,""
+"65","adjusted_wait_surgery","phase_3_surgery","","calc","Adjusted Wait for Surgery","datediff( [date_referral_sent_pa_bhc], [actual_surgery_date], ""d"" ) - if([surgery_delayed_cancel] = 2, sum( [days_delay_neoadj] , [days_delay_invest]  , [days_delay_patient] , [days_delay_surgeon] , [days_delay_other]   )   , '' )","","",NA,NA,"","","",NA,NA,NA,NA,""
+"66","anticipated_wait_surgery","phase_3_surgery","","calc","Anticipated Wait for Surgery","if( [fas_or_physicians_named] = 2,  datediff( [date_referral_sent_pa_bhc], [specific_surgeon_date], ""d"" )   , '')
++ if( [fas_or_physicians_named] = 1,  datediff( [date_referral_sent_pa_bhc], [tnttve_centl_referral_date], ""d"" )   , '')","","",NA,NA,"","","",NA,NA,NA,NA,""
+"67","actual_wait_for_surgery_2","phase_3_surgery","","calc","Difference between adjusted wait and anticipated wait","[adjusted_wait_surgery] - [anticipated_wait_surgery]","","",NA,NA,"","","",NA,NA,NA,NA,""
+"68","surgery_notes","phase_3_surgery","","notes","Reason for additional delay?
+Delay notes, if applicable or if seemingly out of alignment.
+","","If applicable","",NA,NA,"","","",NA,NA,NA,NA,""
