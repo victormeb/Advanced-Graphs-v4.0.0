@@ -129,11 +129,11 @@ The maximum number of this kind of graphs that can be displayed in a given repor
 
 **Location Clusters**
 
-![Geo Map Cluster](./img/geo_map_cluster)
+![Geo Map Cluster](./img/geo_map_cluster.png)
 
 **Location Cateogries**
 
-![Geo Map Categories](./img/geo_map_categories)
+![Geo Map Categories](./img/geo_map_categories.png)
 
 <br/>
 <hr>
