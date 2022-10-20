@@ -97,7 +97,6 @@ print_single <- function(plot, title = "") {
 # Used in custom_bars and custom_stacked to remove labels
 n_spaced_indices <- function(m, n) {
   unique(((0:(n-1))*(m-1))%/%(n-1) + 1)
-  # elements[unique(round(seq(1, length(elements), by = length(elements)/n)))]
 }
 
 
@@ -190,6 +189,36 @@ n_levels <- function(data, x, weight, n, kept_factors = NULL, combined_name = "[
       group_by(!!x, !!!kept_factors) %>%
       summarise(!!weight := grouping_fn(!!weight))
   )
+}
+
+# n_spaces_indices_zeros_first
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a numerical vector potentially containing zeros
+#   and a maximum number of elements to take n from said vector
+#   and returns the indexes of the vector where zeroes are removed
+#   before removing evenly spaced values
+#
+#   Input:
+#     
+#     data - A vector potentialy containing zeros
+#
+#     n - The number of evenly spaced elements to take from the vector
+#
+#   Output:
+#     
+#     The indexes for the evenly spaced elements where zeroes were removed first.
+#
+# Used in custom_bars and custom_stacked to remove labels
+n_spaces_indices_zeros_first <- function(data, n) {
+  not_zeros <- which(data != 0)
+  zeros <- which(data==0)
+  
+  if (length(not_zeros) > n) 
+    not_zeros[n_spaced_indices(length(not_zeros), n)] 
+  else 
+    c(not_zeros, zeros[n_spaced_indices(length(zeros), n-length(zeros))])
 }
 
 # custom_likert
@@ -395,7 +424,31 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
   return(p)  
 }
 
-custom_pie <- function(data, x, y, title = "") {
+# custom_pie
+# Author: Joel Cohen
+# Description:
+#   
+#   Takes a dataframe containing one factor column and one numerical column and creates a barplot
+#
+#   Input:
+#     
+#     data - A datframe containing a categorical and numerical column
+#     
+#     x - The categorical column in data, passed as a symbol
+#
+#     y - The numerical column in data, passed as a symbol
+#
+#     (OPTIONAL)
+#
+#     title - The title for the plot (defaults to nothing)
+#     
+#     max_labels - The maximum number of labels to display.
+#       default: 15
+#
+#   Output:
+#     
+#     A pie chart
+custom_pie <- function(data, x, y, title = "", max_labels = 15) {
   # Enquo the x and y variables
   x <- enquo(x)
   y <- enquo(y)
@@ -409,9 +462,12 @@ custom_pie <- function(data, x, y, title = "") {
   # Compute whether text should be dark or light based off colours
   text_color <- if_else(farver::decode_colour(label_color, "rgb", "hcl")[,"l"] > 50, "black", "white")
   
+  categories_kept <- categories[n_spaces_indices_zeros_first(eval_tidy(y, data), max_labels)]
+  
   # Compute the label positions
   label_pos <- data %>% 
-    filter(!!y != 0) %>%
+    mutate(text_color = text_color) %>%
+    filter(!!x %in% categories_kept) %>%
     mutate(
       label = !!x,
       csum = rev(cumsum(rev(!!y))), 
@@ -419,7 +475,9 @@ custom_pie <- function(data, x, y, title = "") {
       pos = if_else(is.na(pos), !!y/2, pos)
     )
   
-  data %>%
+  #options(ggrepel.max.overlaps = Inf)
+  
+  p <- list(data %>%
     ggplot(aes(x="", y=!!y, fill=!!x)) +
     # Add "Bars"
     geom_bar(width = 1, color = "white", stat='identity') +
@@ -428,23 +486,31 @@ custom_pie <- function(data, x, y, title = "") {
     # Add "Turbo" viridis colours
     scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = label_pos$label) +
     # Add labels to slices (amounts)
+    
     geom_text(aes(label = replace(!!y, !!y == 0, "")),
               position = position_stack(vjust = 0.5),
               color = text_color) +
     # Add labels to slices
-    scale_y_continuous(breaks = label_pos$pos, 
-                       label = label_pos$label)+
+    scale_y_continuous(breaks = NULL)+
+    ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos), nudge_x = 1, color = label_pos$text_color, max.overlaps = Inf)+
+      guides(fill = guide_legend(override.aes = aes(label = "")))+
+    # scale_color_manual(values = text_color) +
     # Add title
-    ggtitle(title) +
+    #ggtitle(title) +
     theme(
       # Remove ticks
       axis.ticks = element_blank(),
       # Set label size
       axis.text = element_text(size = 15),
+      axis.title.y = element_blank(),
       # Set title size and position
       plot.title = element_text(hjust = 0.5, size=5)
-    )
+    ))
   
+  if (length(categories) > max_labels)
+    p <- p %>% append("<figcaption><b>Warning: too many categories were plotted so some labels have been removed</b></figcaption>")
+  
+  return(p)
 }
 # custom_stacked
 # Author: Joel Cohen
