@@ -491,9 +491,13 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
               position = position_stack(vjust = 0.5),
               color = text_color) +
     # Add labels to slices
-    scale_y_continuous(breaks = NULL)+
-    ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos), nudge_x = 1, color = label_pos$text_color, max.overlaps = Inf)+
-      guides(fill = guide_legend(override.aes = aes(label = "")))+
+    scale_y_continuous(breaks = label_pos$pos, labels = label_pos$label)+
+    ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos), 
+                              nudge_x = 1, 
+                              color = label_pos$text_color, 
+                              max.overlaps = Inf,
+                              show.legend = FALSE)+
+      guides(fill = "none")+
     # scale_color_manual(values = text_color) +
     # Add title
     #ggtitle(title) +
@@ -501,8 +505,10 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
       # Remove ticks
       axis.ticks = element_blank(),
       # Set label size
-      axis.text = element_text(size = 15),
+      axis.text.y = element_text(size = 15),
+      axis.text.x = element_blank(),
       axis.title.y = element_blank(),
+      #legend.position = "none",
       # Set title size and position
       plot.title = element_text(hjust = 0.5, size=5)
     ))
