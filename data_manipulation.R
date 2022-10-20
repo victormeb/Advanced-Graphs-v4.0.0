@@ -73,8 +73,7 @@ import_data <- function(parameters, record_id, live_filters) {
     exportCheckboxLabel='false',
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ), header = TRUE, sep = ",", stringsAsFactors = FALSE) %>%
-    group_by()
+  ), header = TRUE, sep = ",", stringsAsFactors = FALSE) 
   
   # Retrieve all records from the project
   all_records <- read.csv(text = postForm(
@@ -105,10 +104,10 @@ import_data <- function(parameters, record_id, live_filters) {
     by = c(names(report_data), "adv_graph_internal_duplicates_id")
   ) %>%
     # Flatten the each event into a single row
-    group_by(across(c(1, any_of(c("redcap_repeat_instrument", "redcap_repeat_instance"))))) %>%
-    summarise(across(.fns = function(column) first(sort(na.omit(column), decreasing = TRUE)))) %>%
-    ungroup() %>%
-    select(names(report_data))
+   group_by(across(c(1, any_of(c("redcap_repeat_instrument", "redcap_repeat_instance"))))) %>%
+   summarise(across(.fns = function(column) first(sort(na.omit(column), decreasing = TRUE)))) %>%
+   ungroup() %>%
+   select(names(report_data))
   
   # If there are no live_filters active, return the flattened report_data
   if (nrow(live_filters) == 0) return(report_data_flattened)
