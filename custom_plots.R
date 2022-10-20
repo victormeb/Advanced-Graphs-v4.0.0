@@ -1,6 +1,7 @@
 # --- Used for creating plots ---
 # Used for many nice looking plots
 library(ggplot2)
+library(ggrepel) 
 
 # Used for likert plots
 library(likert)
@@ -345,10 +346,10 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
       vjust = -0.5,
       size = label_size)
   # If there are more than max_bars bars rotate the labels 90 degrees
-if (n_bars > max_bars) {
-  angle_rotation <- 90
-  v_just <- 0
-}
+  if (n_bars > max_bars) {
+    angle_rotation <- 90
+    v_just <- 0
+  }
   
   # Pass the data to ggplot
   p <- list(data %>%
@@ -394,6 +395,57 @@ if (n_bars > max_bars) {
   return(p)  
 }
 
+custom_pie <- function(data, x, y, title = "") {
+  # Enquo the x and y variables
+  x <- enquo(x)
+  y <- enquo(y)
+  
+  # Get the levels for the bars
+  categories <- levels(eval_tidy(x, data))
+  
+  # Compute the label colours
+  label_color <- if (any(is.na(categories))) c(viridis(length(categories)-1), "grey") else viridis(length(categories))
+  
+  # Compute whether text should be dark or light based off colours
+  text_color <- if_else(farver::decode_colour(label_color, "rgb", "hcl")[,"l"] > 50, "black", "white")
+  
+  # Compute the label positions
+  label_pos <- data %>% 
+    filter(!!y != 0) %>%
+    mutate(
+      label = !!x,
+      csum = rev(cumsum(rev(!!y))), 
+      pos = !!y/2 + lead(csum, 1),
+      pos = if_else(is.na(pos), !!y/2, pos)
+    )
+  
+  data %>%
+    ggplot(aes(x="", y=!!y, fill=!!x)) +
+    # Add "Bars"
+    geom_bar(width = 1, color = "white", stat='identity') +
+    # Convert to pie
+    coord_polar(theta = "y", clip = "off") +
+    # Add "Turbo" viridis colours
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = label_pos$label) +
+    # Add labels to slices (amounts)
+    geom_text(aes(label = replace(!!y, !!y == 0, "")),
+              position = position_stack(vjust = 0.5),
+              color = text_color) +
+    # Add labels to slices
+    scale_y_continuous(breaks = label_pos$pos, 
+                       label = label_pos$label)+
+    # Add title
+    ggtitle(title) +
+    theme(
+      # Remove ticks
+      axis.ticks = element_blank(),
+      # Set label size
+      axis.text = element_text(size = 15),
+      # Set title size and position
+      plot.title = element_text(hjust = 0.5, size=5)
+    )
+  
+}
 # custom_stacked
 # Author: Joel Cohen
 # Description:
@@ -473,6 +525,14 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
               data = data %>%
                 group_by(!!x) %>%
                 summarise(!!fill := sum(!!fill)), size = bar_text, vjust = -0.2)
+    
+    # Stack text colors
+    stack_colors <- if (any(is.na(color_names))) c(turbo(length(color_names) - 1), "grey") else turbo(length(color_names))
+    stack_colors <- data %>%
+      group_by(!!x) %>%
+      mutate(stack_colors = if (any(is.na(!!y))) c(turbo(length(!!y) - 1), "grey") else turbo(length(!!y)),
+             stack_text_colors = if_else(farver::decode_colour(stack_colors, "rgb", "hsl")[, "l"] > 50, "black", "white")
+      )
     # Add stack labels
       # Get the sizes for the individual stacks
     stack_size <- eval_tidy(fill, data = data)
@@ -480,7 +540,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     stack_text <- 1 + (bar_text-1)*stack_size/max(stack_size)
       # Create a geom of labels
     stack_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(!!fill, !!fill == 0, "")),
-              position = (position_stack(vjust = 0.5)), color = "white", size = stack_text)
+              position = (position_stack(vjust = 0.5)), color = stack_colors[["stack_text_colors"]], size = stack_text)
   }
   
   # If there are more than max_bars bars (or groups)
@@ -714,7 +774,7 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL) {
     (
       function(map) {
         if (!is.null(type))
-          addLegend(map, "bottomright", pal = pal, values = data[[type]])
+          addLegend(map, "bottomright", pal = pal, values = data[[type]], title = type)
         else
           map
       }
