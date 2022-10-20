@@ -408,7 +408,7 @@ for (category in radio_categories) {
       # Get the mean for each group, 0 if there are no numeric fields
       summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else round(mean(numeric, na.rm = TRUE), 2), min = if (n() == 0) 0 else min(numeric, na.rm = TRUE), max = if (n() == 0) 0 else max(numeric, na.rm = TRUE)) %>%
       (function (data){
-        # Create side by side plots
+        # Side by side mean bar chart and pie chart
         side_by_side(
           data %>%
             # Rename the fields based on their field names
@@ -427,7 +427,7 @@ for (category in radio_categories) {
               "{category$field_label}" := category, 
               # Get the mean
               "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
-          # Create a custom bar plot
+          # Create a custom pie chart
           custom_pie(x = !!sym(category$field_label), 
                     y = !!sym(paste0(names_to_labels[numeric_field], " (mean)")),
                     title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label))
@@ -436,7 +436,7 @@ for (category in radio_categories) {
         title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label)
         )
         
-        # Create side by side plots
+        # Side by side total bar chart and pie chart
         side_by_side(
           # Beginning of plot 2
           data %>%
@@ -460,6 +460,7 @@ for (category in radio_categories) {
         title = paste0(names_to_labels[numeric_field], " (total) per ", category$field_label)
         )
         
+        # Side by side min bar chart and pie chart
         side_by_side(
           data %>%
             # Rename the fields based on their field names
@@ -487,6 +488,7 @@ for (category in radio_categories) {
         title = paste0(names_to_labels[numeric_field], " (min) per ", category$field_label)
         )
         
+        # Side by side max bar chart and pie chart
         side_by_side(
           data %>%
             transmute(
@@ -521,7 +523,6 @@ for (category in radio_categories) {
 if (length(radio_categories) >= 2) {
   # Get the combination of these two categories
   radio_pairs <- combn(radio_categories, 2, simplify = FALSE)
-  print(radio_pairs)
   # For each pair of radio categories
   for (radio_pair in radio_pairs) {
     report_data %>%
