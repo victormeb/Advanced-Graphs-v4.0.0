@@ -1,5 +1,6 @@
 ---
 #authors: "Victor Espinosa, Alvaro Ciganda, Joel Cohen"
+title: "fc"
 output: 
   html_document:
     css: "advanced_graphs.css"
@@ -157,6 +158,16 @@ categorical_types <- c("radio", "dropdown", "yesno", "truefalse")
 
 # Radio or dropdown fields
 radio_categories <- data_dictionary %>%
+  # If the field type is yesno or truefalse but there is no select_choices_or_calculations
+  # Add select_choices_or_calculations
+  mutate(select_choices_or_calculations = 
+           case_when(
+             select_choices_or_calculations != "" ~ select_choices_or_calculations,
+             field_type == "yesno" ~ "1, Yes | 0, No",
+             field_type == "truefalse" ~ "1, True | 0, False",
+             TRUE ~ select_choices_or_calculations
+           )
+         ) %>%
   # Select fields from the data dictionary
   filter(
     # Where they are of "radio" type
@@ -305,7 +316,7 @@ for (checkbox_field in checkbox_fields) {
   # If there is at least one field of the form "field_name___[0-9]+" in the report_data
   # create a plot
   if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
-    (report_data %>%
+    report_data %>%
       # Select each column of the report data that matches the current checkbox field
       select(matches(paste0(checkbox_field$field_name, "___[0-9]+\\b"))) %>%
       # Let each column be it's own level in a factor column
@@ -324,15 +335,25 @@ for (checkbox_field in checkbox_fields) {
         # Include counts and percents
         count, 
         percent) %>%
+       (function(data) {
+         side_by_side(
+           data %>%
+           custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE)
+           ,
+           data %>%
+           custom_pie(x = !!sym(checkbox_field$field_label), y = count, title = paste0("Count of ", checkbox_field$field_label))
+           ,
+           title = paste0("Count of ", checkbox_field$field_label)
+         )
+       })
       # Create a custom bar plot
-      custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE)) %>% print_single(paste0("Count of ", checkbox_field$field_label))
   }
 }
 
 for (radio_category in radio_categories) {
   # If the entire column isn't NA
   if (!all(is.na(report_data[[radio_category$field_name]])))
-  (report_data %>%
+  report_data %>%
     transmute(
       # Select the column
       across(all_of(radio_category$field_name),
@@ -345,9 +366,18 @@ for (radio_category in radio_categories) {
     # Add a percent column
     mutate(percent = count/sum(count)) %>%
     # Create a custom bar plot
-    custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE)) %>%
     # Print it
-    print_single(title = paste0("Count of ", radio_category$field_label))
+    (function(data) {
+         side_by_side(
+           data %>%
+           custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE)
+           ,
+           data %>%
+           custom_pie(x = !!sym(radio_category$field_label), y = count)
+           ,
+           title = paste0("Count of ", radio_category$field_label)
+         )
+       })
 }
 
 ```
@@ -391,6 +421,23 @@ for (category in radio_categories) {
                       y = !!sym(paste0(names_to_labels[numeric_field], " (mean)")))
           # End of plot 1
           ,
+          data %>%
+            # Rename the fields based on their field names
+            transmute(
+              "{category$field_label}" := category, 
+              # Get the mean
+              "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
+          # Create a custom bar plot
+          custom_pie(x = !!sym(category$field_label), 
+                    y = !!sym(paste0(names_to_labels[numeric_field], " (mean)")),
+                    title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label))
+        ,
+        # Title for side by side plots
+        title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label)
+        )
+        
+        # Create side by side plots
+        side_by_side(
           # Beginning of plot 2
           data %>%
             transmute(
@@ -399,12 +446,20 @@ for (category in radio_categories) {
               "{paste0(names_to_labels[numeric_field], \" (total)\")}" := sum) %>%
           # Create a custom bar plot
           custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (total)")))
+          ,
+          data %>%
+            transmute(
+              "{category$field_label}" := category, 
+              # Get the sum (total)
+              "{paste0(names_to_labels[numeric_field], \" (total)\")}" := sum) %>%
+          # Create a custom bar plot
+          custom_pie(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (total)")),
+          title = paste0(names_to_labels[numeric_field], " (total) per ", category$field_label))
         ,
         # Title for side by side plots
-        title = paste0(names_to_labels[numeric_field], " per ", category$field_label)
+        title = paste0(names_to_labels[numeric_field], " (total) per ", category$field_label)
         )
         
-        # Create side by side plots
         side_by_side(
           data %>%
             # Rename the fields based on their field names
@@ -417,17 +472,40 @@ for (category in radio_categories) {
                       y = !!sym(paste0(names_to_labels[numeric_field], " (min)")))
           # End of plot 1
           ,
-          # Beginning of plot 2
+          data %>%
+            # Rename the fields based on their field names
+            transmute(
+              "{category$field_label}" := category, 
+              # Get the mean
+              "{paste0(names_to_labels[numeric_field], \" (min)\")}" := min) %>%
+          # Create a custom bar plot
+          custom_pie(x = !!sym(category$field_label), 
+                      y = !!sym(paste0(names_to_labels[numeric_field], " (min)")),
+          title = paste0(names_to_labels[numeric_field], " (min) per ", category$field_label))
+        ,
+        # Title for side by side plots
+        title = paste0(names_to_labels[numeric_field], " (min) per ", category$field_label)
+        )
+        
+        side_by_side(
           data %>%
             transmute(
               "{category$field_label}" := category, 
-              # Get the sum (total)
               "{paste0(names_to_labels[numeric_field], \" (max)\")}" := max) %>%
           # Create a custom bar plot
           custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (max)")))
+          # End of plot 1
+          ,
+          data %>%
+            transmute(
+              "{category$field_label}" := category, 
+              "{paste0(names_to_labels[numeric_field], \" (max)\")}" := max) %>%
+          # Create a custom bar plot
+          custom_pie(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (max)")),
+          title = paste0(names_to_labels[numeric_field], " (max) per ", category$field_label))
         ,
         # Title for side by side plots
-        title = paste0(names_to_labels[numeric_field], " per ", category$field_label)
+        title = paste0(names_to_labels[numeric_field], " (max) per ", category$field_label)
         )
 
       })
@@ -443,6 +521,7 @@ for (category in radio_categories) {
 if (length(radio_categories) >= 2) {
   # Get the combination of these two categories
   radio_pairs <- combn(radio_categories, 2, simplify = FALSE)
+  print(radio_pairs)
   # For each pair of radio categories
   for (radio_pair in radio_pairs) {
     report_data %>%
