@@ -69,9 +69,6 @@ if (params$pid != 0) {
   project_info <- post_project_info(params)
   data_dictionary <- post_data_dictionary(params)
   
-  # Get a list of categories and their options
-  categories <- parse_categories(data_dictionary)
-  
   # Retrieve the live filters
   live_filters <- parse_live_filters(params, categories, data_dictionary)
   
@@ -111,7 +108,7 @@ likert_groups <- data_dictionary %>%
   group_by(select_choices_or_calculations) %>%
   # Take a list of field names and labels
   summarise(field_name = list(field_name), field_label = list(field_label)) %>%
-  # Parse the categories into a useful format
+  # Parse the categories into a useful format (collapses field_name, field_label, options_code and options_label using field_name, field_label, and select_choices_or_calculations)
   parse_categories()
 
 #############################
@@ -147,6 +144,7 @@ numeric_fields <- data_dictionary %>%
     & !grepl(paste0("*", ignored_names_numeric, "*", collapse = "|"), field_name)
   ) %>%
   select(field_name) %>%
+  # Turns a single column into a vector
   unlist()
 
 ##############################
@@ -244,6 +242,7 @@ for (likert_group in likert_groups) {
     report_data %>%
       data.frame() %>%
       # Select these fields from the data dictionary
+      # Across changes the field_names to their corresponding field labels 
       transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
       (function(data) {
         # If any of the fields contain an NA
@@ -712,7 +711,7 @@ for (coordinate_field in coordinate_fields) {
               custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = "location", count = "count"),
             # Create a custom map that clusters the locations
             data %>%
-              # Create a custom map with each location having its own color
+              # Create a custom map with each location having clusterings
               custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label)
           )
         })
