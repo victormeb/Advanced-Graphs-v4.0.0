@@ -73,7 +73,7 @@ import_data <- function(parameters, record_id, live_filters) {
     exportCheckboxLabel='false',
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ), header = TRUE, sep = ",", stringsAsFactors = FALSE) 
+  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
   
   # Retrieve all records from the project
   all_records <- read.csv(text = postForm(
@@ -91,6 +91,7 @@ import_data <- function(parameters, record_id, live_filters) {
   # From all the records, take the rows that are in report_data, include the ID column
   report_data_flattened <- inner_join(
     all_records %>%
+      mutate(across(any_of(c("redcap_repeat_instrument", "redcap_repeat_instance")), ~replace(.x, .x == "", NA))) %>%
       select(1, all_of(names(report_data))) %>%
       group_by(across(all_of(names(report_data)))) %>%
       # Add row number for each identical row the records (only counting fields in the report)
