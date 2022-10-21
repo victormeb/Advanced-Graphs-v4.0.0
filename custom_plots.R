@@ -96,7 +96,13 @@ print_single <- function(plot, title = "") {
 #
 # Used in custom_bars and custom_stacked to remove labels
 n_spaced_indices <- function(m, n) {
-  unique(((0:(n-1))*(m-1))%/%(n-1) + 1)
+  if (n == 0 | m == 0)
+    return(c())
+  
+  if (n > 1)
+    unique(((0:(n-1))*(m-1))%/%(n-1) + 1)
+  else
+    m%/%2
 }
 
 
@@ -215,10 +221,10 @@ n_spaces_indices_zeros_first <- function(data, n) {
   not_zeros <- which(data != 0)
   zeros <- which(data==0)
   
-  if (length(not_zeros) > n) 
+  if (length(not_zeros) >= n) 
     not_zeros[n_spaced_indices(length(not_zeros), n)] 
   else 
-    c(not_zeros, zeros[n_spaced_indices(length(zeros), n-length(zeros))])
+    c(not_zeros, zeros[n_spaced_indices(length(zeros), n-length(not_zeros))])
 }
 
 # custom_likert
@@ -466,10 +472,10 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
   
   # Compute the label positions
   label_pos <- data %>% 
-    mutate(text_color = text_color) %>%
-    filter(!!x %in% categories_kept) %>%
+    mutate(text_color = text_color, 
+           label = !!x) %>%
+    filter(!!x %in% categories_kept & !!y != 0) %>%
     mutate(
-      label = !!x,
       csum = rev(cumsum(rev(!!y))), 
       pos = !!y/2 + lead(csum, 1),
       pos = if_else(is.na(pos), !!y/2, pos)
@@ -484,21 +490,21 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
     # Convert to pie
     coord_polar(theta = "y", clip = "off") +
     # Add "Turbo" viridis colours
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = label_pos$label) +
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = categories_kept) +
     # Add labels to slices (amounts)
     
     geom_text(aes(label = replace(!!y, !!y == 0, "")),
               position = position_stack(vjust = 0.5),
               color = text_color) +
     # Add labels to slices
-    scale_y_continuous(breaks = label_pos$pos, labels = label_pos$label)+
+    #scale_y_continuous(breaks = label_pos$pos, labels = label_pos$label)+
     ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos), 
                               nudge_x = 1, 
                               color = label_pos$text_color, 
                               max.overlaps = Inf,
-                              show.legend = FALSE)+
-      guides(fill = "none")+
-    # scale_color_manual(values = text_color) +
+                              show.legend = FALSE, 
+                              force=3000, 
+                              max.time=500)+
     # Add title
     #ggtitle(title) +
     theme(
