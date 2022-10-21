@@ -73,7 +73,9 @@ import_data <- function(parameters, record_id, live_filters) {
     exportCheckboxLabel='false',
     returnFormat='csv',
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
-  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
+  ), header = TRUE, sep = ",", stringsAsFactors = FALSE)%>%
+    mutate(across(any_of(c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")), ~replace(.x, .x == "", NA)))
+    
   
   # Retrieve all records from the project
   all_records <- read.csv(text = postForm(
@@ -91,7 +93,7 @@ import_data <- function(parameters, record_id, live_filters) {
   # From all the records, take the rows that are in report_data, include the ID column
   report_data_flattened <- inner_join(
     all_records %>%
-      mutate(across(any_of(c("redcap_repeat_instrument", "redcap_repeat_instance")), ~replace(.x, .x == "", NA))) %>%
+      mutate(across(any_of(c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")), ~replace(.x, .x == "", NA))) %>%
       select(1, all_of(names(report_data))) %>%
       group_by(across(all_of(names(report_data)))) %>%
       # Add row number for each identical row the records (only counting fields in the report)
@@ -105,7 +107,7 @@ import_data <- function(parameters, record_id, live_filters) {
     by = c(names(report_data), "adv_graph_internal_duplicates_id")
   ) %>%
     # Flatten the each event into a single row
-   group_by(across(c(1, any_of(c("redcap_repeat_instrument", "redcap_repeat_instance"))))) %>%
+   group_by(across(c(1, any_of(c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name"))))) %>%
    summarise(across(.fns = function(column) first(sort(na.omit(column), decreasing = TRUE)))) %>%
    ungroup() %>%
    select(names(report_data))
