@@ -1,6 +1,6 @@
 ---
 #authors: "Victor Espinosa, Alvaro Ciganda, Joel Cohen"
-title: "fc"
+title: "Advance Graphs"
 output: 
   html_document:
     css: "advanced_graphs.css"
@@ -217,7 +217,6 @@ names_to_labels <- data_dictionary$field_label
 names(names_to_labels) <- data_dictionary$field_name
 ```
 
-## Advanced Graphs 
 
 ```{r, results = 'asis', eval = TRUE}
 cat("\n###", project_info$project_title)
