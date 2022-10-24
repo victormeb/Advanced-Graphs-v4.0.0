@@ -102,7 +102,7 @@ n_spaced_indices <- function(m, n) {
   if (n > 1)
     unique(((0:(n-1))*(m-1))%/%(n-1) + 1)
   else
-    m%/%2
+    max(1, m%/%2)
 }
 
 
@@ -473,15 +473,24 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
   # Compute the label positions
   label_pos <- data %>% 
     mutate(text_color = text_color, 
-           label = !!x) %>%
-    filter(!!x %in% categories_kept & !!y != 0) %>%
-    mutate(
-      csum = rev(cumsum(rev(!!y))), 
-      pos = !!y/2 + lead(csum, 1),
-      pos = if_else(is.na(pos), !!y/2, pos)
-    )
+           label = !!x,      
+           csum = rev(cumsum(rev(!!y))),
+           pos = !!y/2 + lead(csum, 1),
+           pos = if_else(is.na(pos), !!y/2, pos)) %>%
+    # Remove the locations that aren't in the kept categories 
+    # and those that won't show up as a slice
+    filter(!!x %in% categories_kept & !!y != 0)
   
-  #options(ggrepel.max.overlaps = Inf)
+  category_labels <- if (nrow(label_pos) > 0)
+    ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos),
+                              nudge_x = 1,
+                              color = label_pos$text_color,
+                              max.overlaps = Inf,
+                              show.legend = FALSE,
+                              force=3000,
+                              max.time=500)
+    else
+      geom_blank()
   
   p <- list(data %>%
     ggplot(aes(x="", y=!!y, fill=!!x)) +
@@ -498,13 +507,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
               color = text_color) +
     # Add labels to slices
     #scale_y_continuous(breaks = label_pos$pos, labels = label_pos$label)+
-    ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos), 
-                              nudge_x = 1, 
-                              color = label_pos$text_color, 
-                              max.overlaps = Inf,
-                              show.legend = FALSE, 
-                              force=3000, 
-                              max.time=500)+
+    category_labels + 
     # Add title
     #ggtitle(title) +
     theme(
@@ -735,7 +738,7 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = 
   column_spanner <- if (is.null(column_spanner)) as_label(y) else column_spanner
   
   # Get the levels of the y variable to be used as column names
-  y_levels <- levels(data[[rlang::as_label(y)]]) %>% replace_na("NA")
+  y_levels <- unique(eval_tidy(y, data) %>% as.character()) %>% replace_na("NA")
   
   # Create a vector for the spanner where the middle value is the number
   # of columns in y
@@ -749,12 +752,14 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = 
   data %>%
     # Convert x and y to character vectors
     transmute(!!x := as.character(!!x), !!y := as.character(!!y), !!total := !!total) %>%
+    # Replace NA's with the string "NA"
+    mutate(across(where(is.character), ~replace_na(.x, "NA"))) %>%
     # Transform the table so the y levels are columns
     pivot_wider(names_from = !!y, values_from = !!total) %>%
     # Add a row of totals by...
     rows_insert(
       # Taking the colSums of the data
-      colSums(.[,1:length(y_levels)+1]) %>% 
+      colSums((.) %>% select(!all_of(as_label(x)))) %>% 
         # Transmute the data
         t() %>% 
         # Convert it to data.frame
@@ -766,7 +771,7 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = 
       # Use "Total" as the name for this row insertion
       by = rlang::as_label(x)) %>%
     # Add a column of row sums
-    mutate(Total = rowSums(.[,1:length(y_levels)+1])) %>%
+    mutate(Total = rowSums((.) %>% select(where(is.numeric)))) %>%
     mutate(across(-c(1), (if (percent) scales::percent else ~.x))) %>%
     # Create a kable table
     kbl(format = "html", align = c("l", rep("c", times = length(y_levels)+1))) %>%
