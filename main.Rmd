@@ -69,6 +69,8 @@ if (params$pid != 0) {
   project_info <- post_project_info(params)
   data_dictionary <- post_data_dictionary(params)
   
+  categories <- parse_categories(data_dictionary)
+  
   # Retrieve the live filters
   live_filters <- parse_live_filters(params, categories, data_dictionary)
   
