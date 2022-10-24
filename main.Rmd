@@ -87,6 +87,9 @@ if (params$pid != 0) {
   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
 }
 
+# Fix duplicate label names
+  data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] <- vctrs::vec_as_names(data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"], repair = "unique", quiet = TRUE)
+
 ##### Get likert groups #####
 # field_types that are candidates for likert
 like_likert <- c("dropdown", "radio")
