@@ -14,9 +14,11 @@ Otherwise, installing pandoc will be different depending on your OS.
 
 # Clone this repo into redcap
 
-Clone this repo into \<redcap-root\>/modules.
-```git clone https://github.com/victormeb/Advanced-Graphs-v4.0.0.git```
-  
+Clone this repo into \<redcap-root\>/modules.  
+```git clone https://github.com/victormeb/Advanced-Graphs-v4.0.0.git```  
+To install the dependencies, run the following command from within the repo:  
+```r install_packages.r```
+
 # Enable this project in **Control Center > External Modules**
   
 When configuring this module use the R path, Pandoc path and R libraries path that we have made note of.
