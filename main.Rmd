@@ -189,10 +189,20 @@ date_fields <- data_dictionary %>%
          # Select only fields that start with 'date'
          & substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
   # Select the field name
-  select(field_name) %>%
+  transmute(field_name,
+            try_format = case_when(text_validation_type_or_show_slider_number == "date_dmy" ~ "%%Y-%m-%d",
+                                   text_validation_type_or_show_slider_number == "date_mdy"~ "%Y-%m-%d",
+                                   text_validation_type_or_show_slider_number == "date_ymd"~ "%Y-%m-%d",
+                                   text_validation_type_or_show_slider_number == "datetime_dmy"~ "%Y-%m-%d %H:%M",
+                                   text_validation_type_or_show_slider_number == "datetime_mdy"~ "%Y-%m-%d %H:%M",
+                                   text_validation_type_or_show_slider_number == "datetime_ymd"~ "%Y-%m-%d %H:%M",
+                                   text_validation_type_or_show_slider_number == "datetime_seconds_dmy"~ "%Y-%m-%d %H:%M:%S",
+                                   text_validation_type_or_show_slider_number == "datetime_seconds_mdy"~ "%Y-%m-%d %H:%M:%S",
+                                   text_validation_type_or_show_slider_number == "datetime_seconds_ymd"~ "%Y-%m-%d %H:%M:%S"))
+  #select(field_name) %>%
   # Return field names in vector
-  unlist() %>%
-  unname()
+  #unlist() %>%
+  #unname()
 
 ##################################
 
@@ -207,14 +217,16 @@ report_data <- report_data %>%
                   # Adding an NA level if there are any NAs
                   ifany = TRUE), .names = "{.col}"),
      # Select all the date fields
-     across(all_of(date_fields), 
+     across(all_of(date_fields$field_name), 
            # Convert them to date
-           .fns = as.Date, 
-           # Try these formats
-           tryFormats = c("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"),
+           .fns = ~as.POSIXct(replace(.x, .x == "", NA), tryFormat = date_fields$try_format[date_fields$field_name == cur_column()], optional = TRUE), 
+           # Try these formats,
            .names = "{.col}")    
     ) 
-  
+
+
+# Change date fields to just field_names of date_fields
+date_fields <- date_fields$field_name
 
 # Create list of labels
 # This is used to extract the text labels from the field names
