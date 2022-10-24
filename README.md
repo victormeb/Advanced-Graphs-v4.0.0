@@ -17,8 +17,14 @@ This REDCap module displays additional advanced graphs from a report in an easy 
 
 ## Manual Installation
 - Clone this repo into `<redcap-root>/modules`.
+```
+git clone https://github.com/victormeb/Advanced-Graphs-v4.0.0.git
+```
 - Go to **Control Center > External Modules** and enable Advanced Graphs.
-- To activate this module for a particular project, go to the project home page, click on the **External Modules** link, and then enable Advanced Graphs for that project.
+- Configure Advanced Graphs:
+    - Find the RScript path. In Rstudio, thiscan be found under *tools > global options > R version*
+    - Find the pandoc path. In R this can be found using ```rmarkdown::find_pandoc()```
+- To activate this module for a particular project, go to the project home page, click on the **External Modules** link, and then enable Advanced Graphs for that project. Then, activate an API key for this project. Go to **Control Center > External Modules** and add the API key and its corresponding project.
 
 
 ## Configuration
