@@ -1,16 +1,18 @@
 # Install R >= v4.0.1
 
-[R project](https://www.r-project.org/)
+You can find the latest version of **R** [here](https://www.r-project.org/).  
 
 Make note of the directory in which you install it. We will use the path to configure Advanced Graphs later.
 
-Also make note of the library path. This can be be found within r using ```.libPaths()```
+Also make note of the library path. This can be be found within r using ```.libPaths()```  
+
+If you are on windows you will also need **RTools** which can be found [here](https://cran.r-project.org/bin/windows/Rtools/).
 
 # Install pandoc for R
 
-If you downloaded Rstudio there should be a version that's been bundled with that. To find it you can use:
-```rmarkdown::find_pandoc()```
-Otherwise, installing pandoc will be different depending on your OS.
+If you downloaded Rstudio there should be a version that's been bundled with that. To find it you can use:  
+```rmarkdown::find_pandoc()```  
+Otherwise, installing pandoc will be different depending on your OS.  
 
 # Clone this repo into redcap
 
