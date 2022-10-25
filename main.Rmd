@@ -1,6 +1,6 @@
 ---
 #authors: "Victor Espinosa, Alvaro Ciganda, Joel Cohen"
-title: "Advance Graphs"
+title: "Advanced Graphs"
 output: 
   html_document:
     css: "advanced_graphs.css"
