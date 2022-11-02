@@ -330,7 +330,7 @@ checkbox_fields <- data_dictionary %>%
   filter(field_type == "checkbox") %>%
   parse_categories()
 
-if (length(checkbox_fields) > 0 || length(radio_categories) > 0)
+if (length(radio_categories) > 0)
   cat("<h3>Category counts</h3>")
 
 for (checkbox_field in checkbox_fields) {

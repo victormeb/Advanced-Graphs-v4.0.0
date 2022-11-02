@@ -75,8 +75,7 @@ import_data <- function(parameters, record_id, live_filters) {
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
   ), header = TRUE, sep = ",", stringsAsFactors = FALSE)%>%
     mutate(across(any_of(c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")), ~replace(.x, .x == "", NA)))
-    
-  
+
   # Retrieve all records from the project
   all_records <- read.csv(text = postForm(
     uri=parameters$server_url,
@@ -90,12 +89,23 @@ import_data <- function(parameters, record_id, live_filters) {
     .opts = RCurl::curlOptions(ssl.verifypeer = FALSE, ssl.verifyhost = FALSE, verbose=FALSE)
   ), header = TRUE, sep = ",", stringsAsFactors = FALSE)
   
+  
+  if (length(setdiff(names(report_data), names(all_records)) != 0)) {
+    cat("<h5><b>There are records in the report that did not appear when retrieving all records</b></h5>",
+        "<h5><b>returning report unmodified (no event flattening)</b></h5>",
+        "<h5><b>Records not found: </b></h5>")
+    print(kable(data.frame(`Field Names` = setdiff(names(report_data), names(all_records)))))
+    return(report_data)
+  }
+
+  
+  return(report_data)
   # From all the records, take the rows that are in report_data, include the ID column
   report_data_flattened <- inner_join(
     all_records %>%
       mutate(across(any_of(c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")), ~replace(.x, .x == "", NA))) %>%
-      select(1, any_of(names(report_data))) %>%
-      group_by(across(any_of(names(report_data)))) %>%
+      select(1, all_of(names(report_data))) %>%
+      group_by(across(all_of(names(report_data)))) %>%
       # Add row number for each identical row the records (only counting fields in the report)
       mutate(adv_graph_internal_duplicates_id = row_number())
     ,
@@ -131,19 +141,19 @@ import_data <- function(parameters, record_id, live_filters) {
   # Join the flattened report_data with the flattened filtered records
   report_data <- inner_join(
     report_data_flattened %>%
-      select(any_of(names(report_data))) %>%
-      group_by(across(any_of(names(report_data)))) %>%
+      select(all_of(names(report_data))) %>%
+      group_by(across(all_of(names(report_data)))) %>%
       mutate(adv_graph_internal_duplicates_id = row_number())
     ,
     records_flattened_filtered %>%
-      select(any_of(names(report_data))) %>%
-      group_by(across(any_of(names(report_data)))) %>%
+      select(all_of(names(report_data))) %>%
+      group_by(across(all_of(names(report_data)))) %>%
       mutate(adv_graph_internal_duplicates_id = row_number())
     ,
     by = c(names(report_data), "adv_graph_internal_duplicates_id")
   ) %>% 
     # remove the duplicate_id column
-    select(any_of(names(report_data)))  %>% 
+    select(all_of(names(report_data)))  %>% 
     # Store it as a dataframe
     as.data.frame()
 
