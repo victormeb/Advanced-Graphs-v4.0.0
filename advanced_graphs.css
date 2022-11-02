@@ -6,56 +6,60 @@
   overflow: auto;
 }
 
-.img-container table {
+.tbl-container {
+  padding: 10px;
+}
+
+.tbl-container table {
   position: sticky;
   border: 1px solid;
   width: 100%;
 }
 
-.img-container thead tr:last-child {
+.tbl-container thead tr:last-child {
   border: 1px solid;
   border-color: black;
 }
 
-.img-container th {
+.tbl-container th {
   padding-left: 3px;
   padding-right: 3px;
 }
 
-.img-container tbody td:last-child {
+.tbl-container tbody td:last-child {
   color: #e90000;
   border-left: 1px solid;
   border-color: black;
 }
 
-.img-container thead tr:last-child th:first-child {
+.tbl-container thead tr:last-child th:first-child {
   border-right: 1px solid;
   border-color: black;
 }
 
-.img-container thead tr:last-child th:last-child {
+.tbl-container thead tr:last-child th:last-child {
   border-left: 1px solid;
   border-color: black;
 }
 
-.img-container tbody td:first-child {
+.tbl-container tbody td:first-child {
   border-right: 1px solid;
   border-color: black;
 }
 
-.img-container tbody tr:last-child  {
+.tbl-container tbody tr:last-child  {
   color: #e90000;
   border: 1px solid;
   border-color: black;
 }
 
 
-.img-container tbody tr:last-child td:first-child {
+.tbl-container tbody tr:last-child td:first-child {
   font-weight: bold;
   color: black;
 }
 
-.img-container tbody tr:last-child td:last-child {
+.tbl-container tbody tr:last-child td:last-child {
   font-weight: bold;
   color: #e90000;
 }

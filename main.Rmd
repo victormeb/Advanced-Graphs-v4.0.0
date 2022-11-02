@@ -239,7 +239,7 @@ names(names_to_labels) <- data_dictionary$field_name
 cat("\n###", project_info$project_title)
 cat("\n### project pid", params$pid)
 cat("\n#### Number of records returned:", nrow(report_data))
-cat("\n##### **Note: events have been flattened into a single record**")
+
 cat("\n##### Live filter(s): ")
 if (nrow(live_filters) > 0 ) {
   cat("\n######", paste0(live_filters$field_label, " = ", live_filters$options_label, collapse = "\n\n###### "))
@@ -250,9 +250,11 @@ if (nrow(live_filters) > 0 ) {
 ```
 
 
-### Likert plots
 
 ```{r likert_plots}
+if (length(likert_groups) > 0)
+  cat("<h3>Likert plots</h3>")
+
 # For each set of fields that share options
 for (likert_group in likert_groups) {
     report_data %>%
@@ -278,10 +280,12 @@ for (likert_group in likert_groups) {
 }
 ```
 
-### Scatter plots  
 
 ```{r scatter_plots, results='asis'}
 scatter_fields <- c(date_fields, numeric_fields)
+
+if (length(scatter_fields) > 1)
+  cat("<h3>Scatter plots  </h3>")
 
 for (x_field in scatter_fields) {
   # And each field considered y
@@ -319,13 +323,15 @@ for (x_field in scatter_fields) {
 
 ```
 
-### Category counts
 
 ```{r bar_plots}
 # Get a parsed list of each check box field
 checkbox_fields <- data_dictionary %>%
   filter(field_type == "checkbox") %>%
   parse_categories()
+
+if (length(checkbox_fields) + length(radio_categories) > 0)
+  cat("<h3>Category counts</h3>")
 
 for (checkbox_field in checkbox_fields) {
   # If there is at least one field of the form "field_name___[0-9]+" in the report_data
@@ -397,9 +403,11 @@ for (radio_category in radio_categories) {
 
 ```
 
-### Numerical bar plots
 
 ```{r numerical_bar_plots}
+if (length(radio_categories) > 0 && length(numeric_fields) > 0)
+  cat("<h3>Numerical bar plots</h3>")
+
 # For each radio category
 for (category in radio_categories) {
   # If the category column isn't empty
@@ -529,13 +537,17 @@ for (category in radio_categories) {
   }
 }
 ```
-### Stacked and grouped bars
+
+### 
+
 ```{r stacked_bars, results='asis', message=FALSE}
 # A "New names:" warning is introduced by the custom_crosstabs function
 # TODO: Fix warning from custom_crosstabs
 
 # If there are at least two categories
 if (length(radio_categories) >= 2) {
+  cat("<h3>Stacked and grouped bars</h3>")
+  
   # Get the combination of these two categories
   radio_pairs <- combn(radio_categories, 2, simplify = FALSE)
   # For each pair of radio categories
@@ -606,47 +618,46 @@ if (length(radio_categories) >= 2) {
         )
 
       # Plot a custom crosstab for either direction of the categorical variables
-      side_by_side(
         data %>%
           # Pass the data to the custom_crosstab function
           custom_crosstab(
             x = !!sym(radio_pair[[1]]$field_label),
             y = !!sym(radio_pair[[2]]$field_label),
-            total = count)
-        ,
-        data %>%
-          # Pass the data to the custom_crosstab function
-          custom_crosstab(
-            x = !!sym(radio_pair[[2]]$field_label),
-            y = !!sym(radio_pair[[1]]$field_label),
-            total = count)
-      )
+            total = count) %>%
+          print_table(paste0(radio_pair[[1]]$field_label, " vs ", radio_pair[[2]]$field_label, " (count)"))
 
-      side_by_side(
+        data %>%
+          # Pass the data to the custom_crosstab function
+          custom_crosstab(
+            x = !!sym(radio_pair[[2]]$field_label),
+            y = !!sym(radio_pair[[1]]$field_label),
+            total = count) %>%
+          print_table(paste0(radio_pair[[2]]$field_label, " vs ", radio_pair[[1]]$field_label, " (count)"))
+      
+        
         data %>%
           # Pass the data to the custom_crosstab function
           custom_crosstab(
             x = !!sym(radio_pair[[1]]$field_label),
             y = !!sym(radio_pair[[2]]$field_label),
             total = percent,
-            percent = TRUE)
-        ,
+            percent = TRUE) %>%
+          print_table(paste0(radio_pair[[1]]$field_label, " vs ", radio_pair[[2]]$field_label, " (percents of table total)"))
+
         data %>%
-          # Pass the data to the custom_crosstab function
+          # Pass the data to the custom_crosstab function with percents
           custom_crosstab(
             x = !!sym(radio_pair[[2]]$field_label),
             y = !!sym(radio_pair[[1]]$field_label),
             total = percent,
-            percent = TRUE)
-      )
+            percent = TRUE) %>%
+          print_table(paste0(radio_pair[[2]]$field_label, " vs ", radio_pair[[1]]$field_label, " (percents of table total)"))
     })
 
   }
 }
 
 ```
-
-### Maps
 
 ```{r maps}
 # If a field_name contains one of these keywords it will be considered a longitude/latitude column
@@ -700,6 +711,7 @@ if (nrow(coordinate_fields) > 0) {
 }
 
 if (length(coordinate_fields) > 0) {
+    cat("<h3>Location counts</h3>")
 # Create a list of maps by
 maps <- list()
 
@@ -736,19 +748,22 @@ for (coordinate_field in coordinate_fields) {
                   
                         
   
-  if (!any(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name)])))
-    maps <- maps %>%
-      append(lapply(
-        radio_categories,
-        function(category) {
-          report_data %>%
-                  # Naming them longitude and latitude respectively
-                  transmute(
-                    across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)), .names = "{names_to_labels[.col]}")
-                  ) %>% mutate(count = 1) %>%
-                  filter(!is.na(!!sym(coordinate_field$longitude_label)) & !is.na(!!sym(coordinate_field$latitude_label))) %>%
-            custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category$field_label)
-        }))
+  if (!any(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name)]))) {
+    cat("<h5>Coordinates with category</h5>")
+    
+      maps <- maps %>%
+        append(lapply(
+          radio_categories,
+          function(category) {
+            report_data %>%
+                    # Naming them longitude and latitude respectively
+                    transmute(
+                      across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)), .names = "{names_to_labels[.col]}")
+                    ) %>% mutate(count = 1) %>%
+                    filter(!is.na(!!sym(coordinate_field$longitude_label)) & !is.na(!!sym(coordinate_field$latitude_label))) %>%
+              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category$field_label)
+          }))
+  }
 }
 # Use htmltools to print the maps
 
@@ -759,8 +774,6 @@ htmltools::tagList(maps)
 #   htmltools::tagList(maps)
 # } 
 ```
-
-### Network graphs
 
 ```{r network_graphs, out.width = "100%", fig.align="center"}
 # Take the text fields from the data dictionary
@@ -778,29 +791,32 @@ text_fields <- data_dictionary %>%
   )}
 
 # If there are 2 or more text fields
-if (length(text_fields) > 1)
-# For each text pair
-for (text_pair in combn(text_fields, 2, simplify = FALSE)) {
-  # If both of the columns aren't null
-  if(!all(is.na(report_data[[text_pair[[1]]$field_name]]))
-     && !all(is.na(report_data[[text_pair[[2]]$field_name]])))
-    # Get the columns from the report data
-    report_data %>%
-            # Turn them into factors and add NA as a factor if there are any
-            transmute(across(all_of(c(text_pair[[1]]$field_name, text_pair[[2]]$field_name)),
-                      function(column) {
-                        addNA(factor(column), ifany = TRUE)
-                      }
-                        , .names = "{names_to_labels[.col]}")
-            ) %>%
-            {side_by_side(
-            custom_network(., x = !!sym(text_pair[[1]]$field_label), y = !!sym(text_pair[[2]]$field_label))
-            ,
-            plot2 = custom_network(., x = !!sym(text_pair[[2]]$field_label), y = !!sym(text_pair[[1]]$field_label))
-            ,
-            title = paste0(text_pair[[1]]$field_label, " vs ", text_pair[[2]]$field_label)
-            )}
-            
+if (length(text_fields) > 1) {
+  cat("<h3>Network graphs</h3>")
+  
+  # For each text pair
+  for (text_pair in combn(text_fields, 2, simplify = FALSE)) {
+    # If both of the columns aren't null
+    if(!all(is.na(report_data[[text_pair[[1]]$field_name]]))
+       && !all(is.na(report_data[[text_pair[[2]]$field_name]])))
+      # Get the columns from the report data
+      report_data %>%
+              # Turn them into factors and add NA as a factor if there are any
+              transmute(across(all_of(c(text_pair[[1]]$field_name, text_pair[[2]]$field_name)),
+                        function(column) {
+                          addNA(factor(column), ifany = TRUE)
+                        }
+                          , .names = "{names_to_labels[.col]}")
+              ) %>%
+              {side_by_side(
+              custom_network(., x = !!sym(text_pair[[1]]$field_label), y = !!sym(text_pair[[2]]$field_label))
+              ,
+              plot2 = custom_network(., x = !!sym(text_pair[[2]]$field_label), y = !!sym(text_pair[[1]]$field_label))
+              ,
+              title = paste0(text_pair[[1]]$field_label, " vs ", text_pair[[2]]$field_label)
+              )}
+              
+  }
 }
 ```
 

@@ -76,6 +76,14 @@ print_single <- function(plot, title = "") {
   cat("\n\n</div>\n\n")
 }
 
+
+print_table <- function(table, title = "") {
+  cat("<div class=\"tbl-container\">")
+    cat("<h5>", title, "</h5>")
+    print(table)
+  cat("</div>")
+} 
+
 # n_spaced_indices
 # Author: Joel Cohen
 # Description:
@@ -852,7 +860,7 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL) {
       fillOpacity = 1,
       fill = TRUE,
       # Cluster nearby circles together
-      clusterOptions = markerClusterOptions( spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1))
+      clusterOptions = markerClusterOptions(maxClusterRadius = 50, spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1))
     ) %>%
     (
       function(map) {

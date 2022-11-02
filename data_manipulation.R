@@ -112,6 +112,9 @@ import_data <- function(parameters, record_id, live_filters) {
    ungroup() %>%
    select(names(report_data))
   
+  if (nrow(report_data) > nrow(report_data_flattened))
+    cat("\n##### **Note: events have been flattened into a single record**")
+  
   # If there are no live_filters active, return the flattened report_data
   if (nrow(live_filters) == 0) return(report_data_flattened)
   
