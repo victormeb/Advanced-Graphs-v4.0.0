@@ -8,6 +8,46 @@ TODO:
 - get report metadata and pass it as parameters to markdown
 
 */
+function get_page($url){
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL,$url);
+	/*
+	$proxy = 'http://proxy.company.com:8080';
+	$proxyauth = 'domain\proxy_username:proxy_password';
+	curl_setopt($ch, CURLOPT_PROXY, $proxy);
+	curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);
+	*/
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_HEADER, 0);
+	$data = curl_exec($ch);
+	curl_close($ch);
+	return $data;
+}
+
+function isSiteAvailible($url){
+    // Check, if a valid url is provided
+    if(!filter_var($url, FILTER_VALIDATE_URL)){
+        return false;
+    }
+
+    // Initialize cURL
+    $curlInit = curl_init($url);
+    
+    // Set options
+    curl_setopt($curlInit,CURLOPT_CONNECTTIMEOUT,10);
+    curl_setopt($curlInit,CURLOPT_HEADER,true);
+    curl_setopt($curlInit,CURLOPT_NOBODY,true);
+    curl_setopt($curlInit,CURLOPT_RETURNTRANSFER,true);
+
+    // Get response
+    $response = curl_exec($curlInit);
+    
+    // Close a cURL session
+    curl_close($curlInit);
+
+    return $response?true:false;
+}
 
 $user_rights = REDCap::getUserRights();
 $user_name = array_keys($user_rights)[0];
@@ -128,7 +168,7 @@ if(!is_numeric($pid) || !is_numeric($report_id) || $report_id<1) {
 								
 						$module_physical_path = str_replace("\\","/",$module->getModulePath());
 						
-						$markdown_file_path = $module_physical_path . "main.Rmd"; // changed from "R_Tables_and_Plots.Rmd" TODO: Delete comment				
+						$markdown_file_path = $module_physical_path . "launch_app.R"; // changed from "R_Tables_and_Plots.Rmd" TODO: Delete comment				
 						
 						$output_folder = $module_physical_path . "output";
 						
@@ -161,16 +201,80 @@ if(!is_numeric($pid) || !is_numeric($report_id) || $report_id<1) {
 								}
 								$params = "list($params)";
 
-								$exec_output = "";
+								
 								//die('"' . $r_path . '" -e "' . $libPaths . ' ' . $pandocPath . ' rmarkdown::render(\'' . $markdown_file_path . '\', params = ' . $params . ', output_file = \'' . $output_file_name . '\')" 2>&1');
-								exec('"' . $r_path . '" -e "' . $libPaths . ' ' . $pandocPath . ' rmarkdown::render(\'' . $markdown_file_path . '\', params = ' . $params . ', output_file = \'' . $output_file_name . '\')" 2>&1', $exec_output);
+								//pclose(popen('start \"hello\" "' . $r_path . '"' . ' -e "' . $libPaths . ' ' . $pandocPath . ' source(\'' . $markdown_file_path . '\'); params = ' . $params . ';"', "r"));
+								// $server = popen('"' . $r_path . '"' . ' -e "' . $libPaths . ' source(\'' . $markdown_file_path . '\'); params = ' . $params . ';"', "r");
+								//$WshShell = new \COM("WScript.Shell");
+								//$oExec = $WshShell->Run('"' . $r_path . '"' . ' -e "' . $libPaths . ' source(\'' . $markdown_file_path . '\'); params = ' . $params . ';"', 0, false);
+								$handle = popen('"' . $r_path . '"' . ' -e "' . $libPaths . 'params = ' . $params . '; source(\'' . $markdown_file_path . '\')" 2>&1', "r");
+								// echo '"' . $r_path . '"' . ' -e "' . $libPaths . ' params = ' . $params . ';' . 'source(\'' . $markdown_file_path . '\');" 2>&1\n';
+								$output_line = "";
+								$exec_output = "";
+								while($output_line  != "The ip follows\n") {
+									$output_line = fgets($handle);
+									$exec_output .= $output_line."\n";
+								}
+								$ip = fgets($handle);
+								//echo $exec_output;
+								if ($ip != "No ip found\n") {
+									echo "The ip is: $ip";
+								} else {
+									echo implode("<br/>",explode("\n",$exec_output));
+								}
+								
+								pclose($handle);
+								//sleep(5);
+								/* while(!isSiteAvailible($ip)) {
+									echo "Site not available";
+								} */
+								//pclose($handle);
+								
+/* 								$output="";
+								if($handle) {
+								  while($tmp = fgets($handle)) {
+									  $output .= $tmp;
+								  }
+								  $output .= "\n\nResult = " . pclose($handle);
+								}
+								else $output = "popen failed";
+								echo $output; */
+								//sleep(5);
+								
+								// set some variables 
+								$name = 'Shiny';
+								$canonical = $ip.$_SERVER['SCRIPT_URL'];
+								$url = $canonical.'?'.http_build_query($_GET);
 								//print_r($exec_output);
 								// check if the execution was successful to show the file. In other case show error
 								// apparently if $exec_output==Array() there were an error
 								// if it was ok, the last element of $exec_output array should be 
 								// Output created: $output_file_name
 								// It needs more testing
-								
+								require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+								?>
+								<iframe id="clientFrame" src="<?= empty($_POST)?$url:'' ?>" style="position:absolute; left:0; right:0; top:0; bottom:0; width:100%; height:100%; border:none;"></iframe>
+								<?php
+									if(!empty($_POST))
+									{
+										?>
+										<form action="<?= $url ?>" method="POST" target="clientFrame" id="clientFrameForm">
+										<?php foreach($_POST AS $key => $value)
+											{ 
+												?>
+												<input type="hidden" name="<?= $key ?>" value="<?= $value ?>" />
+												<?php 
+											} 
+										?>
+										</form>
+										<script>
+										$().ready(function() {
+											$('#clientFrameForm').submit();
+										});
+										</script>
+										<?php
+									}
+								require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 								if(!$exec_output || !is_array($exec_output) || count($exec_output)==0) {
 									$error = "There were an error during R markdown execution.";
 								} else {
@@ -183,6 +287,7 @@ if(!is_numeric($pid) || !is_numeric($report_id) || $report_id<1) {
 										require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 									}
 								}
+								
 							}
 						}
 					}
