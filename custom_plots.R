@@ -331,7 +331,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
   x_title_size = 8
   
   # Get list of categories
-  categories <- eval_tidy(x, data = data)
+  categories <- eval_tidy(x, data = data %>% arrange(!!x))
   
   # Get the evenly spaced categories which will be included as labels
   bar_breaks <- categories[n_spaced_indices(length(categories), max_bars)]
@@ -396,6 +396,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
   
   # Pass the data to ggplot
   p <- list(data %>%
+    arrange(!!x) %>%
     # Use x and y as out x and y
     ggplot(aes(x=!!x, y = !!y, fill = !!x)) +
     # Create bars
@@ -468,7 +469,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
   y <- enquo(y)
   
   # Get the levels for the bars
-  categories <- levels(eval_tidy(x, data))
+  categories <- eval_tidy(x, data %>% arrange(!!x))
   
   # Compute the label colours
   label_color <- if (any(is.na(categories))) c(viridis(length(categories)-1), "grey") else viridis(length(categories))
@@ -476,10 +477,11 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
   # Compute whether text should be dark or light based off colours
   text_color <- if_else(farver::decode_colour(label_color, "rgb", "hcl")[,"l"] > 50, "black", "white")
   
-  categories_kept <- categories[n_spaces_indices_zeros_first(eval_tidy(y, data), max_labels)]
+  categories_kept <- categories[n_spaces_indices_zeros_first(eval_tidy(y, data %>% arrange(!!x)), max_labels)]
   
   # Compute the label positions
   label_pos <- data %>% 
+    arrange(!!x) %>%
     mutate(text_color = text_color, 
            label = !!x,      
            csum = rev(cumsum(rev(!!y))),
@@ -496,11 +498,12 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
                               max.overlaps = Inf,
                               show.legend = FALSE,
                               force=3000,
-                              max.time=500)
+                              max.time=1)
     else
       geom_blank()
   
   p <- list(data %>%
+    arrange(!!x) %>%
     ggplot(aes(x="", y=!!y, fill=!!x)) +
     # Add "Bars"
     geom_bar(width = 1, color = "white", stat='identity') +
@@ -525,11 +528,16 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
       axis.text.y = element_text(size = 15),
       axis.text.x = element_blank(),
       axis.title.y = element_blank(),
-      #legend.position = "none",
+      #legend.key.size = unit(0.5, "cm"),
+      #legend.text = element_blank(),
+      #legend.title =element_blank(),
+      legend.position = "bottom",
+      legend.box = "horizontal",
       # Set title size and position
       plot.title = element_text(hjust = 0.5, size=5)
-    ))
-  
+    ) +
+    guides(fill = guide_legend(title.position="top", title.hjust = 0.5)))
+           
   if (length(categories) > max_labels)
     p <- p %>% append("<figcaption><b>Warning: too many categories were plotted so some labels have been removed</b></figcaption>")
   
