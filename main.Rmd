@@ -35,6 +35,7 @@ knitr::opts_chunk$set(echo = FALSE, eval = T, results = "asis")
 
 # Used for connections to get data from redcap
 library(RCurl)
+library(XML)
 
 # --- Used for creating plots ---
 # Necessary for all percents in likert plot
@@ -91,12 +92,13 @@ if (params$pid != 0) {
 
 pattern <- "</?\\w+((\\s+\\w+(\\s*=\\s*(?:\".*?\"|'.*?'|[^'\">\\s]+))?)+\\s*|\\s*)/?>"
 
+
+# Remove HTML if there is any  
+html_labels <- data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] %>%
+  lapply(function(x) htmlParse(x,  asText = TRUE) %>% xpathApply("//body//text()[not(ancestor::script)][not(ancestor::style)][not(ancestor::noscript)]", xmlValue)) %>% unlist()
+
 # Fix duplicate label names
-  data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] <- vctrs::vec_as_names(gsub(pattern, "\\1", data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"]), repair = "unique", quiet = TRUE)
-  
-
-
-cat(plain.text)
+data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] <- vctrs::vec_as_names(gsub(pattern, "\\1", html_labels), repair = "unique", quiet = TRUE)
 
 ##### Get likert groups #####
 # field_types that are candidates for likert
