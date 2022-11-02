@@ -6,6 +6,13 @@ library(dplyr)
 library(tidyr)
 options(dplyr.summarise.inform = FALSE)
 
+# Used for connections to get data from redcap
+library(RCurl)
+
+# Used to extract trailing numbers from checkboxes
+library(stringr)
+# -------------------------------
+
 # title_caps
 # Author: Joel Cohen (Based on previously existing work)
 # Description:
