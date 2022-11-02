@@ -319,7 +319,7 @@ custom_scatter <- function(data, x, y, line = FALSE) {
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 15) {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 15, label_wrap_length = 20) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -402,8 +402,8 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
     # Create bars
     geom_bar(stat = "identity") +
     # Add viridis colors
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks) + 
-    scale_x_discrete(breaks = bar_breaks, expand = expansion(c(0.05,0.05))) +
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = function(x) str_wrap(x, label_wrap_length)) + 
+    scale_x_discrete(breaks = bar_breaks, labels = function(x) str_wrap(x, width = label_wrap_length), expand = expansion(c(0.05,0.05))) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
           # Adjust the position of the title to be centered
@@ -463,7 +463,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
 #   Output:
 #     
 #     A pie chart
-custom_pie <- function(data, x, y, title = "", max_labels = 15) {
+custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_length = 20) {
   # Enquo the x and y variables
   x <- enquo(x)
   y <- enquo(y)
@@ -483,7 +483,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
   label_pos <- data %>% 
     arrange(!!x) %>%
     mutate(text_color = text_color, 
-           label = !!x,      
+           label = replace_na(as.character(!!x), "NA"),      
            csum = rev(cumsum(rev(!!y))),
            pos = !!y/2 + lead(csum, 1),
            pos = if_else(is.na(pos), !!y/2, pos)) %>%
@@ -492,7 +492,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
     filter(!!x %in% categories_kept & !!y != 0)
   
   category_labels <- if (nrow(label_pos) > 0)
-    ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos),
+    ggrepel::geom_label_repel(data = label_pos, aes(label = str_wrap(label, label_wrap_length), y = pos),
                               nudge_x = 1,
                               color = label_pos$text_color,
                               max.overlaps = Inf,
@@ -510,12 +510,13 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
     # Convert to pie
     coord_polar(theta = "y", clip = "off") +
     # Add "Turbo" viridis colours
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = categories_kept) +
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = categories_kept, labels = function(x) str_wrap(x, label_wrap_length)) +
     # Add labels to slices (amounts)
     
     geom_text(aes(label = replace(!!y, !!y == 0, "")),
               position = position_stack(vjust = 0.5),
               color = text_color) +
+    guides(fill=guide_legend(title='')) +
     # Add labels to slices
     #scale_y_continuous(breaks = label_pos$pos, labels = label_pos$label)+
     category_labels + 
@@ -535,8 +536,8 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
       legend.box = "horizontal",
       # Set title size and position
       plot.title = element_text(hjust = 0.5, size=5)
-    ) +
-    guides(fill = guide_legend(title.position="top", title.hjust = 0.5)))
+    )) #+
+    #guides(fill = guide_legend(title.position="top", title.hjust = 0.5)))
            
   if (length(categories) > max_labels)
     p <- p %>% append("<figcaption><b>Warning: too many categories were plotted so some labels have been removed</b></figcaption>")
@@ -577,7 +578,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15) {
 #   Output:
 #     
 #     A stacked bar plot
-custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20) {
+custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, label_wrap_length = 20) {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -658,7 +659,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
 
   # Pass the data to ggplot
   p <- list(data %>% 
-    ggplot(aes(x=!!x, fill = !!y, y = !!fill)) +
+    ggplot(aes(x=!!x, fill = str_wrap(!!y, label_wrap_length), y = !!fill)) +
     # Add bars, don't add blue outline for stacked bars
     (if (position == "dodge")
       geom_bar(position = position, stat = "identity", width = 0.9)
@@ -670,7 +671,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
                        # Only include max_colour colours in the legend
                        breaks = color_breaks) +
     # Only include labels for max_bars bars
-    scale_x_discrete(labels = replace(as.character(bar_names), !(bar_names %in% bar_breaks), "")) +
+    scale_x_discrete(breaks = replace(as.character(bar_names), !(bar_names %in% bar_breaks), ""), labels = function(x) str_wrap(x, width = label_wrap_length)) +
     scale_y_continuous(expand = expansion(c(0, 0.25))) +
     # Add a title to the plot
     ggtitle(title) +
