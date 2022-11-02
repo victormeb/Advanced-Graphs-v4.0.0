@@ -492,7 +492,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_lengt
     filter(!!x %in% categories_kept & !!y != 0)
   
   category_labels <- if (nrow(label_pos) > 0)
-    ggrepel::geom_label_repel(data = label_pos, aes(label = str_wrap(label, label_wrap_length), y = pos),
+    ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos),
                               nudge_x = 1,
                               color = label_pos$text_color,
                               max.overlaps = Inf,
