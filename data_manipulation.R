@@ -94,8 +94,8 @@ import_data <- function(parameters, record_id, live_filters) {
   report_data_flattened <- inner_join(
     all_records %>%
       mutate(across(any_of(c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")), ~replace(.x, .x == "", NA))) %>%
-      select(1, all_of(names(report_data))) %>%
-      group_by(across(all_of(names(report_data)))) %>%
+      select(1, any_of(names(report_data))) %>%
+      group_by(across(any_of(names(report_data)))) %>%
       # Add row number for each identical row the records (only counting fields in the report)
       mutate(adv_graph_internal_duplicates_id = row_number())
     ,
@@ -131,19 +131,19 @@ import_data <- function(parameters, record_id, live_filters) {
   # Join the flattened report_data with the flattened filtered records
   report_data <- inner_join(
     report_data_flattened %>%
-      select(all_of(names(report_data))) %>%
-      group_by(across(all_of(names(report_data)))) %>%
+      select(any_of(names(report_data))) %>%
+      group_by(across(any_of(names(report_data)))) %>%
       mutate(adv_graph_internal_duplicates_id = row_number())
     ,
     records_flattened_filtered %>%
-      select(all_of(names(report_data))) %>%
-      group_by(across(all_of(names(report_data)))) %>%
+      select(any_of(names(report_data))) %>%
+      group_by(across(any_of(names(report_data)))) %>%
       mutate(adv_graph_internal_duplicates_id = row_number())
     ,
     by = c(names(report_data), "adv_graph_internal_duplicates_id")
   ) %>% 
     # remove the duplicate_id column
-    select(names(report_data))  %>% 
+    select(any_of(names(report_data)))  %>% 
     # Store it as a dataframe
     as.data.frame()
 
