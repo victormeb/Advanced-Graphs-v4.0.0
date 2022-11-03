@@ -90,15 +90,15 @@ if (params$pid != 0) {
   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
 }
 
-pattern <- "</?\\w+((\\s+\\w+(\\s*=\\s*(?:\".*?\"|'.*?'|[^'\">\\s]+))?)+\\s*|\\s*)/?>"
-
-
 # Remove HTML if there is any  
 html_labels <- data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] %>%
-  lapply(function(x) htmlParse(x,  asText = TRUE) %>% xpathApply("//body//text()[not(ancestor::script)][not(ancestor::style)][not(ancestor::noscript)]", xmlValue)) %>% unlist()
+  lapply(function(x) htmlParse(x,  asText = TRUE) %>% xpathApply("//body//text()[not(ancestor::script)][not(ancestor::style)][not(ancestor::noscript)]", xmlValue) %>% paste0(collapse = "")) %>% unlist()
+
+# Remove any entries created which hold only whitespace
+html_labels <- html_labels[which(nchar(trimws(html_labels, whitespace = "[ \t\r\n\xA0\f]")) != 0)]
 
 # Fix duplicate label names
-data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] <- vctrs::vec_as_names(gsub(pattern, "\\1", html_labels), repair = "unique", quiet = TRUE)
+data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] <- vctrs::vec_as_names(html_labels, repair = "unique", quiet = TRUE)
 
 ##### Get likert groups #####
 # field_types that are candidates for likert
