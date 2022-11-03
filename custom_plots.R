@@ -483,7 +483,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_lengt
   label_pos <- data %>% 
     arrange(!!x) %>%
     mutate(text_color = text_color, 
-           label = replace_na(as.character(!!x), "NA"),      
+           label = str_trunc(replace_na(as.character(!!x), "NA"), 250/length(categories_kept)),      
            csum = rev(cumsum(rev(!!y))),
            pos = !!y/2 + lead(csum, 1),
            pos = if_else(is.na(pos), !!y/2, pos)) %>%
@@ -497,7 +497,7 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_lengt
                               color = label_pos$text_color,
                               max.overlaps = Inf,
                               show.legend = FALSE,
-                              force=3000,
+                              force=1000,
                               max.time=1)
     else
       geom_blank()
@@ -592,7 +592,6 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   color_names <- eval_tidy(y, data = data) %>% unique()
   color_breaks <- color_names[n_spaced_indices(length(color_names), max_colors)]
   
-  
   # Count the number of bars
   x_bars = data %>% select(!!x) %>% distinct() %>% nrow()
   
@@ -656,10 +655,9 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     legend_size = 5
   }
   
-
   # Pass the data to ggplot
   p <- list(data %>% 
-    ggplot(aes(x=!!x, fill = str_wrap(!!y, label_wrap_length), y = !!fill)) +
+    ggplot(aes(x=!!x, fill = !!y, y = !!fill)) +
     # Add bars, don't add blue outline for stacked bars
     (if (position == "dodge")
       geom_bar(position = position, stat = "identity", width = 0.9)
@@ -669,7 +667,8 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     scale_fill_viridis(discrete = T, option = "H", 
                        na.value = "grey",
                        # Only include max_colour colours in the legend
-                       breaks = color_breaks) +
+                       breaks = color_breaks, 
+                       labels = function(x) str_wrap(x, width = label_wrap_length)) +
     # Only include labels for max_bars bars
     scale_x_discrete(breaks = replace(as.character(bar_names), !(bar_names %in% bar_breaks), ""), labels = function(x) str_wrap(x, width = label_wrap_length)) +
     scale_y_continuous(expand = expansion(c(0, 0.25))) +
