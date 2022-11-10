@@ -319,7 +319,7 @@ custom_scatter <- function(data, x, y, line = FALSE) {
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 15, label_wrap_length = 20) {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, label_wrap_length = 20, max_label_length = 25) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -394,6 +394,13 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
     v_just <- 0
   }
   
+  if (wrap_label == TRUE && !is.null(wrap_label)) {
+    x_lab_func <- function(x) str_wrap(x, width = label_wrap_length)
+  } else if (is.numeric(max_label_length) && max_label_length >= 3) {
+    x_lab_func <- function(x) str_trunc(x, width = max_label_length)
+  } else {
+    x_lab_func <- function(x) x
+  }
   # Pass the data to ggplot
   p <- list(data %>%
     arrange(!!x) %>%
@@ -403,7 +410,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 1
     geom_bar(stat = "identity") +
     # Add viridis colors
     scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = function(x) str_wrap(x, label_wrap_length)) + 
-    scale_x_discrete(breaks = bar_breaks, labels = function(x) str_wrap(x, width = label_wrap_length), expand = expansion(c(0.05,0.05))) +
+    scale_x_discrete(breaks = bar_breaks, labels = x_lab_func, expand = expansion(c(0.05,0.05))) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
           # Adjust the position of the title to be centered

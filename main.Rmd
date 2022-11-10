@@ -56,6 +56,7 @@ library(stringr)
 # --- Used for data manipulation ---
 library(dplyr)
 library(tidyr)
+library(tibble)
 # This allows us to group by all without
 # being warned which groups are bing used
 options(dplyr.summarise.inform = FALSE)
@@ -197,6 +198,45 @@ radio_categories <- data_dictionary %>%
     & select_choices_or_calculations != "") %>%
   # Turn them into a list of category attributes
   parse_categories()
+
+# Get other fields based on branching logic
+other_fields <- data_dictionary %>%
+  filter(
+    # Choose only fields in the report
+    field_name %in% names(report_data)
+    # Remove fields whos branching logic is empty
+    & !is.null(branching_logic)
+    & branching_logic != ''
+    # Only include fields whose field type is text
+    & field_type == "text"
+  ) %>%
+  # Create a list mapping fields to the fields whos branching
+  # logic they depend on
+  (function(data) {
+    mapply(
+      function(field_name, other_field) {
+        list(
+          # The other field is the name of the current field
+          other_fields = field_name,
+          # Remove numbers from radio fields and remove square brackets
+          field_names = lapply(other_field, gsub, pattern = "\\[|\\]|\\([0-9]+\\)", replacement = "")
+        )
+      },
+      # Get the field name
+      data$field_name,
+      # Extract field names from in between [] brackets
+      regmatches(data$branching_logic, gregexpr("\\[.*?\\]",data$branching_logic)),
+      SIMPLIFY = FALSE
+     ) %>%
+      ## Reverse the order of the list so the names of the list refer to the
+      # columns that have an associated other column
+      enframe() %>%
+      unnest(cols = value) %>%
+      group_by(value) %>%
+      summarize(name = list(name)) %>%
+      transmute(field_name = value, other_fields = name) %>%
+      deframe()
+    })
 
 # Get date fields
 date_fields <- data_dictionary %>%
@@ -381,6 +421,10 @@ for (checkbox_field in checkbox_fields) {
            ,
            title = paste0("Count of ", checkbox_field$field_label)
          )
+         
+         if (any(checkbox_field$field_name %in% names(other_fields)))
+           for (other_field in other_fields[[checkbox_field$field_name]]$others)
+             kable(report_data[[other_field$field]]) %>% print()
        })
       # Create a custom bar plot
   }
@@ -413,6 +457,10 @@ for (radio_category in radio_categories) {
            ,
            title = paste0("Count of ", radio_category$field_label)
          )
+      
+          if (any(radio_category$field_name %in% names(other_fields)))
+           for (other_field in other_fields[[radio_category$field_name]]$others)
+             kable(report_data[[other_field$field_label]]) %>% print()
        })
 }
 
