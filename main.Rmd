@@ -678,8 +678,8 @@ if (length(radio_categories) >= 2) {
 # If a field_name contains one of these keywords it will be considered a longitude/latitude column
 # ADD keywords in order of longest starting string to shortest
 # e.g. c("longitude", "longitud", "long", "l")
-longitude_keywords <- c("longitude", "longitud")
-latitude_keywords <- c("latitude", "latitud")
+longitude_keywords <- c("longitude", "longitud", "Longitude", "Longitud")
+latitude_keywords <- c("latitude", "latitud", "Latitude", "Latitud")
 
 # Create a dataframe of the field names containing the longitude keywords
 longitudes <- data_dictionary %>%
@@ -692,7 +692,8 @@ longitudes <- data_dictionary %>%
     # The field label
     field_label, 
     # The name with the latitude keyword removed
-    stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
+    stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE),
+    stripped_label = sapply(regmatches(field_label, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_label), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
 
 # Create a dataframe of the field names containing the latitude keywords
 latitudes <- data_dictionary %>%
@@ -701,7 +702,9 @@ latitudes <- data_dictionary %>%
   transmute(
     field_name, 
     field_label, 
-    stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
+    stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE),
+    stripped_label = sapply(regmatches(field_label, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_label), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE)
+    )
 
 # Join the latitude and longitude dataframes by the stripped names
 # e.g. sending_longitude and sending_latidute => sending_
@@ -712,21 +715,22 @@ coordinate_fields <- inner_join(longitudes, latitudes, by = "stripped_name")
 if (nrow(coordinate_fields) > 0) {
   # Create a list of coordinate fields where each item has...
   coordinate_fields <- coordinate_fields %>%
-  {mapply(FUN = function(longitude_name, latitude_name, longitude_label, latitude_label) {
+  {mapply(FUN = function(longitude_name, latitude_name, longitude_label, latitude_label, stripped_label) {
     list(
       # The following attributes
       longitude_name = longitude_name,
       latitude_name = latitude_name,
       longitude_label = longitude_label,
-      latitude_label =latitude_label
+      latitude_label =latitude_label,
+      stripped_label = stripped_label
     )
-  }, longitude_name = .[,"field_name.x"], latitude_name = .[,"field_name.y"], longitude_label = .[,"field_label.x"], latitude_label = .[,"field_label.y"], SIMPLIFY = FALSE)}
+  }, longitude_name = .[,"field_name.x"], latitude_name = .[,"field_name.y"], longitude_label = .[,"field_label.x"], latitude_label = .[,"field_label.y"], stripped_label = .[,"stripped_label.x"], SIMPLIFY = FALSE)}
 } else {
   coordinate_fields <- list()
 }
 
 if (length(coordinate_fields) > 0) {
-    cat("<h3>Location counts</h3>")
+    cat("<h3>Maps with counts</h3>")
 # Create a list of maps by
 maps <- list()
 
@@ -736,52 +740,67 @@ for (coordinate_field in coordinate_fields) {
       report_data %>%
         # Naming them longitude and latitude respectively
         transmute(
-          across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name)), .names = "{names_to_labels[.col]}")
+          across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, sapply(radio_categories, function(x) x$field_name))), .names = "{names_to_labels[.col]}")
         ) %>%
         # Remove na entries
-        na.omit() %>%
+        #na.omit() %>%
+        filter(if_all(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)), ~!is.na(.))) %>%
+        # Remove the columns that have more than one option per location
+        select(
+          # Get the names of the columns where
+          all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label, names(
+            (.) %>% 
+              # When grouped by the location
+              group_by(across(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)))) %>% 
+              # Each column has exactly one category per location
+              summarise(across(.fns = ~if(n_distinct(.x) == 1) TRUE else FALSE), .groups = "keep") %>% 
+              # (function(data2) {
+              #   print(kable(data2))
+              #   return(data2)}) %>%
+              select(where(~all(as.logical(.x))))
+            )))
+          ) %>%
         (function (data) {
           list(
-            data%>%
-             # group by pairs of longitudes and latitudes
-              group_by(across(everything())) %>%
-              # Add a location id to each latitude/longitude combination
-              # and add a count for the number of entries per location
-              summarise(location = cur_group_id(), count = n()) %>%
-              # Ungroup the output
-              ungroup() %>%
-              # Create a custom map with each location having its own color
-              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = "location", count = "count"),
-            # Create a custom map that clusters the locations
+            data %>%
+              # Group by the locations
+              group_by(across(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)))) %>%
+              # Get a count a unique location column
+              summarise(across(.fns = first), location = cur_group_id(), count = n(), .groups = "keep") %>%
+              {lapply(setdiff(names(.), c(coordinate_field$longitude_label, coordinate_field$latitude_label, "count")),
+                 function(category)
+                    custom_map(., lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category, count = "count", title = if (category != "location") paste0(coordinate_field$stripped_label, " Count by ", category) else paste0(coordinate_field$stripped_label, " Count"))
+          )},
             data %>%
               # Create a custom map with each location having clusterings
-              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label)
+              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, title = paste0(coordinate_field$stripped_label, " count"))
           )
         })
       )
                   
                   
                         
-  
-  if (!any(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name)]))) {
-    cat("<h5>Coordinates with category</h5>")
-    
-      maps <- maps %>%
-        append(lapply(
-          radio_categories,
-          function(category) {
-            report_data %>%
-                    # Naming them longitude and latitude respectively
-                    transmute(
-                      across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)), .names = "{names_to_labels[.col]}")
-                    ) %>% mutate(count = 1) %>%
-                    filter(!is.na(!!sym(coordinate_field$longitude_label)) & !is.na(!!sym(coordinate_field$latitude_label))) %>%
-              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category$field_label)
-          }))
-  }
-}
+#   for (category in radio_categories)
+#     if (all(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)])|duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)],fromLast = TRUE)))
+#   if (!any(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name)]))) {
+#     cat("<h5>Coordinates with category</h5>")
+# 
+#       maps <- maps %>%
+#         append(lapply(
+#           radio_categories,
+#           function(category) {
+#             report_data %>%
+#                     # Naming them longitude and latitude respectively
+#                     transmute(
+#                       across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)), .names = "{names_to_labels[.col]}")
+#                     ) %>% mutate(count = 1) %>%
+#                     filter(!is.na(!!sym(coordinate_field$longitude_label)) & !is.na(!!sym(coordinate_field$latitude_label))) %>%
+#               custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category$field_label)
+#           }))
+#   }
+# }
 # Use htmltools to print the maps
-
+}
 htmltools::tagList(maps)
 }
 # if (length(coordinate_fields) >= 2) {

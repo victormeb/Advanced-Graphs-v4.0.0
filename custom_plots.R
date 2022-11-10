@@ -821,7 +821,7 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = 
 #   Output:
 #     
 #     A map
-custom_map <- function(data, lat, lng, type = NULL, count = NULL) {
+custom_map <- function(data, lat, lng, type = NULL, count = NULL, title = "") {
   color = "#03F"
   weight = 5
   label = NULL
@@ -873,13 +873,13 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL) {
     (
       function(map) {
         if (!is.null(type))
-          addLegend(map, "bottomright", pal = pal, values = data[[type]], title = type)
+          addLegend(map, "bottomright", pal = pal, opacity = 1, values = data[[type]], title = type)
         else
           map
       }
     ) %>%
     # Add a title
-    addControl(paste0(lng, " vs ", lat), position = "bottomleft")
+    addControl(title, position = "bottomleft")
 }
 
 custom_network <- function(data, x, y) {
