@@ -39,7 +39,7 @@ figcaption {
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, eval = T, results = "asis")
+knitr::opts_chunk$set(echo = FALSE, eval = F, results = "asis")
 
 # Used for connections to get data from redcap
 library(RCurl)
@@ -79,16 +79,24 @@ if (params$pid != 0) {
   project_info <- post_project_info(params)
   data_dictionary <- post_data_dictionary(params)
   
+  repeated_forms <- post_repeated_forms(params)
+  
+  instruments <- post_instruments(params)
+  
   categories <- parse_categories(data_dictionary)
   
   # Retrieve the live filters
   live_filters <- parse_live_filters(params, categories, data_dictionary)
   
   # Retrieve report data
-  report_data <- import_data(params, data_dictionary$field_name[1], live_filters)
+  report_data <- import_data(params, data_dictionary, live_filters)
 } else {
   # Data dictionary is same one from Advanced Graphs - Demo Project
   data_dictionary <- read.csv(file = "./sample/sample_data_dictionary.csv", header = TRUE)
+
+  
+  repeated_forms <- data.frame(form_name = character(0))
+  
   categories <- parse_categories(data_dictionary)
   
   project_info <- data.frame(project_title = c("Sample Data"))
@@ -98,6 +106,16 @@ if (params$pid != 0) {
   # Report data was randomly sampled from Advanced Graphs - Demo Project
   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
 }
+
+plotting_groups <- left_join(data_dictionary, instruments, by = c("form_name" = "instrument_name")) %>%
+  mutate(form_name = if_else(form_name %in% repeated_forms$form_name, form_name, "adv_graph_internal_no_repeat_form_name")) %>%
+  group_by(form_name) %>%
+  summarise(
+    field_name = list(field_name), 
+    instrument_label = paste0("(", paste0(unique(instrument_label), collapse = ", "), ")"),
+    .groups = "drop") %>%
+  select(instrument_label, field_name) %>%
+  deframe()
 
 # Remove HTML if there is any  
 html_labels <- data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] %>%
@@ -127,7 +145,7 @@ likert_groups <- data_dictionary %>%
     & grepl(paste0("*",tolower(key_likert_words), "*", collapse = "|"), tolower(select_choices_or_calculations))
   ) %>%
   # Group the fields that have the same options
-  group_by(select_choices_or_calculations) %>%
+  group_by(form_name, select_choices_or_calculations) %>% #TODO: Likert only in same instrument?
   # Take a list of field names and labels
   summarise(field_name = list(field_name), field_label = list(field_label)) %>%
   # Parse the categories into a useful format (collapses field_name, field_label, options_code and options_label using field_name, field_label, and select_choices_or_calculations)
@@ -180,9 +198,11 @@ categorical_types <- c("radio", "dropdown", "yesno", "truefalse")
 radio_categories <- data_dictionary %>%
   # If the field type is yesno or truefalse but there is no select_choices_or_calculations
   # Add select_choices_or_calculations
-  mutate(select_choices_or_calculations = 
+  mutate(
+    select_choices_or_calculations = replace_na(as.character(select_choices_or_calculations), ""),
+    select_choices_or_calculations =
            case_when(
-             select_choices_or_calculations != "" ~ select_choices_or_calculations,
+             replace_na(as.character(select_choices_or_calculations), "") != "" ~ select_choices_or_calculations,
              field_type == "yesno" ~ "1, Yes | 0, No",
              field_type == "truefalse" ~ "1, True | 0, False",
              TRUE ~ select_choices_or_calculations
@@ -212,31 +232,14 @@ other_fields <- data_dictionary %>%
   ) %>%
   # Create a list mapping fields to the fields whos branching
   # logic they depend on
-  (function(data) {
-    mapply(
-      function(field_name, other_field) {
-        list(
-          # The other field is the name of the current field
-          other_fields = field_name,
-          # Remove numbers from radio fields and remove square brackets
-          field_names = lapply(other_field, gsub, pattern = "\\[|\\]|\\([0-9]+\\)", replacement = "")
-        )
-      },
-      # Get the field name
-      data$field_name,
-      # Extract field names from in between [] brackets
-      regmatches(data$branching_logic, gregexpr("\\[.*?\\]",data$branching_logic)),
-      SIMPLIFY = FALSE
-     ) %>%
-      ## Reverse the order of the list so the names of the list refer to the
-      # columns that have an associated other column
-      enframe() %>%
-      unnest(cols = value) %>%
-      group_by(value) %>%
-      summarize(name = list(name)) %>%
-      transmute(field_name = value, other_fields = name) %>%
-      deframe()
-    })
+  transmute(
+    if_field = lapply(str_extract_all(branching_logic, "\\[.*?\\]"), gsub, pattern = "\\[|\\]|\\([0-9]+\\)", replacement = ""),
+    field_name
+  ) %>%
+  unnest(col = if_field) %>%
+  group_by(if_field) %>%
+  summarise(field_name = list(field_name)) %>%
+  deframe()
 
 # Get date fields
 date_fields <- data_dictionary %>%
@@ -288,16 +291,18 @@ date_fields <- date_fields$field_name
 # This is used to extract the text labels from the field names
 names_to_labels <- data_dictionary$field_label
 names(names_to_labels) <- data_dictionary$field_name
+
+print(kable(report_data))
 ```
 
 
-```{r, results = 'asis', eval = TRUE}
+```{r header, results = 'asis', eval = TRUE}
 cat("\n###", project_info$project_title)
 cat("\n#### Number of records returned:", nrow(report_data))
 
 cat("\n##### Live filter(s): ")
 if (nrow(live_filters) > 0 ) {
-  cat("######", paste0(live_filters$field_label, " = ", live_filters$options_label, collapse = "\t "))
+  cat(paste0(live_filters$field_label, " = ", live_filters$options_label, collapse = "\t "))
 } else {
   cat("None")
 }
@@ -307,31 +312,33 @@ if (nrow(live_filters) > 0 ) {
 
 
 ```{r likert_plots}
-if (length(likert_groups) > 0)
-  cat("<h3>Likert plots</h3>")
-
-# For each set of fields that share options
-for (likert_group in likert_groups) {
-    report_data %>%
-      data.frame() %>%
-      # Select these fields from the data dictionary
-      # Across changes the field_names to their corresponding field labels 
-      transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
-      (function(data) {
-        # If any of the fields contain an NA
-       if (any(is.na(data))) {
-         return(
-           # Add an NA field to each factor
-           transmute(data, across(.fns = addNA))
-         )
-       }
-        # Otherwise return the data as is
-        return(data)
-      }) %>%
-      # Pass this dataframe to the custom likert
-      custom_likert() %>%
-      # print this plot
-      print()
+for (i in seq_along(plotting_groups)) {
+  plotting_group <- plotting_groups[[i]]
+  if (length(likert_groups[likert_groups %in% plotting_group]) > 0)
+    cat("<h3>Likert plots for Instrument(s) ", names(plotting_groups)[i], "</h3>", sep = "")
+  # For each set of fields that share options
+  for (likert_group in likert_groups[likert_groups %in% plotting_group]) {
+      report_data %>%
+        data.frame() %>%
+        # Select these fields from the data dictionary
+        # Across changes the field_names to their corresponding field labels 
+        transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
+        (function(data) {
+          # If any of the fields contain an NA
+         if (any(is.na(data))) {
+           return(
+             # Add an NA field to each factor
+             transmute(data, across(.fns = addNA))
+           )
+         }
+          # Otherwise return the data as is
+          return(data)
+        }) %>%
+        # Pass this dataframe to the custom likert
+        custom_likert() %>%
+        # print this plot
+        print()
+  }
 }
 ```
 
@@ -339,264 +346,281 @@ for (likert_group in likert_groups) {
 ```{r scatter_plots, results='asis'}
 scatter_fields <- c(date_fields, numeric_fields)
 
-if (length(scatter_fields) > 1)
-  cat("<h3>Scatter plots  </h3>")
-
-for (x_field in scatter_fields) {
-  # And each field considered y
-  # If the entire column is not empty
-  if (!all(is.na(report_data[,x_field])))
-    for (y_field in scatter_fields) {
-      # Excluding field_x = field_y and empty y_field
-      if ((y_field != x_field)& !all(is.na(report_data[,y_field]))) {
-          report_data %>%
-            # Get x and y fields and name them by their respective labels
-            transmute(
-              across(all_of(x_field), .names = "{names_to_labels[x_field]}"),
-              across(all_of(y_field), .names = "{names_to_labels[y_field]}")
-            ) %>%
-            # Remove NA entries from the data
-            na.omit() %>%
-          (function(data) {
-            # If there is data to plot
-            if (nrow(data) > 0) {
-              # Plot the scatter plot and line plot side by side
-              side_by_side(
-                data %>%
-                  custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = FALSE)
-              ,
-                data %>%
-              custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = TRUE)
-              ,
-              title = paste0(names_to_labels[y_field], " vs ", names_to_labels[x_field])
-              )
-            }
-          })
-      }
-    } 
+for (i in seq_along(plotting_groups)) {
+  plotting_group <- plotting_groups[[i]]
+  if (length(scatter_fields[scatter_fields %in% plotting_group]) > 1)
+    if(any(apply(combn(scatter_fields[scatter_fields %in% plotting_group], 2), 1, function(x) nrow(na.omit(report_data[, x]))  > 0)))
+      cat("<h3>Scatter plots for Instrument(s) ", names(plotting_groups)[i], "</h3>", sep = "")
+  
+  for (x_field in scatter_fields[scatter_fields %in% plotting_group]) {
+    # And each field considered y
+    # If the entire column is not empty
+    if (!all(is.na(report_data[,x_field])))
+      for (y_field in scatter_fields[scatter_fields %in% plotting_group]) {
+        # Excluding field_x = field_y and empty y_field
+        if ((y_field != x_field)& !all(is.na(report_data[,y_field]))) {
+            report_data %>%
+              # Get x and y fields and name them by their respective labels
+              transmute(
+                across(all_of(x_field), .names = "{names_to_labels[x_field]}"),
+                across(all_of(y_field), .names = "{names_to_labels[y_field]}")
+              ) %>%
+              # Remove NA entries from the data
+              na.omit() %>%
+            (function(data) {
+              # If there is data to plot
+              if (nrow(data) > 0) {
+                # Plot the scatter plot and line plot side by side
+                side_by_side(
+                  data %>%
+                    custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = FALSE)
+                ,
+                  data %>%
+                custom_scatter(x = !!sym(names_to_labels[x_field]), y = !!sym(names_to_labels[y_field]), line = TRUE)
+                ,
+                title = paste0(names_to_labels[y_field], " vs ", names_to_labels[x_field])
+                )
+              }
+            })
+        }
+      } 
+  }
 }
-
 ```
 
 
 ```{r bar_plots}
 # Get a parsed list of each check box field
 checkbox_fields <- data_dictionary %>%
-  filter(field_type == "checkbox") %>%
+  filter(
+    sapply(field_name, function(x) any(grep(paste0(x, "___[0-9]+\\b"), names(report_data))))
+    & field_type == "checkbox"
+    ) %>%
   parse_categories()
 
-if (length(radio_categories) > 0)
-  cat("<h3>Category counts</h3>")
-
-for (checkbox_field in checkbox_fields) {
-  # If there is at least one field of the form "field_name___[0-9]+" in the report_data
-  # create a plot
-  if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
-    report_data %>%
-      # Select each column of the report data that matches the current checkbox field
-      select(matches(paste0(checkbox_field$field_name, "___[0-9]+\\b"))) %>%
-      # Let each column be it's own level in a factor column
-      pivot_longer(cols = everything())  %>%
-      # remove NA entries
-      na.omit() %>%
-      group_by(name, .drop = FALSE) %>%
-      # Get the count and proportion for each of the checkboxes
-      summarise(count = sum(value), percent = count/n())  %>%
-      # Use the field label as the name 
-      transmute(
-        # Use the field_label as the name for the options
-        "{checkbox_field$field_label}" := 
-          # replace the field_name__1 with the corresponding label
-          factor(checkbox_field$options_label[str_extract(name, "[0-9]+\\b")], levels = checkbox_field$options_label), 
-        # Include counts and percents
-        count, 
-        percent) %>%
-       (function(data) {
-         side_by_side(
-           data %>%
-           custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE)
-           ,
-           data %>%
-           custom_pie(x = !!sym(checkbox_field$field_label), y = count, title = paste0("Count of ", checkbox_field$field_label))
-           ,
-           title = paste0("Count of ", checkbox_field$field_label)
-         )
-         
-         if (any(checkbox_field$field_name %in% names(other_fields)))
-           for (other_field in other_fields[[checkbox_field$field_name]]$others)
-             kable(report_data[[other_field$field]]) %>% print()
-       })
-      # Create a custom bar plot
+for (i in seq_along(plotting_groups)) {
+  plotting_group <- plotting_groups[[i]]
+  if (length(checkbox_fields[names(checkbox_fields) %in% plotting_group]) > 0)
+    cat("<h3>Checkbox counts for Instrument(s) ", names(plotting_groups)[i], "</h3>", sep = "")
+  for (checkbox_field in checkbox_fields[names(checkbox_fields) %in% plotting_group]) {
+    # If there is at least one field of the form "field_name___[0-9]+" in the report_data
+    # create a plot
+    if (any(grepl(paste0(checkbox_field$field_name, "___[0-9]+\\b"), names(report_data)))) {
+      report_data %>%
+        # Select each column of the report data that matches the current checkbox field
+        select(matches(paste0(checkbox_field$field_name, "___[0-9]+\\b"))) %>%
+        # Let each column be it's own level in a factor column
+        pivot_longer(cols = everything())  %>%
+        # remove NA entries
+        na.omit() %>%
+        group_by(name, .drop = FALSE) %>%
+        # Get the count and proportion for each of the checkboxes
+        summarise(count = sum(value), percent = count/n())  %>%
+        # Use the field label as the name 
+        transmute(
+          # Use the field_label as the name for the options
+          "{checkbox_field$field_label}" := 
+            # replace the field_name__1 with the corresponding label
+            factor(checkbox_field$options_label[str_extract(name, "[0-9]+\\b")], levels = checkbox_field$options_label), 
+          # Include counts and percents
+          count, 
+          percent) %>%
+         (function(data) {
+           side_by_side(
+             data %>%
+             custom_bars(x = !!sym(checkbox_field$field_label), y = count, label2 = percent, percent = TRUE)
+             ,
+             data %>%
+             custom_pie(x = !!sym(checkbox_field$field_label), y = count, title = paste0("Count of ", checkbox_field$field_label))
+             ,
+             title = paste0("Count of ", checkbox_field$field_label)
+           )
+           
+           if (any(checkbox_field$field_name %in% names(other_fields)))
+             for (other_field in other_fields[[checkbox_field$field_name]])
+              print_other_table(report_data, other_field, title = paste0(names_to_labels[other_field], " responses"))
+         })
+        # Create a custom bar plot
+    }
   }
-}
 
-for (radio_category in radio_categories) {
-  # If the entire column isn't NA
-  if (!all(is.na(report_data[[radio_category$field_name]])))
-  report_data %>%
-    transmute(
-      # Select the column
-      across(all_of(radio_category$field_name),
-             # Rename it the field label
-             .names = radio_category$field_label)
-      ) %>%
-    # Get a count of each category
-    group_by_all(.drop = FALSE) %>%
-    summarise(count = n()) %>%
-    # Add a percent column
-    mutate(percent = count/sum(count)) %>%
-    # Create a custom bar plot
-    # Print it
-    (function(data) {
-         side_by_side(
-           data %>%
-           custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE)
-           ,
-           data %>%
-           custom_pie(x = !!sym(radio_category$field_label), y = count)
-           ,
-           title = paste0("Count of ", radio_category$field_label)
-         )
-      
-          if (any(radio_category$field_name %in% names(other_fields)))
-           for (other_field in other_fields[[radio_category$field_name]]$others)
-             kable(report_data[[other_field$field_label]]) %>% print()
-       })
+  if (length(radio_categories[names(radio_categories) %in% plotting_group]) > 0)
+    cat("<h3>Category counts for Instrument(s) ", names(plotting_groups)[i], "</h3>", sep = "")
+  
+  for (radio_category in radio_categories[names(radio_categories) %in% plotting_group]) {
+    # If the entire column isn't NA
+    if (!all(is.na(report_data[[radio_category$field_name]])))
+    report_data %>%
+      transmute(
+        # Select the column
+        across(all_of(radio_category$field_name),
+               # Rename it the field label
+               .names = radio_category$field_label)
+        ) %>%
+      # Get a count of each category
+      group_by_all(.drop = FALSE) %>%
+      summarise(count = n()) %>%
+      # Add a percent column
+      mutate(percent = count/sum(count)) %>%
+      # Create a custom bar plot
+      # Print it
+      (function(data) {
+           side_by_side(
+             data %>%
+             custom_bars(x = !!sym(radio_category$field_label), y = count, label2 = percent, percent = TRUE)
+             ,
+             data %>%
+             custom_pie(x = !!sym(radio_category$field_label), y = count)
+             ,
+             title = paste0("Count of ", radio_category$field_label)
+           )
+        
+            if (any(radio_category$field_name %in% names(other_fields)))
+              for (other_field in other_fields[[radio_category$field_name]])
+                print_other_table(report_data, other_field, title = paste0(names_to_labels[other_field], " responses"))
+         })
+  }
 }
 
 ```
 
 
 ```{r numerical_bar_plots}
-if (length(radio_categories) > 0 && length(numeric_fields) > 0)
-  cat("<h3>Numerical bar plots</h3>")
-
-# For each radio category
-for (category in radio_categories) {
-  # If the category column isn't empty
-  if (!all(is.na(report_data[[category$field_name]])))
-  # For each numeric field
-  for (numeric_field in numeric_fields) {
-    # If the numeric column isn't empty
-    if (!all(is.na(report_data[[numeric_field]])))
-    report_data %>%
-      transmute(
-        # Select the cateorical column
-        across(all_of(category$field_name), .names = "category"),
-        # Select the numeric column
-        across(all_of(numeric_field), .names = "numeric")
-      ) %>% 
-      # Remove entries where the numeric column is NA
-      filter(!is.na(numeric)) %>%
-      # Group by the category and do not drop categories that do no show up in the data
-      # TODO: Do we want to drop or keep empty levels
-      group_by(category, .drop = FALSE) %>%
-      # Get the mean for each group, 0 if there are no numeric fields
-      summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else round(mean(numeric, na.rm = TRUE), 2), min = if (n() == 0) 0 else min(numeric, na.rm = TRUE), max = if (n() == 0) 0 else max(numeric, na.rm = TRUE)) %>%
-      (function (data){
-        # Side by side mean bar chart and pie chart
-        side_by_side(
-          data %>%
-            # Rename the fields based on their field names
-            transmute(
-              "{category$field_label}" := category, 
-              # Get the mean
-              "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
-          # Create a custom bar plot
-          custom_bars(x = !!sym(category$field_label), 
-                      y = !!sym(paste0(names_to_labels[numeric_field], " (mean)")))
-          # End of plot 1
+for (i in seq_along(plotting_groups)) {
+  plotting_group <- plotting_groups[i]
+  if (length(radio_categories[names(radio_categories) %in% plotting_group]) > 0 && length(numeric_fields[numeric_fields %in% plotting_group]) > 0)
+    cat("<h3>Numerical bar plots for Instrument(s) ", names(plotting_groups)[i], "</h3>")
+  # For each radio category
+  for (category in radio_categories[names(radio_categories) %in% plotting_group]) {
+    # If the category column isn't empty
+    if (!all(is.na(report_data[[category$field_name]])))
+    # For each numeric field
+    for (numeric_field in numeric_fields[numeric_fields %in% plotting_group]) {
+      # If the numeric column isn't empty
+      if (!all(is.na(report_data[[numeric_field]])))
+      report_data %>%
+        transmute(
+          # Select the cateorical column
+          across(all_of(category$field_name), .names = "category"),
+          # Select the numeric column
+          across(all_of(numeric_field), .names = "numeric")
+        ) %>% 
+        # Remove entries where the numeric column is NA
+        filter(!is.na(numeric)) %>%
+        # Group by the category and do not drop categories that do no show up in the data
+        # TODO: Do we want to drop or keep empty levels
+        group_by(category, .drop = FALSE) %>%
+        # Get the mean for each group, 0 if there are no numeric fields
+        summarise(sum = sum(numeric, na.rm = TRUE), mean = if (n() == 0) 0 else round(mean(numeric, na.rm = TRUE), 2), min = if (n() == 0) 0 else min(numeric, na.rm = TRUE), max = if (n() == 0) 0 else max(numeric, na.rm = TRUE)) %>%
+        (function (data){
+          # Side by side mean bar chart and pie chart
+          side_by_side(
+            data %>%
+              # Rename the fields based on their field names
+              transmute(
+                "{category$field_label}" := category, 
+                # Get the mean
+                "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
+            # Create a custom bar plot
+            custom_bars(x = !!sym(category$field_label), 
+                        y = !!sym(paste0(names_to_labels[numeric_field], " (mean)")))
+            # End of plot 1
+            ,
+            data %>%
+              # Rename the fields based on their field names
+              transmute(
+                "{category$field_label}" := category, 
+                # Get the mean
+                "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
+            # Create a custom pie chart
+            custom_pie(x = !!sym(category$field_label), 
+                      y = !!sym(paste0(names_to_labels[numeric_field], " (mean)")),
+                      title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label))
           ,
-          data %>%
-            # Rename the fields based on their field names
-            transmute(
-              "{category$field_label}" := category, 
-              # Get the mean
-              "{paste0(names_to_labels[numeric_field], \" (mean)\")}" := mean) %>%
-          # Create a custom pie chart
-          custom_pie(x = !!sym(category$field_label), 
-                    y = !!sym(paste0(names_to_labels[numeric_field], " (mean)")),
-                    title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label))
-        ,
-        # Title for side by side plots
-        title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label)
-        )
-        
-        # Side by side total bar chart and pie chart
-        side_by_side(
-          # Beginning of plot 2
-          data %>%
-            transmute(
-              "{category$field_label}" := category, 
-              # Get the sum (total)
-              "{paste0(names_to_labels[numeric_field], \" (total)\")}" := sum) %>%
-          # Create a custom bar plot
-          custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (total)")))
+          # Title for side by side plots
+          title = paste0(names_to_labels[numeric_field], " (mean) per ", category$field_label)
+          )
+          
+          # Side by side total bar chart and pie chart
+          side_by_side(
+            # Beginning of plot 2
+            data %>%
+              transmute(
+                "{category$field_label}" := category, 
+                # Get the sum (total)
+                "{paste0(names_to_labels[numeric_field], \" (total)\")}" := sum) %>%
+            # Create a custom bar plot
+            custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (total)")))
+            ,
+            data %>%
+              transmute(
+                "{category$field_label}" := category, 
+                # Get the sum (total)
+                "{paste0(names_to_labels[numeric_field], \" (total)\")}" := sum) %>%
+            # Create a custom bar plot
+            custom_pie(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (total)")),
+            title = paste0(names_to_labels[numeric_field], " (total) per ", category$field_label))
           ,
-          data %>%
-            transmute(
-              "{category$field_label}" := category, 
-              # Get the sum (total)
-              "{paste0(names_to_labels[numeric_field], \" (total)\")}" := sum) %>%
-          # Create a custom bar plot
-          custom_pie(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (total)")),
-          title = paste0(names_to_labels[numeric_field], " (total) per ", category$field_label))
-        ,
-        # Title for side by side plots
-        title = paste0(names_to_labels[numeric_field], " (total) per ", category$field_label)
-        )
-        
-        # Side by side min bar chart and pie chart
-        side_by_side(
-          data %>%
-            # Rename the fields based on their field names
-            transmute(
-              "{category$field_label}" := category, 
-              # Get the mean
-              "{paste0(names_to_labels[numeric_field], \" (min)\")}" := min) %>%
-          # Create a custom bar plot
-          custom_bars(x = !!sym(category$field_label), 
-                      y = !!sym(paste0(names_to_labels[numeric_field], " (min)")))
-          # End of plot 1
+          # Title for side by side plots
+          title = paste0(names_to_labels[numeric_field], " (total) per ", category$field_label)
+          )
+          
+          # Side by side min bar chart and pie chart
+          side_by_side(
+            data %>%
+              # Rename the fields based on their field names
+              transmute(
+                "{category$field_label}" := category, 
+                # Get the mean
+                "{paste0(names_to_labels[numeric_field], \" (min)\")}" := min) %>%
+            # Create a custom bar plot
+            custom_bars(x = !!sym(category$field_label), 
+                        y = !!sym(paste0(names_to_labels[numeric_field], " (min)")))
+            # End of plot 1
+            ,
+            data %>%
+              # Rename the fields based on their field names
+              transmute(
+                "{category$field_label}" := category, 
+                # Get the mean
+                "{paste0(names_to_labels[numeric_field], \" (min)\")}" := min) %>%
+            # Create a custom bar plot
+            custom_pie(x = !!sym(category$field_label), 
+                        y = !!sym(paste0(names_to_labels[numeric_field], " (min)")),
+            title = paste0(names_to_labels[numeric_field], " (min) per ", category$field_label))
           ,
-          data %>%
-            # Rename the fields based on their field names
-            transmute(
-              "{category$field_label}" := category, 
-              # Get the mean
-              "{paste0(names_to_labels[numeric_field], \" (min)\")}" := min) %>%
-          # Create a custom bar plot
-          custom_pie(x = !!sym(category$field_label), 
-                      y = !!sym(paste0(names_to_labels[numeric_field], " (min)")),
-          title = paste0(names_to_labels[numeric_field], " (min) per ", category$field_label))
-        ,
-        # Title for side by side plots
-        title = paste0(names_to_labels[numeric_field], " (min) per ", category$field_label)
-        )
-        
-        # Side by side max bar chart and pie chart
-        side_by_side(
-          data %>%
-            transmute(
-              "{category$field_label}" := category, 
-              "{paste0(names_to_labels[numeric_field], \" (max)\")}" := max) %>%
-          # Create a custom bar plot
-          custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (max)")))
-          # End of plot 1
+          # Title for side by side plots
+          title = paste0(names_to_labels[numeric_field], " (min) per ", category$field_label)
+          )
+          
+          # Side by side max bar chart and pie chart
+          side_by_side(
+            data %>%
+              transmute(
+                "{category$field_label}" := category, 
+                "{paste0(names_to_labels[numeric_field], \" (max)\")}" := max) %>%
+            # Create a custom bar plot
+            custom_bars(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (max)")))
+            # End of plot 1
+            ,
+            data %>%
+              transmute(
+                "{category$field_label}" := category, 
+                "{paste0(names_to_labels[numeric_field], \" (max)\")}" := max) %>%
+            # Create a custom bar plot
+            custom_pie(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (max)")),
+            title = paste0(names_to_labels[numeric_field], " (max) per ", category$field_label))
           ,
-          data %>%
-            transmute(
-              "{category$field_label}" := category, 
-              "{paste0(names_to_labels[numeric_field], \" (max)\")}" := max) %>%
-          # Create a custom bar plot
-          custom_pie(x = !!sym(category$field_label), y = !!sym(paste0(names_to_labels[numeric_field], " (max)")),
-          title = paste0(names_to_labels[numeric_field], " (max) per ", category$field_label))
-        ,
-        # Title for side by side plots
-        title = paste0(names_to_labels[numeric_field], " (max) per ", category$field_label)
-        )
-
-      })
+          # Title for side by side plots
+          title = paste0(names_to_labels[numeric_field], " (max) per ", category$field_label)
+          )
+          
+          # Print other responses from this category
+          if (any(category$field_name %in% names(other_fields)))
+             for (other_field in other_fields[[category$field_name]])
+               print_other_table(report_data, other_field, title = paste0(names_to_labels[other_field], " responses"))
+        })
+    }
   }
 }
 ```
@@ -606,120 +630,129 @@ for (category in radio_categories) {
 ```{r stacked_bars, results='asis', message=FALSE}
 # A "New names:" warning is introduced by the custom_crosstabs function
 # TODO: Fix warning from custom_crosstabs
-
-# If there are at least two categories
-if (length(radio_categories) >= 2) {
-  cat("<h3>Stacked and grouped bars</h3>")
+for (i in seq_along(plotting_groups)) {
+    plotting_group <- plotting_groups[[i]]# If there are at least two categories
+  if (length(radio_categories[names(radio_categories) %in% plotting_group]) >= 2) {
+    cat("<h3>Stacked and grouped bars for Instrument(s) ", names(plotting_groups)[i], "</h3>", sep = "")
+    # Get the combination of these two categories
+    radio_pairs <- combn(radio_categories[names(radio_categories) %in% plotting_group], 2, simplify = FALSE)
+    # For each pair of radio categories
+    for (radio_pair in radio_pairs) {
+      report_data %>%
+        transmute(
+          # Select the x and y categories
+          across(all_of(radio_pair[[1]]$field_name), .names = "{radio_pair[[1]]$field_label}"),
+          # Repeat for second column
+          across(all_of(radio_pair[[2]]$field_name), .names = "{radio_pair[[2]]$field_label}")
+        ) %>%
+        # Group by both columns and do not drop levels where there are no matches
+        group_by_all(.drop = FALSE) %>%
+        # Get a count of each pair of levels
+        summarise(count = n()) %>%
+        # Ungroup data
+        ungroup() %>%
+        mutate(percent = count/sum(count)) %>%
+        (function(data) {
+          # Create a custom stacked  and a grouped bar plot 
+          # with the first field as x and print them side by side
+          side_by_side(
+            # stacked bar plot
+            data %>%
+              custom_stacked(
+                # x and y are the categories
+                x = !!sym(radio_pair[[1]]$field_label), 
+                y = !!sym(radio_pair[[2]]$field_label), 
+                # fill is the data to fill the bars with
+                fill = count, 
+                title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label))
+            ,
+            data %>%
+              custom_stacked(
+                x = !!sym(radio_pair[[1]]$field_label), 
+                             y = !!sym(radio_pair[[2]]$field_label), 
+                             fill = count, 
+                             title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label),
+                             # position = dodge indicates grouped bar plot
+                             position = "dodge",
+                             max_bars = 17)
+            ,
+            # The title to include
+            title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label)
+          )
+          
+        # Create a two more custom stacked and a grouped bar plots 
+        # with the first field as y and print and them side by side
+          side_by_side(
+            data %>%
+            # Create a custom stacked bar plot with the data with the first field as y
+              custom_stacked(
+                x = !!sym(radio_pair[[2]]$field_label), 
+                y = !!sym(radio_pair[[1]]$field_label), 
+                fill = count, 
+                title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label))
+            ,
+            data %>%
+            custom_stacked(
+                x = !!sym(radio_pair[[2]]$field_label), 
+                y = !!sym(radio_pair[[1]]$field_label), 
+                fill = count, 
+                title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label),
+                position = "dodge",
+                max_bars = 17)
+            ,
+            title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label)
+          )
   
-  # Get the combination of these two categories
-  radio_pairs <- combn(radio_categories, 2, simplify = FALSE)
-  # For each pair of radio categories
-  for (radio_pair in radio_pairs) {
-    report_data %>%
-      transmute(
-        # Select the x and y categories
-        across(all_of(radio_pair[[1]]$field_name), .names = "{radio_pair[[1]]$field_label}"),
-        # Repeat for second column
-        across(all_of(radio_pair[[2]]$field_name), .names = "{radio_pair[[2]]$field_label}")
-      ) %>%
-      # Group by both columns and do not drop levels where there are no matches
-      group_by_all(.drop = FALSE) %>%
-      # Get a count of each pair of levels
-      summarise(count = n()) %>%
-      # Ungroup data
-      ungroup() %>%
-      mutate(percent = count/sum(count)) %>%
-      (function(data) {
-        # Create a custom stacked  and a grouped bar plot 
-        # with the first field as x and print them side by side
-        side_by_side(
-          # stacked bar plot
+        # Plot a custom crosstab for either direction of the categorical variables
           data %>%
-            custom_stacked(
-              # x and y are the categories
-              x = !!sym(radio_pair[[1]]$field_label), 
-              y = !!sym(radio_pair[[2]]$field_label), 
-              # fill is the data to fill the bars with
-              fill = count, 
-              title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label))
-          ,
+            # Pass the data to the custom_crosstab function
+            custom_crosstab(
+              x = !!sym(radio_pair[[1]]$field_label),
+              y = !!sym(radio_pair[[2]]$field_label),
+              total = count) %>%
+            print_table(paste0(radio_pair[[1]]$field_label, " vs ", radio_pair[[2]]$field_label, " (count)"))
+  
           data %>%
-            custom_stacked(
-              x = !!sym(radio_pair[[1]]$field_label), 
-                           y = !!sym(radio_pair[[2]]$field_label), 
-                           fill = count, 
-                           title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label),
-                           # position = dodge indicates grouped bar plot
-                           position = "dodge",
-                           max_bars = 17)
-          ,
-          # The title to include
-          title = paste0(radio_pair[[1]]$field_label, " and ", radio_pair[[2]]$field_label)
-        )
+            # Pass the data to the custom_crosstab function
+            custom_crosstab(
+              x = !!sym(radio_pair[[2]]$field_label),
+              y = !!sym(radio_pair[[1]]$field_label),
+              total = count) %>%
+            print_table(paste0(radio_pair[[2]]$field_label, " vs ", radio_pair[[1]]$field_label, " (count)"))
         
-      # Create a two more custom stacked and a grouped bar plots 
-      # with the first field as y and print and them side by side
-        side_by_side(
+          
           data %>%
-          # Create a custom stacked bar plot with the data with the first field as y
-            custom_stacked(
-              x = !!sym(radio_pair[[2]]$field_label), 
-              y = !!sym(radio_pair[[1]]$field_label), 
-              fill = count, 
-              title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label))
-          ,
+            # Pass the data to the custom_crosstab function
+            custom_crosstab(
+              x = !!sym(radio_pair[[1]]$field_label),
+              y = !!sym(radio_pair[[2]]$field_label),
+              total = percent,
+              percent = TRUE) %>%
+            print_table(paste0(radio_pair[[1]]$field_label, " vs ", radio_pair[[2]]$field_label, " (percents of table total)"))
+  
           data %>%
-          custom_stacked(
-              x = !!sym(radio_pair[[2]]$field_label), 
-              y = !!sym(radio_pair[[1]]$field_label), 
-              fill = count, 
-              title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label),
-              position = "dodge",
-              max_bars = 17)
-          ,
-          title = paste0(radio_pair[[2]]$field_label, " and ", radio_pair[[1]]$field_label)
-        )
-
-      # Plot a custom crosstab for either direction of the categorical variables
-        data %>%
-          # Pass the data to the custom_crosstab function
-          custom_crosstab(
-            x = !!sym(radio_pair[[1]]$field_label),
-            y = !!sym(radio_pair[[2]]$field_label),
-            total = count) %>%
-          print_table(paste0(radio_pair[[1]]$field_label, " vs ", radio_pair[[2]]$field_label, " (count)"))
-
-        data %>%
-          # Pass the data to the custom_crosstab function
-          custom_crosstab(
-            x = !!sym(radio_pair[[2]]$field_label),
-            y = !!sym(radio_pair[[1]]$field_label),
-            total = count) %>%
-          print_table(paste0(radio_pair[[2]]$field_label, " vs ", radio_pair[[1]]$field_label, " (count)"))
-      
-        
-        data %>%
-          # Pass the data to the custom_crosstab function
-          custom_crosstab(
-            x = !!sym(radio_pair[[1]]$field_label),
-            y = !!sym(radio_pair[[2]]$field_label),
-            total = percent,
-            percent = TRUE) %>%
-          print_table(paste0(radio_pair[[1]]$field_label, " vs ", radio_pair[[2]]$field_label, " (percents of table total)"))
-
-        data %>%
-          # Pass the data to the custom_crosstab function with percents
-          custom_crosstab(
-            x = !!sym(radio_pair[[2]]$field_label),
-            y = !!sym(radio_pair[[1]]$field_label),
-            total = percent,
-            percent = TRUE) %>%
-          print_table(paste0(radio_pair[[2]]$field_label, " vs ", radio_pair[[1]]$field_label, " (percents of table total)"))
-    })
-
+            # Pass the data to the custom_crosstab function with percents
+            custom_crosstab(
+              x = !!sym(radio_pair[[2]]$field_label),
+              y = !!sym(radio_pair[[1]]$field_label),
+              total = percent,
+              percent = TRUE) %>%
+            print_table(paste0(radio_pair[[2]]$field_label, " vs ", radio_pair[[1]]$field_label, " (percents of table total)"))
+          
+          # Print other fields for x field if there are any
+          if (any(radio_pair[[1]]$field_name %in% names(other_fields)))
+             for (other_field in other_fields[[radio_pair[[1]]$field_name]])
+               print_other_table(report_data, other_field, title = paste0(names_to_labels[other_field], " responses"))
+          
+          # Print other fields for y field if there are any
+          if (any(radio_pair[[2]]$field_name %in% names(other_fields)))
+             for (other_field in other_fields[[radio_pair[[2]]$field_name]])
+                print_other_table(report_data, other_field, title = paste0(names_to_labels[other_field], " responses"))
+      })
+  
+    }
   }
 }
-
 ```
 
 ```{r maps}
@@ -738,7 +771,8 @@ longitudes <- data_dictionary %>%
     # Include the field name
     field_name,
     # The field label
-    field_label, 
+    field_label,
+    form_name,
     # The name with the latitude keyword removed
     stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE),
     stripped_label = sapply(regmatches(field_label, gregexpr(pattern = paste0(longitude_keywords, collapse = "|"), field_label), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE))
@@ -749,7 +783,8 @@ latitudes <- data_dictionary %>%
          & grepl(paste0("*", latitude_keywords,"*", collapse = "|"), field_name)) %>%
   transmute(
     field_name, 
-    field_label, 
+    field_label,
+    form_name,
     stripped_name = sapply(regmatches(field_name, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_name), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE),
     stripped_label = sapply(regmatches(field_label, gregexpr(pattern = paste0(latitude_keywords, collapse = "|"), field_label), invert = TRUE), paste0, collapse = "", USE.NAMES = FALSE)
     )
@@ -757,7 +792,7 @@ latitudes <- data_dictionary %>%
 # Join the latitude and longitude dataframes by the stripped names
 # e.g. sending_longitude and sending_latidute => sending_
 # so they share a row in the coordinates field dataframe
-coordinate_fields <- inner_join(longitudes, latitudes, by = "stripped_name") 
+coordinate_fields <- inner_join(longitudes, latitudes, by = c("stripped_name", "form_name")) 
 
 # If there is more than one coordinate_field
 if (nrow(coordinate_fields) > 0) {
@@ -778,78 +813,55 @@ if (nrow(coordinate_fields) > 0) {
 }
 
 if (length(coordinate_fields) > 0) {
-    cat("<h3>Maps with counts</h3>")
-# Create a list of maps by
-maps <- list()
-
-for (coordinate_field in coordinate_fields) {
-  maps <- maps %>%
-    append(
-      report_data %>%
-        # Naming them longitude and latitude respectively
-        transmute(
-          across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, sapply(radio_categories, function(x) x$field_name))), .names = "{names_to_labels[.col]}")
-        ) %>%
-        # Remove na entries
-        #na.omit() %>%
-        filter(if_all(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)), ~!is.na(.))) %>%
-        # Remove the columns that have more than one option per location
-        select(
-          # Get the names of the columns where
-          all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label, names(
-            (.) %>% 
-              # When grouped by the location
-              group_by(across(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)))) %>% 
-              # Each column has exactly one category per location
-              summarise(across(.fns = ~if(n_distinct(.x) == 1) TRUE else FALSE), .groups = "keep") %>% 
-              # (function(data2) {
-              #   print(kable(data2))
-              #   return(data2)}) %>%
-              select(where(~all(as.logical(.x))))
-            )))
+  cat("<h3>Maps with counts</h3>")
+  # Create a list of maps by
+  maps <- list()
+  
+  for (coordinate_field in coordinate_fields) {
+    maps <- maps %>%
+      append(
+        report_data %>%
+          # Naming them longitude and latitude respectively
+          transmute(
+            across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, sapply(radio_categories, function(x) x$field_name))), .names = "{names_to_labels[.col]}")
           ) %>%
-        (function (data) {
-          list(
-            data %>%
-              # Group by the locations
-              group_by(across(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)))) %>%
-              # Get a count a unique location column
-              summarise(across(.fns = first), location = cur_group_id(), count = n(), .groups = "keep") %>%
-              {lapply(setdiff(names(.), c(coordinate_field$longitude_label, coordinate_field$latitude_label, "count")),
-                 function(category)
-                    custom_map(., lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category, count = "count", title = if (category != "location") paste0(coordinate_field$stripped_label, " Count by ", category) else paste0(coordinate_field$stripped_label, " Count"))
-          )},
-            data %>%
-              # Create a custom map with each location having clusterings
-              custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, title = paste0(coordinate_field$stripped_label, " count"))
-          )
-        })
+          # Remove na entries
+          #na.omit() %>%
+          filter(if_all(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)), ~!is.na(.))) %>%
+          # Remove the columns that have more than one option per location
+          select(
+            # Get the names of the columns where
+            all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label, names(
+              (.) %>% 
+                # When grouped by the location
+                group_by(across(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)))) %>% 
+                # Each column has exactly one category per location
+                summarise(across(.fns = ~if(n_distinct(.x) == 1) TRUE else FALSE), .groups = "keep") %>% 
+                # (function(data2) {
+                #   print(kable(data2))
+                #   return(data2)}) %>%
+                select(where(~all(as.logical(.x))))
+              )))
+            ) %>%
+          (function (data) {
+            list(
+              data %>%
+                # Group by the locations
+                group_by(across(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)))) %>%
+                # Get a count a unique location column
+                summarise(across(.fns = first), location = cur_group_id(), count = n(), .groups = "keep") %>%
+                {lapply(setdiff(names(.), c(coordinate_field$longitude_label, coordinate_field$latitude_label, "count")),
+                   function(category)
+                      custom_map(., lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category, count = "count", title = if (category != "location") paste0(coordinate_field$stripped_label, " Count by ", category) else paste0(coordinate_field$stripped_label, " Count"))
+            )},
+              data %>%
+                # Create a custom map with each location having clusterings
+                custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, title = paste0(coordinate_field$stripped_label, " count"))
+            )
+          })
       )
-                  
-                  
-                        
-#   for (category in radio_categories)
-#     if (all(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)])|duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)],fromLast = TRUE)))
-#   if (!any(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name)]))) {
-#     cat("<h5>Coordinates with category</h5>")
-# 
-#       maps <- maps %>%
-#         append(lapply(
-#           radio_categories,
-#           function(category) {
-#             report_data %>%
-#                     # Naming them longitude and latitude respectively
-#                     transmute(
-#                       across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)), .names = "{names_to_labels[.col]}")
-#                     ) %>% mutate(count = 1) %>%
-#                     filter(!is.na(!!sym(coordinate_field$longitude_label)) & !is.na(!!sym(coordinate_field$latitude_label))) %>%
-#               custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category$field_label)
-#           }))
-#   }
-# }
-# Use htmltools to print the maps
-}
-htmltools::tagList(maps)
+  }
+  htmltools::tagList(maps)
 }
 # if (length(coordinate_fields) >= 2) {
 #   maps <- mapply(custom_network_map, combn(coordinate_fields, 2, simplify = FALSE), MoreArgs = list(data = report_data, both = TRUE), SIMPLIFY = FALSE)
@@ -872,32 +884,34 @@ text_fields <- data_dictionary %>%
     SIMPLIFY = FALSE
   )}
 
-# If there are 2 or more text fields
-if (length(text_fields) > 1) {
-  cat("<h3>Network graphs</h3>")
-  
-  # For each text pair
-  for (text_pair in combn(text_fields, 2, simplify = FALSE)) {
-    # If both of the columns aren't null
-    if(!all(is.na(report_data[[text_pair[[1]]$field_name]]))
-       && !all(is.na(report_data[[text_pair[[2]]$field_name]])))
-      # Get the columns from the report data
-      report_data %>%
-              # Turn them into factors and add NA as a factor if there are any
-              transmute(across(all_of(c(text_pair[[1]]$field_name, text_pair[[2]]$field_name)),
-                        function(column) {
-                          addNA(factor(column), ifany = TRUE)
-                        }
-                          , .names = "{names_to_labels[.col]}")
-              ) %>%
-              {side_by_side(
-              custom_network(., x = !!sym(text_pair[[1]]$field_label), y = !!sym(text_pair[[2]]$field_label))
-              ,
-              plot2 = custom_network(., x = !!sym(text_pair[[2]]$field_label), y = !!sym(text_pair[[1]]$field_label))
-              ,
-              title = paste0(text_pair[[1]]$field_label, " vs ", text_pair[[2]]$field_label)
-              )}
+for (i in seq_along(plotting_groups)) {
+  plotting_group <- plotting_groups[[i]]
+  # If there are 2 or more text fields
+  if (length(text_fields[text_fields %in% plotting_group]) > 1) {
+    cat("<h3>Network graphs for Instrument(s) ", names(plotting_groups)[i], "</h3>", sep = "")
+    # For each text pair
+    for (text_pair in combn(text_fields[names(text_fields) %in% plotting_group], 2, simplify = FALSE)) {
+      # If both of the columns aren't null
+      if(!all(is.na(report_data[[text_pair[[1]]$field_name]]))
+         && !all(is.na(report_data[[text_pair[[2]]$field_name]])))
+        # Get the columns from the report data
+        report_data %>%
+                # Turn them into factors and add NA as a factor if there are any
+                transmute(across(all_of(c(text_pair[[1]]$field_name, text_pair[[2]]$field_name)),
+                          function(column) {
+                            addNA(factor(column), ifany = TRUE)
+                          }
+                            , .names = "{names_to_labels[.col]}")
+                ) %>%
+                {side_by_side(
+                custom_network(., x = !!sym(text_pair[[1]]$field_label), y = !!sym(text_pair[[2]]$field_label))
+                ,
+                plot2 = custom_network(., x = !!sym(text_pair[[2]]$field_label), y = !!sym(text_pair[[1]]$field_label))
+                ,
+                title = paste0(text_pair[[1]]$field_label, " vs ", text_pair[[2]]$field_label)
+                )}
               
+    }
   }
 }
 ```

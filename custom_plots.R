@@ -82,6 +82,17 @@ print_table <- function(table, title = "") {
     cat("<h5>", title, "</h5>")
     print(table)
   cat("</div>")
+}
+
+print_other_table <- function(data, field_name, title = "") {
+  cat("<div class=\"other-tbl-container\">")
+  cat("<h5>", title, "</h5>")
+  print(data %>% 
+          group_by(across(all_of(field_name))) %>%
+          summarise() %>%
+          na.omit() %>%
+          kable(col.names = c(names_to_labels[field_name]), align = "c"))
+  cat("</div>")
 } 
 
 # n_spaced_indices
@@ -112,7 +123,6 @@ n_spaced_indices <- function(m, n) {
   else
     max(1, m%/%2)
 }
-
 
 # n_levels
 # Author: Joel Cohen
