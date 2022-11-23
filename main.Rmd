@@ -788,7 +788,7 @@ for (coordinate_field in coordinate_fields) {
       report_data %>%
         # Naming them longitude and latitude respectively
         transmute(
-          across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, sapply(radio_categories, function(x) x$field_name))), .names = "{names_to_labels[.col]}")
+          across(any_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name,names(radio_categories))), .names = "{names_to_labels[.col]}")
         ) %>%
         # Remove na entries
         #na.omit() %>%
@@ -825,29 +825,6 @@ for (coordinate_field in coordinate_fields) {
           )
         })
       )
-                  
-                  
-                        
-#   for (category in radio_categories)
-#     if (all(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)])|duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)],fromLast = TRUE)))
-#   if (!any(duplicated(report_data[, c(coordinate_field$longitude_name, coordinate_field$latitude_name)]))) {
-#     cat("<h5>Coordinates with category</h5>")
-# 
-#       maps <- maps %>%
-#         append(lapply(
-#           radio_categories,
-#           function(category) {
-#             report_data %>%
-#                     # Naming them longitude and latitude respectively
-#                     transmute(
-#                       across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, category$field_name)), .names = "{names_to_labels[.col]}")
-#                     ) %>% mutate(count = 1) %>%
-#                     filter(!is.na(!!sym(coordinate_field$longitude_label)) & !is.na(!!sym(coordinate_field$latitude_label))) %>%
-#               custom_map(lng = coordinate_field$longitude_label, lat = coordinate_field$latitude_label, type = category$field_label)
-#           }))
-#   }
-# }
-# Use htmltools to print the maps
 }
 htmltools::tagList(maps)
 }
