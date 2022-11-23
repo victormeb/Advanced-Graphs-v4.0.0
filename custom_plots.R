@@ -248,22 +248,66 @@ n_spaces_indices_zeros_first <- function(data, n) {
 #   Output:
 #     
 #     A likert plot
-custom_likert <- function(x) {
-  likert.bar.plot(likert(x),
+custom_likert <- function(x, wrap_label = FALSE, label_wrap_length = 10, max_label_length = 50) {
+  percent_data <- x %>% 
+    pivot_longer(cols = everything(), names_to = "Item", values_to = "variable") %>%
+    group_by(Item) %>%
+    mutate(count = n()) %>%
+    group_by(Item, variable) %>%
+    summarise(percent = n()/first(count))
+  
+  p <- likert.bar.plot(likert(x),
                   as.percent = TRUE,
-                  colors = turbo(length(levels(x[[1]]))),
-                  # low.color="forestgreen",
-                  # high.color = "red3",
-                  # neutral.color = "lightgoldenrod",
+                  #colors = turbo(length(levels(x[[1]]))),
+                  low.color="forestgreen",
+                  high.color = "red3",
+                  neutral.color = "lightgoldenrod",
                   horizontal=TRUE,
-                  plot.percents = TRUE,
-                  xscale.components=xscale.components.top.HH,
-                  yscale.components=yscale.components.right.HH,
+                  plot.percents = FALSE,
+                  plot.percent.neutral = FALSE,
+                  #xscale.components=xscale.components.top.HH,
+                  #yscale.components=yscale.components.right.HH,
                   xlimEqualLeftRight=FALSE,
                   xTickLabelsPositive=TRUE,
                   reverse=FALSE,
                   xlab = "Percent",
                   ylab.right = "")
+  
+  if (wrap_label == TRUE && !is.null(label_wrap_length)) {
+    x_lab_func <- function(x) str_wrap(x, width = label_wrap_length)
+  } else if (is.numeric(max_label_length) && max_label_length >= 3) {
+    x_lab_func <- function(x) str_trunc(x, width = max_label_length)
+  } else {
+    x_lab_func <- function(x) x
+  }
+  
+  # Calculate positions for percent labels
+  label_data <- inner_join(p$data, percent_data, by = c("Item", "variable")) %>%
+    mutate(sign = sign(value)) %>%
+    group_by(Item, sign) %>%
+    arrange(variable) %>%
+    mutate(position = c(value %*% (replace(matrix(1, n(), n()), if (all(sign > 0)) lower.tri(matrix(c(1), n(), n())) else upper.tri(matrix(c(1), n(), n())), 0) - diag(0.5, n(), n()))))%>%
+    group_by(Item, variable) %>%
+    summarize(across(.fns = mean))
+
+    # Add percent labels and axis labels
+    # suppressMessages stops ggplot from printing a message related to rewriting the axis labels
+    # that were already set by likert.
+    p <- suppressMessages(p + ggrepel::geom_text_repel(data = label_data, aes(label = scales::percent(percent, accuracy = 1), y = position, x = Item),
+                  direction = "x",
+                  size = 3,
+                  max.overlaps = Inf,
+                  show.legend = FALSE,
+                  box.padding = 0,
+                  force=1,
+                  force_pull = 10,
+                  max.iter = 4,
+                  min.segment.length = 0,
+                  max.time=1) +
+      scale_x_discrete(labels = x_lab_func))
+    
+    p
+
 }
 
 # custom_scatter
