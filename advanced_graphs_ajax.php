@@ -510,7 +510,11 @@ switch($_POST["method"]) {
 		break;
 	case "select_fields":
 		$adv_output = select_fields();
-		echo json_encode(file_get_contents($adv_output["output"]));
+		if (!$adv_output["status"]) {
+			echo json_encode($adv_output["output"]);
+		} else {
+			echo json_encode(file_get_contents($adv_output["output"]));
+		}
 		break;
 	default:
 		echo nothing_to_show();

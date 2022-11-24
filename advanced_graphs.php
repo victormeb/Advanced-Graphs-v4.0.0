@@ -45,6 +45,8 @@ function send_fields(form) {
 		$('#advanced_graphs').html(
 			data
 		);
+		
+		$('#south').css('position', 'bottom');
 	});
 }
 
@@ -74,6 +76,8 @@ $.ajax(ajax_url, {data: {params: refferer_parameters, method: "get_fields"}, dat
 		$('#advanced_graphs').html(
 			field_form(data)
 		);
+		
+		$('#south').css('position', 'bottom');
 	});
 
 console.log("waiting");

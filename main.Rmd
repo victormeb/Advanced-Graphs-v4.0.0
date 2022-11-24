@@ -39,7 +39,7 @@ figcaption {
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, eval = F, results = "asis")
+knitr::opts_chunk$set(echo = FALSE, eval = T, results = "asis")
 
 # Used for connections to get data from redcap
 library(RCurl)
@@ -73,39 +73,39 @@ source("./custom_plots.R")
 
 
 ```{r data_input, eval = TRUE}
-# TODO: The if statement is temporary and allows for testing on sample data
-if (params$pid != 0) {
-  # Get report metadata
-  project_info <- post_project_info(params)
-  data_dictionary <- post_data_dictionary(params)
-  
-  repeated_forms <- post_repeated_forms(params)
-  
-  instruments <- post_instruments(params)
-  
-  categories <- parse_categories(data_dictionary)
-  
-  # Retrieve the live filters
-  live_filters <- parse_live_filters(params, categories, data_dictionary)
-  
-  # Retrieve report data
-  report_data <- import_data(params, data_dictionary, live_filters)
-} else {
-  # Data dictionary is same one from Advanced Graphs - Demo Project
-  data_dictionary <- read.csv(file = "./sample/sample_data_dictionary.csv", header = TRUE)
-
-  
-  repeated_forms <- data.frame(form_name = character(0))
-  
-  categories <- parse_categories(data_dictionary)
-  
-  project_info <- data.frame(project_title = c("Sample Data"))
-  
-  live_filters <- data.frame(c())
-  
-  # Report data was randomly sampled from Advanced Graphs - Demo Project
-  report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
-}
+# # TODO: The if statement is temporary and allows for testing on sample data
+# if (params$pid != 0) {
+#   # Get report metadata
+#   project_info <- post_project_info(params)
+#   data_dictionary <- post_data_dictionary(params)
+#   
+#   repeated_forms <- post_repeated_forms(params)
+#   
+#   instruments <- post_instruments(params)
+#   
+#   categories <- parse_categories(data_dictionary)
+#   
+#   # Retrieve the live filters
+#   live_filters <- parse_live_filters(params, categories, data_dictionary)
+#   
+#   # Retrieve report data
+#   report_data <- import_data(params, data_dictionary, live_filters)
+# } else {
+#   # Data dictionary is same one from Advanced Graphs - Demo Project
+#   data_dictionary <- read.csv(file = "./sample/sample_data_dictionary.csv", header = TRUE)
+# 
+#   
+#   repeated_forms <- data.frame(form_name = character(0))
+#   
+#   categories <- parse_categories(data_dictionary)
+#   
+#   project_info <- data.frame(project_title = c("Sample Data"))
+#   
+#   live_filters <- data.frame(c())
+#   
+#   # Report data was randomly sampled from Advanced Graphs - Demo Project
+#   report_data <- read.csv(file = "./sample/sample_report_data.csv", header = TRUE)
+# }
 
 plotting_groups <- left_join(data_dictionary, instruments, by = c("form_name" = "instrument_name")) %>%
   mutate(form_name = if_else(form_name %in% repeated_forms$form_name, form_name, "adv_graph_internal_no_repeat_form_name")) %>%
@@ -292,7 +292,7 @@ date_fields <- date_fields$field_name
 names_to_labels <- data_dictionary$field_label
 names(names_to_labels) <- data_dictionary$field_name
 
-print(kable(report_data))
+# print(kable(report_data))
 ```
 
 
@@ -300,12 +300,12 @@ print(kable(report_data))
 cat("\n###", project_info$project_title)
 cat("\n#### Number of records returned:", nrow(report_data))
 
-cat("\n##### Live filter(s): ")
-if (nrow(live_filters) > 0 ) {
-  cat(paste0(live_filters$field_label, " = ", live_filters$options_label, collapse = "\t "))
-} else {
-  cat("None")
-}
+# cat("\n##### Live filter(s): ")
+# if (nrow(live_filters) > 0 ) {
+#   cat(paste0(live_filters$field_label, " = ", live_filters$options_label, collapse = "\t "))
+# } else {
+#   cat("None")
+# }
 
 ```
 

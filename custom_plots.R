@@ -41,7 +41,7 @@ library(rlang)
 #
 #   title - the title of the side by side plots
 side_by_side <- function(plot1, plot2, title = "") {
-  cat("<center><h4>", title, "</h4></center><div class=\"clearfix\"><div class=\"img-container\">")
+  cat("<center><h4>", title, "</h4></center>\n\n<div class=\"clearfix\">\n\n<div class=\"img-container\">\n\n")
     if (class(plot1)[1] == "list")
       for (item in plot1)
         if (class(item)[1] == "character")
@@ -50,8 +50,8 @@ side_by_side <- function(plot1, plot2, title = "") {
           print(item)
     else
       print(plot1)
-  cat("</div>")
-  cat("<div class=\"img-container\">")
+  cat("\n\n</div>\n\n")
+  cat("\n\n<div class=\"img-container\">\n\n")
     if (class(plot2)[1] == "list")
       for (item in plot2)
         if (class(item)[1] == "character")
