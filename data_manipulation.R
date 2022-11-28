@@ -194,7 +194,7 @@ apply_live_filters <- function(report_data, all_records, live_filters, id_fields
         ungroup()
       ,
       all_records %>%
-        pivot_wider(names_from = all_of("redcap_repeat_instrument"))
+        pivot_wider(names_from = all_of("redcap_repeat_instrument")) %>%
         group_by(across(any_of(c(names(all_records)[1], id_fields)))) %>%
         filter(eval(rlang::parse_expr(paste0(live_filters$filter_string, collapse = "&")))) %>%
         (function(data){print(kable(data));return(data)}) %>%
