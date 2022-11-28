@@ -813,17 +813,35 @@ if (nrow(coordinate_fields) > 0) {
 }
 
 if (length(coordinate_fields) > 0) {
-  cat("<h3>Maps with counts</h3>")
-  # Create a list of maps by
-  maps <- list()
-  
-  for (coordinate_field in coordinate_fields) {
-    maps <- maps %>%
-      append(
-        report_data %>%
-          # Naming them longitude and latitude respectively
-          transmute(
-            across(all_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name, sapply(radio_categories, function(x) x$field_name))), .names = "{names_to_labels[.col]}")
+    cat("<h3>Maps with counts</h3>")
+# Create a list of maps by
+maps <- list()
+
+for (coordinate_field in coordinate_fields) {
+  maps <- maps %>%
+    append(
+      report_data %>%
+        # Naming them longitude and latitude respectively
+        transmute(
+          across(any_of(c(coordinate_field$longitude_name, coordinate_field$latitude_name,names(radio_categories))), .names = "{names_to_labels[.col]}")
+        ) %>%
+        # Remove na entries
+        #na.omit() %>%
+        filter(if_all(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)), ~!is.na(.))) %>%
+        # Remove the columns that have more than one option per location
+        select(
+          # Get the names of the columns where
+          all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label, names(
+            (.) %>% 
+              # When grouped by the location
+              group_by(across(all_of(c(coordinate_field$longitude_label, coordinate_field$latitude_label)))) %>% 
+              # Each column has exactly one category per location
+              summarise(across(.fns = ~if(n_distinct(.x) == 1) TRUE else FALSE), .groups = "keep") %>% 
+              # (function(data2) {
+              #   print(kable(data2))
+              #   return(data2)}) %>%
+              select(where(~all(as.logical(.x))))
+            )))
           ) %>%
           # Remove na entries
           #na.omit() %>%
@@ -860,8 +878,8 @@ if (length(coordinate_fields) > 0) {
             )
           })
       )
-  }
-  htmltools::tagList(maps)
+}
+htmltools::tagList(maps)
 }
 # if (length(coordinate_fields) >= 2) {
 #   maps <- mapply(custom_network_map, combn(coordinate_fields, 2, simplify = FALSE), MoreArgs = list(data = report_data, both = TRUE), SIMPLIFY = FALSE)
