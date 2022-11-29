@@ -258,7 +258,7 @@ n_spaces_indices_zeros_first <- function(data, n) {
 #   Output:
 #     
 #     A likert plot
-custom_likert <- function(x, wrap_label = FALSE, label_wrap_length = 10, max_label_length = 50) {
+custom_likert <- function(x, wrap_label = FALSE, label_wrap_length = 10, max_label_length = 50, text_size = 0.08) {
   percent_data <- x %>% 
     pivot_longer(cols = everything(), names_to = "Item", values_to = "variable") %>%
     group_by(Item) %>%
@@ -319,7 +319,7 @@ custom_likert <- function(x, wrap_label = FALSE, label_wrap_length = 10, max_lab
         legend.position = "bottom",
         legend.box = "horizontal",
         legend.title = element_blank(),
-        legend.text = element_text(size = (dev.size("cm")[[1]])/(sum(nchar(levels(x[[1]])))*0.08))
+        legend.text = element_text(size = (dev.size("cm")[[1]])/(sum(nchar(levels(x[[1]])))*text_size))
       )
       
       )
