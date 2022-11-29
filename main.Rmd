@@ -39,7 +39,7 @@ figcaption {
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, eval = F, results = "asis")
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, results = "asis")
 
 # Used for connections to get data from redcap
 library(RCurl)
@@ -148,8 +148,11 @@ likert_groups <- data_dictionary %>%
   group_by(form_name, select_choices_or_calculations) %>% #TODO: Likert only in same instrument?
   # Take a list of field names and labels
   summarise(field_name = list(field_name), field_label = list(field_label)) %>%
+  mutate(form_label = instruments[instruments[["instrument_name"]] == form_name, "instrument_label"]) %>%
+  # Split into several dataframes by form name
+  split(.$form_label, drop = TRUE) %>%
   # Parse the categories into a useful format (collapses field_name, field_label, options_code and options_label using field_name, field_label, and select_choices_or_calculations)
-  parse_categories()
+  lapply(parse_categories) 
 
 #############################
 
@@ -291,8 +294,6 @@ date_fields <- date_fields$field_name
 # This is used to extract the text labels from the field names
 names_to_labels <- data_dictionary$field_label
 names(names_to_labels) <- data_dictionary$field_name
-
-print(kable(report_data))
 ```
 
 
@@ -311,34 +312,33 @@ if (nrow(live_filters) > 0 ) {
 
 
 
-```{r likert_plots}
-for (i in seq_along(plotting_groups)) {
-  plotting_group <- plotting_groups[[i]]
-  if (length(likert_groups[likert_groups %in% plotting_group]) > 0)
-    cat("<h3>Likert plots for Instrument(s) ", names(plotting_groups)[i], "</h3>", sep = "")
-  # For each set of fields that share options
-  for (likert_group in likert_groups[likert_groups %in% plotting_group]) {
-      report_data %>%
-        data.frame() %>%
-        # Select these fields from the data dictionary
-        # Across changes the field_names to their corresponding field labels 
-        transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
-        (function(data) {
-          # If any of the fields contain an NA
-         if (any(is.na(data))) {
-           return(
-             # Add an NA field to each factor
-             transmute(data, across(.fns = addNA))
-           )
-         }
-          # Otherwise return the data as is
-          return(data)
-        }) %>%
-        # Pass this dataframe to the custom likert
-        custom_likert() %>%
-        # print this plot
-        print()
+```{r likert_plots, eval = T}
+for (i in seq_along(likert_groups)) {
+  cat("<h3>Likert plots for Instrument(s) ", names(likert_groups)[i], "</h3>", sep = "")
+  
+  for (likert_group in likert_groups[[i]]) {
+    report_data %>%
+      data.frame() %>%
+      # Select these fields from the data dictionary
+      # Across changes the field_names to their corresponding field labels 
+      transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
+      (function(data) {
+        # If any of the fields contain an NA
+       if (any(is.na(data))) {
+         return(
+           # Add an NA field to each factor
+           transmute(data, across(.fns = addNA))
+         )
+       }
+        # Otherwise return the data as is
+        return(data)
+      }) %>%
+      # Pass this dataframe to the custom likert
+      custom_likert() %>%
+      # print this plot
+      print()
   }
+  
 }
 ```
 
