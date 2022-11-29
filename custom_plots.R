@@ -314,7 +314,18 @@ custom_likert <- function(x, wrap_label = FALSE, label_wrap_length = 10, max_lab
                   max.iter = 4,
                   min.segment.length = 0,
                   max.time=1) +
-      scale_x_discrete(labels = x_lab_func))
+      scale_x_discrete(labels = x_lab_func) +
+      theme(
+        legend.position = "bottom",
+        legend.box = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = (dev.size("cm")[[1]])/(sum(nchar(levels(x[[1]])))*0.08))
+      )
+      
+      )
+    
+    
+    
     
     p
 
