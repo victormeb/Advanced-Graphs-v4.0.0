@@ -95,13 +95,13 @@ import_data <- function(parameters, data_dictionary, live_filters, flatten = TRU
       report_data <- apply_live_filters(report_data, all_records, live_filters)
   }
   
-  if (flatten) {
-    # A list containing the flattened report data as the first entry
-    # and the flattened records as the second entry
-    id_fields <- c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")
-    report_data <- flattened_redcap_report(report_data, data_dictionary, id_fields)
-
-  }
+  # if (flatten) {
+  #   # A list containing the flattened report data as the first entry
+  #   # and the flattened records as the second entry
+  #   id_fields <- c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")
+  #   report_data <- flattened_redcap_report(report_data, data_dictionary, id_fields)
+  # 
+  # }
   
   return(report_data)
 }
@@ -115,7 +115,6 @@ check_records_distinct <- function(data, id_fields) {
       summarise(across(.fns = ~(n() - sum(is.na(.x)) > 1)), .groups = "drop") %>%
       # Select only non-grouping rows
       select(-any_of(id_fields)) %>%
-      (function(data){print(kable(data));return(data)}) %>%
       any()
   )
 }
@@ -151,41 +150,6 @@ post_instruments <- function(parameters) {
 }
 
 apply_live_filters <- function(report_data, all_records, live_filters, id_fields = c("redcap_repeat_instrument", "redcap_repeat_instance", "redcap_event_name")) {
-  # Check if there are field_names in the report export that are
-  # not in the record export.
-  if (length(setdiff(names(report_data), names(all_records)) != 0)) {
-    cat("<h5><b>There are records in the report that did not appear when retrieving all records</b></h5>",
-        "<h5><b>returning report unmodified (no live filtering)</b></h5>",
-        "<h5><b>Records not found: </b></h5>")
-    print(kable(data.frame(`Field Names` = setdiff(names(report_data), names(all_records)))))
-    return(report_data)
-  }
-  
-  # If the names of the record id field are not a subset of the record id in the 
-  # record export then live filtering will fail.
-  if (names(all_records)[1] %in% names(report_data))
-    if (!all(report_data[[names(all_records)[1]]] %in% all_records[[1]])) {
-      cat("<h5><b>ID column of report is not a subset of all records.</b></h5>\n\n")
-      cat("<h5><b>This is most likely due to user having de-identified access</b></h5>\n\n")
-      cat("<h5><b>Live filtering failed</b></h5>\n\n")
-      return(report_data)
-      
-      # OR TODO:
-      # cat("<h5><b>ID column of report is not a subset of all records.</b></h5>\n\n")
-      # cat("<h5><b>This is most likely due to user having de-identified access</b></h5>\n\n")
-      # cat("<h5><b>Record ID removed from report</b></h5>\n\n")
-      # report_data <- report_data %>% select(-all_of(names(all_records)[1]))
-    }
-  
-  # If each field does not have a distinct entry per grouping (full event)
-  # Return the original report_data with a message.
-  if (check_records_distinct(all_records, c(names(all_records)[1], id_fields))) {
-    cat("<h5><b>Not all events were distinct records</b></h5>\n\n")
-    cat("<h5><b>(multiple entries per record id/repeating instrument/repeat_instance/event_name)</b></h5>\n\n")
-    cat("<h5><b>Live filtering failed</b></h5>\n\n")
-    return(report_data)
-  }
-  
   return(
     inner_join(
       report_data%>%
@@ -194,17 +158,14 @@ apply_live_filters <- function(report_data, all_records, live_filters, id_fields
         ungroup()
       ,
       all_records %>%
-        pivot_wider(names_from = all_of("redcap_repeat_instrument")) %>%
-        group_by(across(any_of(c(names(all_records)[1], id_fields)))) %>%
         filter(eval(rlang::parse_expr(paste0(live_filters$filter_string, collapse = "&")))) %>%
-        (function(data){print(kable(data));return(data)}) %>%
         group_by(across(all_of(names(report_data)))) %>%
         summarise(adv_graph_internal_duplicates_id = row_number()) %>%
-        (function(data){print(kable(data));return(data)}) %>%
         ungroup()
       ,
       by = c(names(report_data), "adv_graph_internal_duplicates_id")
-    )
+    ) %>% 
+      select(-adv_graph_internal_duplicates_id)
   )
 }
 
@@ -516,7 +477,7 @@ parse_live_filters <- function (parameters, categories, data_dictionary,live_fil
                 categories[[field_name]]$options_label[options_code]
             ),
             # Create a filtering string for each filter
-            filter_string = (if (options_code == "[NULL]") paste0("all(is.na(", field_name, "))") else paste0("any(",field_name, "==",options_code, ")"))
+            filter_string = (if (options_code == "[NULL]") paste0("is.na(", field_name, ")") else paste0(field_name, "==",options_code))
           )
       else
         data
