@@ -182,7 +182,7 @@ function get_project_info($pid) {
 	return stream_get_contents($fp);
 }
 
-function get_instruments($pid) {
+function get_instruments($pid, $format = "raw") {
 	global $post;
 	// Don't output any CATs because they cannot be used in the Mobile App
 	$cat_list = ($post['mobile_app']) ? PROMIS::getPromisInstruments() : array();
@@ -192,6 +192,10 @@ function get_instruments($pid) {
 	foreach ($Proj->forms as $form=>$attr) {
 		if (in_array($form, $cat_list)) continue;
 		$forms[] = array('instrument_name'=>$form, 'instrument_label'=>strip_tags(html_entity_decode($attr['menu'], ENT_QUOTES)));
+	}
+	
+	if ($format == "raw") {
+		return $forms;
 	}
 	
 	$output = "";
@@ -376,12 +380,12 @@ function run_R($report_data_file_path, $data_dictionary_file_path, $project_info
 	
 	exec($r_code, $exec_output);
 	
-	$exec_output = array_map(htmlspecialchars, $exec_output);
+	$exec_output = array_map('htmlspecialchars', $exec_output);
 	
 	if (end($exec_output) == "Execution halted")
-		return Array(output => utf8_encode(implode("<br/>",$exec_output)), status => false);
+		return Array('output' => utf8_encode(implode("<br/>",$exec_output)), 'status' => false);
 	
-	return Array(output=>$output_file_name, status=> true);
+	return Array('output'=>$output_file_name, 'status'=> true);
 	/* $command = Array(
 		$r_path,
 		"-e",
@@ -510,14 +514,17 @@ switch($_POST["method"]) {
 		break;
 	case "select_fields":
 		$adv_output = select_fields();
-		if (!$adv_output["status"]) {
-			echo json_encode($adv_output["output"]);
+ 		if (!$adv_output["status"]) {
+			echo $adv_output["output"];
 		} else {
-			echo json_encode(file_get_contents($adv_output["output"]));
-		}
+			echo file_get_contents($adv_output["output"]);
+		} 
 		break;
 	default:
 		echo nothing_to_show();
 		break;
 }
+
+
+
 ?>

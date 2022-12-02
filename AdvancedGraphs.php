@@ -6,6 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
 use \DateTime;
 use \DateTimeZone;
+use DataExport;
 
 class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 {
@@ -184,6 +185,138 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		$result=str_replace("\\\\'","\\'",$result) ;
 		$result=str_replace("\\\\\"","\\\"",$result) ;	
 	return $result;
-}
+	}
+	
+	// TODO: Documentation
+	// https://github.com/jsonform/jsonform/wiki#outline
+	function likert_groups($data_dictionary, $report_fields, $instruments) {
+		// TODO: Set keywords in module settings.
+		// field_types that are candidates for likert
+		$like_likert = array("dropdown", "radio");
+		
+		// If any of the following keywords are contained in the options
+		// it will be considered a likert category
+		$key_likert_words = array("male", "not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "infatil", "completamente inutil", "completamente infatil", "dificil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo");
+		
+		$by_instrument = array();
 
+		$instruments_dictionary = array();
+
+		foreach ($instruments as $instrument) {
+			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
+		}
+
+		$instrument_names = array_map(function($instrument) {return $instrument['instrument_name'];}, $instruments);
+
+		
+		foreach ($report_fields as $field_name) {
+			// Get all field attributes from data dictionary
+			$field = $data_dictionary[$field_name];
+			
+			// Check that field type can be interpreted as likert
+			$type_matches = in_array($field['field_type'], $like_likert);
+			
+			// Check that the choices contain a likert keyword
+			$selection_matches = preg_match("/".implode("|", $key_likert_words)."/", strtolower($field['select_choices_or_calculations']));
+
+			// If the field can be interpreted as liekrt
+			if ($type_matches && $selection_matches) {
+				// Match it to the appopriate instrument.
+				if (in_array($field['form_name'], $instrument_names)) {
+					$by_instrument[$field['form_name']]['choices'][$field['select_choices_or_calculations']][] = $field_name;
+				} 
+				// else {
+				// 	$by_instrument['adv_graph_no_instruments']['choices'][$field['select_choices_or_calculations']][] = $field_name;
+				// }
+				// $by_instrument['adv_graph_all_instruments']['choices'][$field['select_choices_or_calculations']][] = $field_name;
+			}
+		}
+		
+		if (!$by_instrument)
+			return array();
+
+		$by_instrument['adv_graph_all_instruments']['choices'] = array();
+
+		foreach($by_instrument as $instrument => $group) {
+			$by_instrument[$instrument]['instrument_label'] = $instruments_dictionary[$instrument];
+			$by_instrument['adv_graph_all_instruments']['choices'] = array_merge($by_instrument['adv_graph_all_instruments']['choices'], $group['choices']);
+		}
+		
+		//$by_instrument['adv_graph_no_instruments']['instrument_label'] = "No Instrument";
+		$by_instrument['adv_graph_all_instruments']['instrument_label'] = "All Instruments";
+
+
+		foreach ($by_instrument as $group) {
+			if (!isset($group['choices']))
+				unset($group);
+		}
+		
+		return $by_instrument;
+		
+/* 		// Get fields whose selections contain likert key words.
+		$matches_selection = preg_grep(
+ 									"/".implode("|", $key_likert_words)."/",
+									array_map(
+										function($field) {
+											return strtolower($field['select_choices_or_calculations']);
+										}, 
+										$data_dictionary
+									)
+								); 
+
+		// Get fields with the appropriate field type
+		$matches_field_type = preg_grep(
+								"/".implode("|",$like_likert)."/",
+								array_map(
+									function($field) {return $field['field_type'];},
+									$data_dictionary
+								)
+							 );	 
+
+		// Get those fields that are of the appropriate field type and contain a keyword.
+		$likert_fields = array_intersect(array_keys($matches_selection), array_keys($matches_field_type));
+		
+		if (count($likert_fields) == 0) 
+			return false;
+		
+		echo print_r($instrument_names);
+		foreach ($likert_fields as $field) {
+			$field = $data_dictionary[$field];
+			if (in_array($field['form_name'], $instrument_names)) {
+				$by_instrument[$field['form_name']]['choices'][$field['select_choices_or_calculations']][] = $field;
+			} else {
+				$by_instrument['adv_graph_no_instruments']['choices'][$field['select_choices_or_calculations']][] = $field;
+			}
+			$by_instrument['adv_graph_all_instruments']['choices'][$field['select_choices_or_calculations']][] = $field;
+		}
+		
+		foreach($instruments as $instrument) {
+			$by_instrument[$instrument['instrument_name']]['instrument_label'] = $instrument['instrument_label'];
+		}
+		
+		$by_instrument['adv_graph_no_instruments']['instrument_label'] = "No Instrument";
+		$by_instrument['adv_graph_all_instruments']['instrument_label'] = "All Instruments";
+		
+		return $by_instrument; */
+	}
+	
+	function scatter_groups($data_dictionary, $instruments) {
+		
+	}
+	
+	function barplot_groups($data_dictionary, $instruments) {
+		
+	}
+	
+	function crosstab_groups($data_dictionary, $instruments) {
+		
+	}
+	
+	function map_groups($data_dictionary, $instruments) {
+		
+	}
+	
+	function network_groups($data_dictionary, $instruments) {
+		
+	}
 }
