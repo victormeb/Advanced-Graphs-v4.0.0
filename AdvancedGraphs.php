@@ -179,6 +179,7 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			 }
 		   }
 		}
+
 		
 		$result=str_replace("\\\"","\"",$result) ;
 		$result=str_replace("\\'","'",$result) ;
@@ -187,28 +188,71 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	return $result;
 	}
 	
+
+	function get_repeat_instruments($Proj) {
+		echo "GRR";
+		global $lang;
+
+		echo "GRR0";
+		// Get project object of attributes
+	
+		// if project has not repeating forms or events
+		echo "GRR1";
+		if(!$Proj->hasRepeatingFormsEvents()){
+			return ($Proj->longitudinal ? "event_name,form_name,custom_form_label" : "form_name,custom_form_label")."\n";
+		}
+		echo "GRR2";
+		$raw_values = $Proj->getRepeatingFormsEvents();
+		echo "GRR3";
+		if($Proj->longitudinal){
+			$eventForms = $Proj->eventsForms;
+			foreach ($eventForms as $dkey=>$row){
+				$event_name = Event::getEventNameById($Proj->project_id,$dkey);
+				$sql = "select form_name, custom_repeat_form_label from redcap_events_repeat where event_id = " . db_escape($dkey) . "";
+				$q = db_query($sql);
+				if(db_num_rows($q) > 0){
+					while ($row = db_fetch_assoc($q)){
+						$form_name = ($row['form_name'] ? $row['form_name'] : '');
+						$form_label = ($row['custom_repeat_form_label'] ? $row['custom_repeat_form_label'] : '');
+						$results[] = array('event_name'=>$event_name, 'form_name'=>$form_name, 'custom_form_label'=>$form_label);
+					}
+				}
+			}
+		}else{//classic project
+			foreach (array_values($raw_values)[0] as $dkey=>$row){
+				$results[] = array('form_name'=>$dkey, 'custom_form_label'=>$row);
+			}
+		}
+
+		return $results;
+	}
+	
 	// TODO: Documentation
 	// https://github.com/jsonform/jsonform/wiki#outline
-	function likert_groups($data_dictionary, $report_fields, $instruments) {
+	function likert_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
 		// TODO: Set keywords in module settings.
 		// field_types that are candidates for likert
 		$like_likert = array("dropdown", "radio");
 		
 		// If any of the following keywords are contained in the options
 		// it will be considered a likert category
-		$key_likert_words = array("male", "not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "infatil", "completamente inutil", "completamente infatil", "dificil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo");
+		$key_likert_words = array("victoria", "fas", "male", "not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "infatil", "completamente inutil", "completamente infatil", "dificil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo");
 		
 		$by_instrument = array();
 
 		$instruments_dictionary = array();
+		$repeats_dictionary = array();
+
+		foreach ($repeat_instruments as $instrument) {
+			$repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
+		}
 
 		foreach ($instruments as $instrument) {
 			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
 		}
 
-		$instrument_names = array_map(function($instrument) {return $instrument['instrument_name'];}, $instruments);
+		//$instrument_names = array_map(function($instrument) {return $instrument['instrument_name'];}, $instruments); TODO
 
-		
 		foreach ($report_fields as $field_name) {
 			// Get all field attributes from data dictionary
 			$field = $data_dictionary[$field_name];
@@ -222,12 +266,13 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			// If the field can be interpreted as liekrt
 			if ($type_matches && $selection_matches) {
 				// Match it to the appopriate instrument.
-				if (in_array($field['form_name'], $instrument_names)) {
+				if (in_array($field['form_name'], array_keys($repeats_dictionary))) {
 					$by_instrument[$field['form_name']]['choices'][$field['select_choices_or_calculations']][] = $field_name;
+					continue;
 				} 
-				// else {
-				// 	$by_instrument['adv_graph_no_instruments']['choices'][$field['select_choices_or_calculations']][] = $field_name;
-				// }
+
+				$by_instrument['adv_graph_non_repeating']['choices'][$field['select_choices_or_calculations']][] = $field_name;
+
 				// $by_instrument['adv_graph_all_instruments']['choices'][$field['select_choices_or_calculations']][] = $field_name;
 			}
 		}
@@ -235,20 +280,20 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		if (!$by_instrument)
 			return array();
 
-		$by_instrument['adv_graph_all_instruments']['choices'] = array();
+		// $by_instrument['adv_graph_all_instruments']['choices'] = array();
 
 		foreach($by_instrument as $instrument => $group) {
 			$by_instrument[$instrument]['instrument_label'] = $instruments_dictionary[$instrument];
-			$by_instrument['adv_graph_all_instruments']['choices'] = array_merge($by_instrument['adv_graph_all_instruments']['choices'], $group['choices']);
+			//$by_instrument['adv_graph_all_instruments']['choices'] = array_merge($by_instrument['adv_graph_all_instruments']['choices'], $group['choices']);
 		}
 		
-		//$by_instrument['adv_graph_no_instruments']['instrument_label'] = "No Instrument";
-		$by_instrument['adv_graph_all_instruments']['instrument_label'] = "All Instruments";
+		// //$by_instrument['adv_graph_no_instruments']['instrument_label'] = "No Instrument";
+		$by_instrument['adv_graph_non_repeating']['instrument_label'] = "Non-repeating instruments";
 
 
-		foreach ($by_instrument as $group) {
+		foreach ($by_instrument as $instrument => $group) {
 			if (!isset($group['choices']))
-				unset($group);
+				unset($by_instrument[$instrument]);
 		}
 		
 		return $by_instrument;
@@ -300,8 +345,12 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		return $by_instrument; */
 	}
 	
-	function scatter_groups($data_dictionary, $instruments) {
-		
+	function scatter_groups($data_dictionary, $report_fields, $instruments) {
+		// when searching for numeric fields
+		$ignored_names_numeric = array("latitude", "longitude", "latitud", "longitud");
+
+		// text validation strings to consider as a numerical column
+		$accepted_text_validation = array("integer", "number", "float", "decimal");
 	}
 	
 	function barplot_groups($data_dictionary, $instruments) {

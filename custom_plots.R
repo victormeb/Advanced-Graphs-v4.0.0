@@ -28,6 +28,8 @@ library(stringr)
 # Used to evaluate quosures in plotting functions
 library(rlang)
 
+# Used to create html images
+library(htmltools)
 
 # side_by_side
 # Author: Joel Cohen
@@ -274,6 +276,28 @@ custom_likert <- function(x) {
                   reverse=FALSE,
                   xlab = "Percent",
                   ylab.right = "")
+}
+
+build_likert <- function(fields, title="") {
+  report_data %>%
+    data.frame() %>%
+    # Select these fields from the data dictionary
+    # Across changes the field_names to their corresponding field labels 
+    transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
+    (function(data) {
+      # If any of the fields contain an NA
+      if (any(is.na(data))) {
+        return(
+          # Add an NA field to each factor
+          transmute(data, across(.fns = addNA))
+        )
+      }
+      # Otherwise return the data as is
+      return(data)
+    }) %>%
+    # Pass this dataframe to the custom likert
+    custom_likert() %>%
+    plotTag(title)
 }
 
 # custom_scatter

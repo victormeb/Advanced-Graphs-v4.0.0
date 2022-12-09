@@ -520,6 +520,9 @@ switch($_POST["method"]) {
 			echo file_get_contents($adv_output["output"]);
 		} 
 		break;
+	case "build_graphs":
+		echo json_encode($_POST);
+		break;
 	default:
 		echo nothing_to_show();
 		break;
