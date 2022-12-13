@@ -260,14 +260,21 @@ n_spaces_indices_zeros_first <- function(data, n) {
 #   Output:
 #     
 #     A likert plot
-custom_likert <- function(x, wrap_label = FALSE, label_wrap_length = 10, max_label_length = 50, text_size = 0.08) {
+custom_likert <- function(x, title="", wrap_label = FALSE, label_wrap_length = 10, max_label_length = 30, label_text = 3, legend_text = 35, legend_rows = 1) {
+  wrap_label <- as.logical(unlist(wrap_label))
+  label_wrap_length <- as.numeric(unlist(label_wrap_length))
+  max_label_length <- as.numeric(unlist(max_label_length))
+  legend_text <- as.numeric(unlist(legend_text))
+  legend_rows <- as.numeric(unlist(legend_rows))
+  label_text <- as.numeric(unlist(label_text))
+  
   percent_data <- x %>% 
     pivot_longer(cols = everything(), names_to = "Item", values_to = "variable") %>%
     group_by(Item) %>%
     mutate(count = n()) %>%
     group_by(Item, variable) %>%
     summarise(percent = n()/first(count))
-  
+
   p <- likert.bar.plot(likert(x),
                   as.percent = TRUE,
                   colors = if (!any(is.na(x))) colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]]))) else c(colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]])) - 1), "grey"),
@@ -318,27 +325,33 @@ custom_likert <- function(x, wrap_label = FALSE, label_wrap_length = 10, max_lab
                   max.time=1) +
       scale_x_discrete(labels = x_lab_func) +
       theme(
-        legend.position = "bottom",
-        legend.box = "horizontal",
+        axis.text.y = element_text(size=label_text),
+        legend.justification = c(1, 0),
+        legend.direction = "horizontal",
+        #legend.margin = margin(5, 5, 5, 5),
+        #legend.box.spacing = unit(1, "cm"),
         legend.title = element_blank(),
-        legend.text = element_text(size = (dev.size("cm")[[1]])/(sum(nchar(levels(x[[1]])))*text_size))
-      )
+        legend.text = element_text(size = (dev.size("cm")[[1]]*legend_text)/(sum(nchar(levels(x[[1]])))))
+      ) +
+      guides(fill = guide_legend(nrow = legend_rows))
       
       )
-    
-    
     
     
     p
 
 }
 
-build_likert <- function(fields, title="") {
+build_likert <- function(fields, options, title, ...) {
+  options <- parse_options(options)
   report_data %>%
     data.frame() %>%
     # Select these fields from the data dictionary
     # Across changes the field_names to their corresponding field labels 
-    transmute(across(all_of(likert_group$field_name), .names = "{likert_group$field_label}")) %>%
+    transmute(
+      across(all_of(unlist(fields)), 
+      .fns = ~factor(.x, levels = options[,1], labels = options[,2]), 
+      .names = "{names_to_labels[.col]}")) %>%
     (function(data) {
       # If any of the fields contain an NA
       if (any(is.na(data))) {
@@ -351,8 +364,9 @@ build_likert <- function(fields, title="") {
       return(data)
     }) %>%
     # Pass this dataframe to the custom likert
-    custom_likert() %>%
-    plotTag(title)
+    custom_likert(...) %>%
+    # Create an html object from it.
+    plotTag(unlist(title))
 }
 
 # custom_scatter

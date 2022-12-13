@@ -19,7 +19,6 @@ $report_id = $query['report_id'];
 $data_dictionary = MetaData::getDataDictionary("array", false, array(), array(), false, false, null, $_GET['pid']);
 $report_fields = DataExport::getReports($report_id)["fields"];
 
-echo "BOOM";
 $Proj = new Project($pid);
 
 $repeat_instruments = $module->get_repeat_instruments($Proj);
@@ -33,7 +32,12 @@ foreach ($Proj->forms as $form=>$attr) {
 //echo json_encode($data_dictionary);
 // $likert_groups = json_encode($module->likert_groups($data_dictionary, $forms));
 echo print_r($query);
-$likert_groups = json_encode($module->likert_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments));
+$graph_groups = json_encode(
+		array(
+			"likert_groups" => $module->likert_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments),
+			"scatter_groups" => $module->scatter_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments)
+		)
+	);
 echo "TEST";
 ?>
 <style>
@@ -67,12 +71,12 @@ echo "TEST";
   left: 0;
   height: 25px;
   width: 25px;
-  background-color: #eee;
+  background-color: #ccc;
 }
 
 /* On mouse-over, add a grey background color */
 .container:hover input ~ .checkmark {
-  background-color: #ccc;
+  background-color: #aaa;
 }
 
 /* When the checkbox is checked, add a blue background */
@@ -145,32 +149,41 @@ select {
 	gap: 16px;
 }
 
-/* .forms {
-	display: flex;
-	border: 1px solid #999;
-	width: 100%;
-	block-size: fit-content;
-	margin: 5px;
-	gap: 16px;
-} */
-
-.likert-form {
+.forms {
 	display: grid;
 	border: 1px solid #999;
+	width: 100%;
 	grid-template-columns: 1fr 1fr; 
-  	grid-template-rows: 1fr 0.1fr; 
+  	grid-template-rows: 1fr auto 0.1fr; 
   	gap: 0px 0px; 
   	grid-template-areas: 
-		"form-child form-checkbox"
+		"form-left form-right"
+		"preview-pane preview-pane"
 		"buttons buttons"
+} 
+
+.forms label {
+	font-size: 2em;
 }
 
+
+
 .form-child {
-	grid-area: form-child;
+	grid-area: form-left;
 }
 
 .form-checkbox {
-	grid-area: form-checkbox;
+	grid-area: form-right;
+}
+
+.preview-pane {
+	grid-area: preview-pane;
+	margin: auto;
+ 	width: 50%;
+}
+
+.preview-pane img {
+	margin-left: 25%;
 }
 
 .buttons {
@@ -210,6 +223,16 @@ select {
 	font-size: 16px;
 }
 
+.close-options {
+	float: right;
+	display: block;
+	position: inherit;
+	border: none;
+	background-color: grey;
+	color: red;
+	text-align: center;
+}
+
 /* .form-left {
 	float: left;
 	position: absolute;
@@ -241,6 +264,11 @@ select {
 	border: 1px solid #888;
 	width: 80%;
 }
+
+.graph-options input[type=text] {
+	display: block;
+}
+
 </style>
 <script>
 var data_dictionary = <?php echo json_encode($data_dictionary);?>;
@@ -251,11 +279,11 @@ var refferer_parameters = <?php echo $original_params;?>;
 var pid = <?php echo $_GET["pid"];?>;
 var ajax_url = ajax_url+ "&pid=" + pid;
 
-var likert_fields = <?php echo $likert_groups;?>;
+var graph_groups = <?php echo $graph_groups;?>;
 
 var report_object = new Map();
 
-console.log(likert_fields);
+console.log(graph_groups);
 
 function select_all_fields(source) {	
 	$("[name=\"field_name\"]").each(function() {
@@ -307,10 +335,54 @@ function field_form(data) {
 	return form_html;
 }
 
+function create_new_form(button, main_options, other_options) {
+	// The main template all forms follow
+	let graph_form = `<form class="forms">
+								${main_options}
+								<div class="preview-pane"></div>
+								<div class="buttons">
+									<button class="preview" type="button">Preview</button>
+									<button class="config" type="button"><i class="fa fa-cog" aria-hidden="true"></i></button>
+									<button class="remove" type="button"><i class="fa fa-trash" aria-hidden="true"></i></button>
+								</div>
+								<div class="graph-modal">
+									<div class="graph-options">
+										${other_options}
+									</div>
+								</div>
+							  </form>`;
+
+	// Create a new form on top of the '+' button
+	$(button).before(graph_form);
+
+	// Set new_form to be the newly created form
+	let new_form = $(button).prev();
+
+	// Disable the preview button
+	toggle_form(new_form, false);
+
+	// Set the buttons for the new form
+	set_buttons(new_form);
+
+	// Update the report whenever the graph options change
+	new_form.find('.graph-options').change(function() {
+		update_report(new_form);
+	});
+
+	return new_form;
+
+	// Each graph function must:
+	// Create main options and other options menus
+	// Determine whether to show instruments
+	// Create logic to validate form
+}
+
 function likert_div() {
-	if (!(likert_fields && Object.keys(likert_fields).length !== 0 && Object.getPrototypeOf(likert_fields) === Object.prototype)) {
+	// if (!(likert_fields && Object.keys(likert_fields).length !== 0 && Object.getPrototypeOf(likert_fields) === Object.prototype)) {
+	// 	return;
+	// }
+	if (!graph_groups["likert_groups"])
 		return;
-	}
 	// Keeps track of then number of graph forms that have been created
 	likert_count = 0;
 
@@ -327,102 +399,271 @@ function likert_div() {
 }
 
 function likert_form(button) {
+	let likert_fields = graph_groups["likert_groups"];
 	// Are there more than one options for the instrument?
-	let multiple_options = Object.keys(likert_fields).length > 1;
+	let multiple_instruments = Object.keys(likert_fields).length > 1;
 
-	let instruments = (multiple_options ? '<option disabled selected value> -- select an instrument -- </option>' : '');
+	let instruments = (multiple_instruments ? '<option disabled selected value> -- select an instrument -- </option>' : '');
 
 	for (const instrument in likert_fields) {
 		instruments += `<option value=\"${instrument}\">${likert_fields[instrument]['instrument_label']}</option>`;
 	}
 
-	
-	let select_instruments = `<form class="forms likert-form">
-								<div class="form-child">
-									<select class="instrument-selector">${instruments}</select>
-									<select class="options-selector"></select>
+	let main_options = `<div class="form-child">
+									<label>Instrument<select class="instrument-selector">${instruments}</select></label><br>
+									<label>Option group<select class="options-selector" name="options"></select></label>
 								</div>
-								<div class="form-checkbox"></div>
-								<div class="buttons">
-									<button class="preview" type="button">Preview</button>
-									<button class="config" type="button"><i class="fa fa-cog" aria-hidden="true"></i></button>
-									<button class="remove" type="button"><i class="fa fa-trash" aria-hidden="true"></i></button>
-								</div>
-								<div class="graph-modal">
-									<div class="graph-options">
-										<label>Title<input type="text" name="title" placeholder="Default"></label>
-										<button class="close-options" type="button">Close</button>
-									</div>
-								</div>
-							  </form>`;
+								<div class="form-checkbox"></div>`;
+
+	let other_options = 
+			`
+			<label>Title<input type="text" name="title" placeholder="Default"></label>
+			<br><label>Size of field labels<input type="number" step="1" name="label_text" value="10"></input> characters</label>
+			<br><label class="container">Wrap Field Labels?<input type="checkbox" name="wrap_label" value="true" ></input><span class="checkmark"></span></label>
+			<br><label>Wrap after <input type="number" step="1" name="label_wrap_length" value="10"></input> characters</label>
+			<br><label>Truncate after <input type="number" step="1" name="max_label_length" value="30"></input> characters</label>
+			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="30"></input></label>
+			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
+			<button class="close-options" type="button">Close</button>`;
 	
-	$(button).before(select_instruments);
+	// Create a new form with default buttons
+	new_form = create_new_form(button, main_options, other_options);
 
-	let new_form = $(button).prev(); 
-
-	toggle_form(new_form, false);
-
-	set_buttons(new_form);
-	
+	// Let the selected instrument be the currently selected one
 	let selected_instrument = new_form.find('.instrument-selector').find(':selected').val();
 
+	// If there is an instrument selected
 	if (selected_instrument) 
+		// Fill the options group selector with the available choices
 		$.each(likert_fields[selected_instrument]['choices'], function (key, value) {
 			new_form.find('.options-selector').append(`<option value='${key}'>${key}</option>`);
 		});
 	else
+		// Otherwise hide the options selector
 		new_form.find('.options-selector').hide();
 
+	// If there is only one instrument
+	if (!multiple_instruments) {
+		// Hide the instrument selector
+		new_form.find('.instrument-selector').hide();
+		// And its label
+		new_form.find('.instrument-selector').parent().hide();
+	}
+
+	// When the selected instrument changes
 	new_form.find('.instrument-selector').change(function () {
 		let selected_instrument = $(this).find(':selected').val();
+		// Empty the options selector
 		new_form.find('.options-selector').empty();	
+		// Add the option prompting a user to select an options gorup
 		new_form.find('.options-selector').append('<option disabled selected value> -- select an options group -- </option>');
+		// For each options group in the selected instrument
 		$.each(likert_fields[selected_instrument]['choices'], function (key, value) {
+			// Add the option group to the selector
 			new_form.find('.options-selector').append(`<option value='${key}'>${key}</option>`);
 		});
+		// Show the options group
 		new_form.find('.options-selector').show();
 	});
 
+	// Let the selected options group be stored in selected_group
 	let selected_group = new_form.find('.options-selector').find(':selected').val();
 
+	// If both the instrument and options group is selected
 	if (selected_group && selected_instrument) {
+		// Fill the checkbox div with the appropriate fields
 		$.each(likert_fields[selected_instrument]['choices'][selected_group], function(key, value) {
-			console.log(value);
 			new_form.find('.form-checkbox').append(`<label class="container">${data_dictionary[value]['field_label']}<input type='checkbox' name="fields" value=${value} checked='checked'><span class="checkmark"></span></label>`);
 		});
+		// Add a select all checkbox
 		new_form.find('.form-checkbox').append(`<hr><label class="container">Select All<input type='checkbox' checked='checked' class='select-all'><span class="checkmark"></span></label>`);
+		// Whenever the select-all is checked
 		new_form.find('.select-all').click(function() {
+			// select or deselect all fields
 			$(this).parent().parent().find('input:checkbox').prop('checked', this.checked);
 		});
+		// Set the form as ready to preview
 		toggle_form(new_form, true);
 	}
 
+	// Whenever the options group changes
 	new_form.find('.options-selector').change(function() {
 		let selected_group = new_form.find('.options-selector').find(':selected').val();
 		let selected_instrument = new_form.find('.instrument-selector').find(':selected').val();
+		// Empty the checkbox fields
 		new_form.find('.form-checkbox').empty();
+		// Fill the checkbox div with the appropriate fields
 		$.each(likert_fields[selected_instrument]['choices'][selected_group], function(key, value) {
-			console.log(value);
 			new_form.find('.form-checkbox').append(`<label class="container">${data_dictionary[value]['field_label']}<input type='checkbox' name="fields" value=${value} checked='checked'><span class="checkmark"></span></label>`);
 		});
+		// Add a select all checkbox
 		new_form.find('.form-checkbox').append(`<hr><label class="container">Select All<input type='checkbox' checked='checked' class='select-all'><span class="checkmark"></span></label>`);
+		// Whenever the select-all is checked
 		new_form.find('.select-all').click(function() {
+			// select or deselect all fields
 			$(this).parent().parent().find('input:checkbox').prop('checked', this.checked);
 		});
+		// Set the form as ready to preview
 		toggle_form(new_form, true);
-		// new_form.find('.preview').prop('disabled', false);
-		// new_form.find('.preview').css('background-color',' #4CAF50');
 	});
 
+	// Whenever the checkbox changes
 	new_form.find('.form-checkbox').change(function () {
+		// If any fields are checked
 		if ($(this).find('input:checkbox:checked').not('.select-all').length) {
+			// Consider this form ready to preview
 			toggle_form(new_form, true);
-			console.log(new_form.serializeArray());
 			return;
-		}	
+		}
+
+		// If no fields are checked
+		// "Turn off" the form
 		toggle_form(new_form, false);
 	});
+
+	// If any of the graph-options change
+	new_form.find('.graph-options').change(function() {
+		// Update the report
+		update_report(new_form);
+	});
 }
+
+function scatter_div() {
+	if (!graph_groups["likert_groups"])
+		return;
+
+
+	let scatter_html = `<div id="scatter" class="graph-type">\
+						<h2 id="scatter_header">Scatter</h2>\
+						<input id="add_scatter" type="button" value="+">
+					   </div>`;
+
+	$('#advanced_graphs').append(scatter_html);
+
+	$('#add_scatter').click(function() {
+			scatter_form(this);
+	});
+}
+
+function scatter_form(button) {
+	let scatter_fields = graph_groups["scatter_groups"];
+	// Are there more than one options for the instrument?
+	let multiple_instruments = Object.keys(scatter_fields).length > 1;
+
+	let instruments = (multiple_instruments ? '<option disabled selected value> -- select an instrument -- </option>' : '');
+
+	for (const instrument in scatter_fields) {
+		instruments += `<option value=\"${instrument}\">${scatter_fields[instrument]['instrument_label']}</option>`;
+	}
+
+	let main_options = `<div class="form-child">
+									<label>Instrument<select class="instrument-selector">${instruments}</select></label>
+									<label>"X" field<select class="x-field field-selector" name="x"></select></label>
+									<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
+									<label class="container line">Line? <input type="checkbox" name="wrap_label" value="true" ></input><span class="checkmark"></span></label>
+								</div>
+								<div class="form-checkbox"></div>`;
+
+	let other_options = 
+			`
+			<label>Title<input type="text" name="title" placeholder="Default"></label>
+			<br><label>Size of field labels<input type="number" step="1" name="label_text" value="10"></input> characters</label>
+			<br><label class="container">Wrap Field Labels?<input type="checkbox" name="wrap_label" value="true" ></input><span class="checkmark"></span></label>
+			<br><label>Wrap after <input type="number" step="1" name="label_wrap_length" value="10"></input> characters</label>
+			<br><label>Truncate after <input type="number" step="1" name="max_label_length" value="30"></input> characters</label>
+			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="30"></input></label>
+			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
+			<button class="close-options" type="button">Close</button>`;
+
+	// Create a new form with default buttons
+	new_form = create_new_form(button, main_options, other_options);
+
+	// Let the selected instrument be the currently selected one
+	let selected_instrument = new_form.find('.instrument-selector').find(':selected').val();
+
+	// If there is an instrument selected
+	if (selected_instrument) {
+		// let selected_instrument = $(this).find(':selected').val();
+
+		// Reset the options with the corresponding fields
+		new_form.find('.x-field').empty();
+		new_form.find('.y-field').empty();
+
+		new_form.find('.x-field').append(`<option disabled selected>-- Choose an x field --</option>`);
+		new_form.find('.y-field').append(`<option disabled selected>-- Choose a y field --</option>`);
+
+		new_form.find('.field-selector ').append(`<option value='${key}'>${key}</option>`);
+
+		$.each(scatter_fields[selected_instrument], function (key, value) {
+			new_form.find('.field-selector ').append(`<optgroup label='${key}'>`);
+
+			$.each(value['fields'], function (key, value) {
+				new_form.find('.field-selector ').append(`<option value='${data_dictionary['value']['field_label']}'>${value}</option>`);
+			});
+
+			new_form.find('.field-selector ').append(`</optgroup>`);
+			// new_form.find('.y-field').append(`<option value='${key}'>${key}</option>`);
+		});
+
+		// And show the selectors
+		new_form.find('.x-field').show();
+		new_form.find('.y-field').show();
+		new_form.find('.line').show();
+	} else {
+		// Otherwise hide the options selector
+		new_form.find('.x-field').hide();
+		new_form.find('.y-field').hide();
+		new_form.find('.line').hide();
+	}
+
+	// If there is only one instrument
+	if (!multiple_instruments) {
+		// Hide the instrument selector
+		new_form.find('.instrument-selector').hide();
+		// And its label
+		new_form.find('.instrument-selector').parent().hide();
+	}
+
+	// When the instrument changes
+	new_form.find('.instrument-selector').change(function () {
+		let selected_instrument = $(this).find(':selected').val();
+
+		// Reset the options with the corresponding fields
+		new_form.find('.x-field').empty();
+		new_form.find('.y-field').empty();
+
+		new_form.find('.x-field').append(`<option disabled selected>-- Choose an x field --</option>`);
+		new_form.find('.y-field').append(`<option disabled selected>-- Choose a y field --</option>`);
+
+		new_form.find('.field-selector ').append(`<option value='${key}'>${key}</option>`);
+
+		$.each(scatter_fields[selected_instrument], function (key, value) {
+			new_form.find('.field-selector ').append(`<optgroup label='${key}'>`);
+
+			$.each(value['fields'], function (key, value) {
+				new_form.find('.field-selector ').append(`<option value='${data_dictionary['value']['field_label']}'>${value}</option>`);
+			});
+
+			new_form.find('.field-selector ').append(`</optgroup>`);
+			// new_form.find('.y-field').append(`<option value='${key}'>${key}</option>`);
+		});
+
+		// And show the selectors
+		new_form.find('.x-field').show();
+		new_form.find('.y-field').show();
+		new_form.find('.line').show();
+	});
+
+	new_form.find('.field-selector').change(function () {
+		if (new_form.find('.field-selector :selected').not(':disabled').length != 2) {
+			toggle_form(new_form, false);
+			return;
+		}
+		toggle_form(new_form, true);
+	});
+	console.log(new_form.find('.field-selector :selected').not(':disabled').length);
+}
+
 
 function toggle_form(form, enabled) {
 	if (enabled) {
@@ -491,13 +732,25 @@ function generate_graph(form) {
 		return;
 	}
 
-	$.ajax(ajax_url, {data: {params: refferer_parameters, graphs: [report_object.get(form)], method: "build_graphs"}, method: "POST"}).done(function(data) { //, dataType: "html"
-		console.log(data);
+	form.find(".preview-pane").html("<h2>Loading your graph...</h2>");
+
+	console.log(report_object.get(form));
+
+	$.ajax(ajax_url, {data: {params: refferer_parameters, graphs: [report_object.get(form)], method: "build_graphs"}, dataType: "json", method: "POST"}).done(function(data) { //, dataType: "html"
+		// console.log(data);
+		if (!data["status"]) {
+			form.find(".preview-pane").html("<h2 style=\"color: red;\">There was an error loading your graph</h2>");
+			console.log(data["r_output"]);
+			return;
+		}
+		
+		form.find(".preview-pane").html(data["html"]);
 	});
 }
 
 $(document).ready(function() {
 	likert_div();
+	scatter_div();
 });
 
 // $(document).ready(function() {

@@ -413,6 +413,15 @@ parse_categories <- function(data) {
   )
 }
 
+parse_options <- function(options) {
+  # Split options over | character
+  str_split(options, "[|]", simplify = TRUE) %>% 
+    # Split option codes from option labels over ,
+    str_split(",", 2, simplify = TRUE) %>% 
+    # Remove leading and trailing whitespace
+    gsub(pattern = "^\\s+|\\s+^", replacement = "")
+}
+
 # parse_live_filters
 # Author: Joel Cohen
 # Description:

@@ -4,6 +4,7 @@ use ExternalModules\ExternalModules;
 
 $pid = $_POST["params"]["pid"];
 $report_id = $_POST["params"]["report_id"];
+$params = $_POST["params"];
 
 global $Proj;
 $Proj = new Project($pid);
@@ -521,7 +522,7 @@ switch($_POST["method"]) {
 		} 
 		break;
 	case "build_graphs":
-		echo json_encode($_POST);
+		echo $module->build_graphs($pid, $report_id, $params, $_POST["graphs"]);
 		break;
 	default:
 		echo nothing_to_show();

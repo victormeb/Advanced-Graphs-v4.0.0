@@ -7,6 +7,7 @@ use ExternalModules\ExternalModules;
 use \DateTime;
 use \DateTimeZone;
 use DataExport;
+use MetaData;
 
 class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 {
@@ -190,20 +191,17 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	
 
 	function get_repeat_instruments($Proj) {
-		echo "GRR";
 		global $lang;
-
-		echo "GRR0";
 		// Get project object of attributes
 	
 		// if project has not repeating forms or events
-		echo "GRR1";
+
 		if(!$Proj->hasRepeatingFormsEvents()){
 			return ($Proj->longitudinal ? "event_name,form_name,custom_form_label" : "form_name,custom_form_label")."\n";
 		}
-		echo "GRR2";
+
 		$raw_values = $Proj->getRepeatingFormsEvents();
-		echo "GRR3";
+
 		if($Proj->longitudinal){
 			$eventForms = $Proj->eventsForms;
 			foreach ($eventForms as $dkey=>$row){
@@ -226,6 +224,65 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 
 		return $results;
 	}
+
+	function get_report($report_id, $params) {
+		// Get user rights
+		$user_rights_proj_user = UserRights::getPrivileges(PROJECT_ID, USERID);
+		$user_rights = $user_rights_proj_user[PROJECT_ID][strtolower(USERID)];
+		unset($user_rights_proj_user);
+		
+		// TODO: should user access even with no rights?
+		
+		// Does user have De-ID rights?
+		$deidRights = ($user_rights['data_export_tool'] == '2');
+	
+		// De-Identification settings
+		$hashRecordID = ($deidRights);
+		$removeIdentifierFields = ($user_rights['data_export_tool'] == '3' || $deidRights);
+		$removeUnvalidatedTextFields = ($deidRights);
+		$removeNotesFields = ($deidRights);
+		$removeDateFields = ($deidRights);
+		
+		// Build live filter logic from parameters
+		list ($liveFilterLogic, $liveFilterGroupId, $liveFilterEventId) = buildReportDynamicFilterLogicReferrer($report_id, $params);
+	
+		// Retrieve report from redcap
+		$content = DataExport::doReport($report_id, 'export', 'csvraw', false, false,
+										false, false, $removeIdentifierFields, $hashRecordID, $removeUnvalidatedTextFields,
+										$removeNotesFields, $removeDateFields, false, false, array(), 
+										array(), false, false, 
+										false, true, true, $liveFilterLogic, $liveFilterGroupId, $liveFilterEventId, true, ",", '');
+	
+										
+		return $content;
+	}
+
+	function add_instrument_labels($grouped_fields, $instruments) {
+		// Create a dictionary that maps instrument names to instrument labels
+		$instruments_dictionary = array();
+
+		foreach ($instruments as $instrument) {
+			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
+		}
+
+		$instruments_dictionary['adv_graph_non_repeating'] = "Non-repeating instruments";
+
+		// Add the appropriate instrument label to each instrument
+		foreach($grouped_fields as $instrument => $group) {
+			$grouped_fields[$instrument]['instrument_label'] = $instruments_dictionary[$instrument];
+		}
+		
+		// Let the non-repeating instruments have the label "Non-repeating instruments"
+		// $grouped_fields['adv_graph_non_repeating']['instrument_label'] = "Non-repeating instruments";
+		
+		// Remove the instruments whose choices aren't set
+		// foreach ($grouped_fields as $instrument => $group) {
+		// 	if (!isset($group[$must_be_set]))
+		// 		unset($grouped_fields[$instrument]);
+		// }
+
+		return $grouped_fields;
+	}
 	
 	// TODO: Documentation
 	// https://github.com/jsonform/jsonform/wiki#outline
@@ -238,21 +295,17 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		// it will be considered a likert category
 		$key_likert_words = array("victoria", "fas", "male", "not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "infatil", "completamente inutil", "completamente infatil", "dificil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo");
 		
-		$by_instrument = array();
+		// Create an array that groups fields by repeating instruments
+		$likert_fields = array();
 
-		$instruments_dictionary = array();
+		// Create a dicitionary that maps repeat instrument names to repeat instrument labels
 		$repeats_dictionary = array();
 
 		foreach ($repeat_instruments as $instrument) {
 			$repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
 		}
 
-		foreach ($instruments as $instrument) {
-			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
-		}
-
-		//$instrument_names = array_map(function($instrument) {return $instrument['instrument_name'];}, $instruments); TODO
-
+		// For each report_field...
 		foreach ($report_fields as $field_name) {
 			// Get all field attributes from data dictionary
 			$field = $data_dictionary[$field_name];
@@ -267,90 +320,145 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			if ($type_matches && $selection_matches) {
 				// Match it to the appopriate instrument.
 				if (in_array($field['form_name'], array_keys($repeats_dictionary))) {
-					$by_instrument[$field['form_name']]['choices'][$field['select_choices_or_calculations']][] = $field_name;
+					$likert_fields[$field['form_name']]['choices'][$field['select_choices_or_calculations']][] = $field_name;
 					continue;
 				} 
 
-				$by_instrument['adv_graph_non_repeating']['choices'][$field['select_choices_or_calculations']][] = $field_name;
-
-				// $by_instrument['adv_graph_all_instruments']['choices'][$field['select_choices_or_calculations']][] = $field_name;
+				// If it does not belong to a repeat instrument map it to the non-repeating instrument category
+				$likert_fields['adv_graph_non_repeating']['choices'][$field['select_choices_or_calculations']][] = $field_name;
 			}
 		}
 		
-		if (!$by_instrument)
+		// If by instrument is empty return an empty array
+		if (!$likert_fields)
 			return array();
 
-		// $by_instrument['adv_graph_all_instruments']['choices'] = array();
-
-		foreach($by_instrument as $instrument => $group) {
-			$by_instrument[$instrument]['instrument_label'] = $instruments_dictionary[$instrument];
-			//$by_instrument['adv_graph_all_instruments']['choices'] = array_merge($by_instrument['adv_graph_all_instruments']['choices'], $group['choices']);
-		}
 		
-		// //$by_instrument['adv_graph_no_instruments']['instrument_label'] = "No Instrument";
-		$by_instrument['adv_graph_non_repeating']['instrument_label'] = "Non-repeating instruments";
-
-
-		foreach ($by_instrument as $instrument => $group) {
-			if (!isset($group['choices']))
-				unset($by_instrument[$instrument]);
-		}
-		
-		return $by_instrument;
-		
-/* 		// Get fields whose selections contain likert key words.
-		$matches_selection = preg_grep(
- 									"/".implode("|", $key_likert_words)."/",
-									array_map(
-										function($field) {
-											return strtolower($field['select_choices_or_calculations']);
-										}, 
-										$data_dictionary
-									)
-								); 
-
-		// Get fields with the appropriate field type
-		$matches_field_type = preg_grep(
-								"/".implode("|",$like_likert)."/",
-								array_map(
-									function($field) {return $field['field_type'];},
-									$data_dictionary
-								)
-							 );	 
-
-		// Get those fields that are of the appropriate field type and contain a keyword.
-		$likert_fields = array_intersect(array_keys($matches_selection), array_keys($matches_field_type));
-		
-		if (count($likert_fields) == 0) 
-			return false;
-		
-		echo print_r($instrument_names);
-		foreach ($likert_fields as $field) {
-			$field = $data_dictionary[$field];
-			if (in_array($field['form_name'], $instrument_names)) {
-				$by_instrument[$field['form_name']]['choices'][$field['select_choices_or_calculations']][] = $field;
-			} else {
-				$by_instrument['adv_graph_no_instruments']['choices'][$field['select_choices_or_calculations']][] = $field;
-			}
-			$by_instrument['adv_graph_all_instruments']['choices'][$field['select_choices_or_calculations']][] = $field;
-		}
-		
-		foreach($instruments as $instrument) {
-			$by_instrument[$instrument['instrument_name']]['instrument_label'] = $instrument['instrument_label'];
-		}
-		
-		$by_instrument['adv_graph_no_instruments']['instrument_label'] = "No Instrument";
-		$by_instrument['adv_graph_all_instruments']['instrument_label'] = "All Instruments";
-		
-		return $by_instrument; */
+		// Return the fields grouped by instrument
+		return self::add_instrument_labels($likert_fields, $instruments);
 	}
 	
-	function scatter_groups($data_dictionary, $report_fields, $instruments) {
+	function numeric_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
+		echo "gof";
 		// when searching for numeric fields
 		$ignored_names_numeric = array("latitude", "longitude", "latitud", "longitud");
 
 		// text validation strings to consider as a numerical column
 		$accepted_text_validation = array("integer", "number", "float", "decimal");
+
+		// Create an array that groups fields by repeating instruments
+		$numeric_fields = array();
+
+		// Create a dictionary that maps instrument names to instrument labels
+		$instruments_dictionary = array();
+
+		foreach ($instruments as $instrument) {
+			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
+		}
+
+		// Create a dicitionary that maps repeat instrument names to repeat instrument labels
+		$repeats_dictionary = array();
+
+		foreach ($repeat_instruments as $instrument) {
+			$repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
+		}
+		echo "one";
+		// For each field
+		foreach($report_fields as $field_name) {
+			$field = $data_dictionary[$field_name];
+			$field_type = $field['field_type'] ;
+			$field_text_and_valid =  preg_match("/text/", $field['field_type']) && preg_match("/".implode("|", $accepted_text_validation)."/", strtolower($field['text_validation_type_or_show_slider_number']));
+			$field_type_is_calc = preg_match("/calc/", $field['field_type']);
+			$field_names_ignored = boolval(preg_match("/".implode("|", $ignored_names_numeric)."/", strtolower($field['field_name'])));
+			echo "$field_name type is '$field_type' text valid?" .  ($field_text_and_valid ? 'tue': 'false') . "| type is calc?" . ($field_type_is_calc ? 'tue': 'false') . " | ignored field name? " . ($field_names_ignored ? 'tue': 'false')."\n";
+			// If the field is numeric add it to the corresponding instrument
+			if (($field_text_and_valid | $field_type_is_calc) & !$field_names_ignored) {
+				// Match it to the appopriate instrument.
+				if (in_array($field['form_name'], array_keys($repeats_dictionary))) {
+					$numeric_fields[$field['form_name']]['fields'][] = $field_name;
+					continue;
+				} 
+
+				// If it does not belong to a repeat instrument map it to the non-repeating instrument category
+				$numeric_fields['adv_graph_non_repeating']['fields'][] = $field_name;
+			}
+				
+		}
+	
+		// If by instrument is empty return an empty array
+		if (!$numeric_fields)
+			return array();
+			
+		// Return the fields grouped by instrument
+		return self::add_instrument_labels($numeric_fields, $instruments);
+	}
+
+	function date_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
+		// Create an array that groups fields by repeating instruments
+		$date_fields = array();
+
+		// Create a dictionary that maps instrument names to instrument labels
+		$instruments_dictionary = array();
+
+		foreach ($instruments as $instrument) {
+			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
+		}
+
+		// Create a dicitionary that maps repeat instrument names to repeat instrument labels
+		$repeats_dictionary = array();
+
+		foreach ($repeat_instruments as $instrument) {
+			$repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
+		}
+
+		// For each field
+		foreach($report_fields as $field_name) {
+			$field = $data_dictionary[$field_name];
+			$validation_contains_date = preg_match("/^date/", strtolower($field['text_validation_type_or_show_slider_number']));
+
+			// If the field is numeric add it to the corresponding instrument
+			if ($validation_contains_date) {
+				// Match it to the appopriate instrument.
+				if (in_array($field['form_name'], array_keys($repeats_dictionary))) {
+					$date_fields[$field['form_name']]['fields'][] = $field_name;
+					continue;
+				} 
+
+				// If it does not belong to a repeat instrument map it to the non-repeating instrument category
+				$date_fields['adv_graph_non_repeating']['fields'][] = $field_name;
+			}
+				
+		}
+	
+		// If by instrument is empty return an empty array
+		if (!$date_fields)
+			return array();
+
+		// Return the fields grouped by instrument
+		return self::add_instrument_labels($date_fields, $instruments);
+	}
+
+	function scatter_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
+		$numeric_grouped = self::numeric_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments);
+		
+		$date_grouped = self::date_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments);
+
+		$scatter_groups = array();
+
+		foreach($numeric_grouped as $instrument => $scatter_field) {
+			foreach ($scatter_field['fields'] as $field) {
+				$scatter_groups[$instrument]['fields']['numeric'][] = $field;
+			}
+		}
+
+		foreach($date_grouped as $instrument => $scatter_field) {
+			foreach ($scatter_field['fields']  as $field) {
+				$scatter_groups[$instrument]['fields']['date'][] = $field;
+			}
+		}
+		
+
+		return self::add_instrument_labels($scatter_groups, $instruments);
 	}
 	
 	function barplot_groups($data_dictionary, $instruments) {
@@ -367,5 +475,131 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	
 	function network_groups($data_dictionary, $instruments) {
 		
+	}
+
+
+	function build_graphs($pid, $report_id, $params, $graphs) {
+		$input_data = array("inputs" => array(), "graphs" => array());
+		$input_data["inputs"]["report_data"] = tempnam(sys_get_temp_dir(), "report_data");
+		$input_data["inputs"]["data_dictionary"] = tempnam(sys_get_temp_dir(), "data_dictionary");
+		$input_data["inputs"]["repeat_instruments"] = tempnam(sys_get_temp_dir(), "repeat_instruments");
+
+		$report_data_file = fopen($input_data["inputs"]["report_data"], "w");
+		$data_dictionary_file = fopen($input_data["inputs"]["data_dictionary"], "w");
+		$repeat_instruments_file = fopen($input_data["inputs"]["repeat_instruments"], "w");
+
+		if (!($report_data_file && $data_dictionary_file && $repeat_instruments_file)) {
+			fclose($report_data_file);
+			fclose($data_dictionary_file);
+			fclose($repeat_instruments_file);
+			return "<h1 style='color: red;'>Something went wrong generating your graph</h1>";
+		}
+		$error_msg = '';
+
+		$report_data = get_report($report_id, $params);
+
+		if (!$report_data)
+			$error_msg .= '<h1 style=\"color:red;\">Failed to export report data</h1>';
+		
+		$data_dictionary = MetaData::getDataDictionary("csv", false, array(), array(), false, false, null, $pid);
+		
+		if (!$data_dictionary)
+			$error_msg .= '<h1 style=\"color:red;\">Failed to export data dictionary</h1>';
+		
+		
+		$repeat_instruments = get_repeat_instruments($pid);
+	
+		if (!$repeat_instruments)
+			$repeat_instruments = "form_name,custom_form_label\n";
+
+		$status = true;
+
+		$status = $status && fwrite($report_data_file, $report_data);
+		$status = $status && fwrite($data_dictionary_file, $data_dictionary);
+		$status = $status && fwrite($repeat_instruments_file, $repeat_instruments);
+
+		if (!$status || $error_msg) {
+			fclose($report_data_file);
+			fclose($data_dictionary_file);
+			fclose($repeat_instruments_file);
+			return $error_msg;
+		}
+
+		$output_paths = array();
+
+		foreach($graphs as $graph) {
+			$output_path = tempnam(sys_get_temp_dir(), "graph");
+
+			$graph["output_file"] = $output_path;
+			$output_paths[] = $output_path;
+			$input_data["graphs"][] = $graph;
+		}
+
+		$input_path = tempnam(sys_get_temp_dir(), "graph");
+
+		$input_file = fopen($input_path, "w");
+
+		if (!$input_file) {
+			fclose($report_data_file);
+			fclose($data_dictionary_file);
+			fclose($repeat_instruments_file);
+			return "<h1>Unable to create input file</h1>";
+		}
+
+		if (!fwrite($input_file, json_encode($input_data))) {
+			fclose($report_data_file);
+			fclose($data_dictionary_file);
+			fclose($repeat_instruments_file);
+			fclose($input_file);
+			return "<h1>Unable to create input file</h1>";
+		}
+
+		// Replace backslashes with forward slashes in module path.
+		$module_physical_path = str_replace("\\","/",self::getModulePath());
+		$input_path = str_replace("\\","/", $input_path);
+
+		$markdown_file_path = $module_physical_path . "build_graphs.R";
+
+		$r_path = self::getSystemSetting("r-path");
+		if(is_array($r_path)){
+			$r_path = $r_path[0];
+		}
+
+		$data_manipulation_path = $module_physical_path.'data_manipulation.R';
+		$custom_plots_path = $module_physical_path.'custom_plots.R';
+
+		$r_code = "\"$r_path\" -e
+		\"$libPaths 
+		input_data_path <- '$input_path';
+		source('$data_manipulation_path');
+		source('$custom_plots_path');
+		source('$markdown_file_path')\"
+		2>&1";
+
+		$r_code = trim(preg_replace('/\s+/', ' ', $r_code));
+		# echo $r_code;
+		$status = exec($r_code, $exec_output);
+
+		if (end($exec_output) != "SUCCESS")
+			$status = false;
+
+		if ($status)
+			$status = true;
+		# echo print_r($exec_output);
+
+
+		$html_output = "";
+
+		foreach($output_paths as $output_path) {
+			$html_output .= file_get_contents($output_path);
+		}
+
+		return json_encode(
+				array(
+					"status" => $status,
+					"html" => $html_output,
+					"r_output" => $exec_output
+				)
+			);
 	}
 }

@@ -9,8 +9,8 @@ if (!exists("input_data_path")) {
 
 type_to_method = list("likert" = "build_likert")
 
-source("./data_manipulation.R")
-source("./custom_plots.R")
+# source("./data_manipulation.R")
+# source("./custom_plots.R")
 
 # Example input file
 '{
@@ -60,11 +60,17 @@ report_data <- read.csv(report_data_path, header = TRUE, sep = ",", stringsAsFac
 data_dictionary <- read.csv(data_dictionary_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 repeat_instruments <- read.csv(repeat_instruments_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
-output_paths <- list()
+# Create list of labels
+# This is used to extract the text labels from the field names
+names_to_labels <- data_dictionary$field_label
+names(names_to_labels) <- data_dictionary$field_name
 
 for (graph in input_data$graphs) {
+
+  method <- unlist(type_to_method[graph$type])
+
   # Create graph with parameters
-  html_plot <- do.call(type_to_method[graph$type], graph$params)
+  html_plot <- do.call(method, graph$params)
   
   # Open the temporary file created for this graph by php
   temp_file <- file(graph$output_file)
@@ -74,4 +80,4 @@ for (graph in input_data$graphs) {
   close(temp_file)
 }
 
-cat(toJSON(TRUE))
+cat("SUCCESS")
