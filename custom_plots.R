@@ -398,6 +398,48 @@ custom_scatter <- function(data, x, y, line = FALSE) {
         geom_point(colour = "blue", shape = 19)
 }
 
+build_scatter <- function(x, y, title="", line=FALSE, ...) {
+  x <- unlist(x)
+  y <- unlist(y)
+  title <- unlist(title)
+  line <- unlist(line)
+  
+  if (line)
+    line <- TRUE
+  print(report_data)
+  # Get date fields
+  date_fields <- data_dictionary %>%
+    # Select only fields in the report
+    filter(field_name %in% c(x,y)
+           # Select only fields that start with 'date'
+           & substr(text_validation_type_or_show_slider_number, 1, 4) == "date") %>%
+    # Select the field name
+    transmute(field_name,
+              try_format = case_when(text_validation_type_or_show_slider_number == "date_dmy" ~ "%%Y-%m-%d",
+                                     text_validation_type_or_show_slider_number == "date_mdy"~ "%Y-%m-%d",
+                                     text_validation_type_or_show_slider_number == "date_ymd"~ "%Y-%m-%d",
+                                     text_validation_type_or_show_slider_number == "datetime_dmy"~ "%Y-%m-%d %H:%M",
+                                     text_validation_type_or_show_slider_number == "datetime_mdy"~ "%Y-%m-%d %H:%M",
+                                     text_validation_type_or_show_slider_number == "datetime_ymd"~ "%Y-%m-%d %H:%M",
+                                     text_validation_type_or_show_slider_number == "datetime_seconds_dmy"~ "%Y-%m-%d %H:%M:%S",
+                                     text_validation_type_or_show_slider_number == "datetime_seconds_mdy"~ "%Y-%m-%d %H:%M:%S",
+                                     text_validation_type_or_show_slider_number == "datetime_seconds_ymd"~ "%Y-%m-%d %H:%M:%S"))
+
+  cat("test2\n")
+  report_data %>%
+    na.omit() %>%
+    mutate(
+      # Select all the date fields
+      across(all_of(date_fields$field_name), 
+             # Convert them to date
+             .fns = ~as.POSIXct(replace(.x, .x == "", NA), tryFormat = date_fields$try_format[date_fields$field_name == cur_column()], optional = TRUE), 
+             # Try these formats,
+             .names = "{.col}")
+    ) %>%
+    custom_scatter(!!sym(x), !!sym(y), line) %>%
+    plotTag(unlist(title))
+  }
+
 # custom_bars
 # Author: Joel Cohen
 # Description:

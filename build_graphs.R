@@ -7,7 +7,7 @@ if (!exists("input_data_path")) {
   quit("no", 0, FALSE)
 }
 
-type_to_method = list("likert" = "build_likert")
+type_to_method = list("likert" = "build_likert", "scatter" = "build_scatter")
 
 # source("./data_manipulation.R")
 # source("./custom_plots.R")

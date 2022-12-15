@@ -8,6 +8,7 @@ use \DateTime;
 use \DateTimeZone;
 use DataExport;
 use MetaData;
+use HtmlPage;
 
 class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 {
@@ -29,6 +30,9 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 				$this->enabled_projects[$arr_projects_pids[$i]] = $arr_projects_tokens[$i];
 			}
 		}		
+
+		$this->module_js_path = str_replace("\\","/",$this->getModulePath())."js/";
+		$this->module_css_path = str_replace("\\","/",$this->getModulePath())."css/";
     }
 	
 	function redcap_module_save_configuration($project_id) {
@@ -187,6 +191,29 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		$result=str_replace("\\\\'","\\'",$result) ;
 		$result=str_replace("\\\\\"","\\\"",$result) ;	
 	return $result;
+	}
+
+		function loadJS($js_file, $outputToPage=true)
+	{
+		// Create script tag
+		$output = "<script type=\"text/javascript\" src=\"" . $this->getURL('js/'.$js_file,  $this->module_js_path). "\"></script>\n";
+		if ($outputToPage) {
+			print $output;
+		} else {
+			return $output;
+		}
+	}
+
+	// Output the link/style tag for a given CSS file
+	function loadCSS($css_file, $outputToPage=true)
+	{
+		// Create link tag
+		$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\" href=\"" . $this->getURL('css/'.$css_file,  $this->module_js_path) . "\">\n";
+		if ($outputToPage) {
+			print $output;
+		} else {
+			return $output;
+		}
 	}
 	
 
