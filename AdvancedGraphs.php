@@ -9,10 +9,18 @@ use \DateTimeZone;
 use DataExport;
 use MetaData;
 use HtmlPage;
+use UserRights;
+use Project;
 
 class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 {
 	private $enabled_projects;
+	public $data_dictionary;
+	public $report_fields;
+	public $instruments;
+	public $instruments_dictionary;
+	public $repeat_instruments;
+	public $repeats_dictionary;
 	
     public function __construct()
     {
@@ -34,6 +42,34 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		$this->module_js_path = str_replace("\\","/",$this->getModulePath())."js/";
 		$this->module_css_path = str_replace("\\","/",$this->getModulePath())."css/";
     }
+
+	function initialize_report($pid, $user_id, $report_id, $params) {
+		$this->data_dictionary = MetaData::getDataDictionary("array", false, array(), array(), false, false, null, $pid);
+		
+		$this->report_fields = $this->get_accessible_fields($pid, $user_id, $report_id);
+
+		$this->report = $this->get_report($pid, $user_id, $report_id, $params, "array");
+
+		$Proj = new Project($pid);
+
+		$this->instruments = array();
+		$this->instruments_dictionary = array();
+
+		// echo print_r($report_fields);
+		foreach ($Proj->forms as $form=>$attr) {
+			$this->instruments[] = array('instrument_name'=>$form, 'instrument_label'=>strip_tags(html_entity_decode($attr['menu'], ENT_QUOTES)));
+			$this->instruments_dictionary[$form] = strip_tags(html_entity_decode($attr['menu'], ENT_QUOTES));
+		}
+
+		$this->instruments_dictionary['adv_graph_non_repeating'] = "Non-repeating instruments";
+
+		$this->repeat_instruments = $this->get_repeat_instruments($pid);
+		$this->repeats_dictionary = array();
+
+		foreach ($this->repeat_instruments as $instrument) {
+			$this->repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
+		}	
+	}
 	
 	function redcap_module_save_configuration($project_id) {
 
@@ -193,10 +229,10 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	return $result;
 	}
 
-		function loadJS($js_file, $outputToPage=true)
+		function loadJS($js_file, $folder = "js", $outputToPage=true)
 	{
 		// Create script tag
-		$output = "<script type=\"text/javascript\" src=\"" . $this->getURL('js/'.$js_file,  $this->module_js_path). "\"></script>\n";
+		$output = "<script type=\"text/javascript\" src=\"" . $this->getURL("$folder/".$js_file,  $this->module_js_path). "\"></script>\n";
 		if ($outputToPage) {
 			print $output;
 		} else {
@@ -205,10 +241,10 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	}
 
 	// Output the link/style tag for a given CSS file
-	function loadCSS($css_file, $outputToPage=true)
+	function loadCSS($css_file, $folder = "css", $outputToPage=true)
 	{
 		// Create link tag
-		$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\" href=\"" . $this->getURL('css/'.$css_file,  $this->module_js_path) . "\">\n";
+		$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\" href=\"" . $this->getURL("$folder/".$css_file,  $this->module_js_path) . "\">\n";
 		if ($outputToPage) {
 			print $output;
 		} else {
@@ -217,10 +253,10 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	}
 	
 
-	function get_repeat_instruments($Proj) {
+	function get_repeat_instruments($pid, $format="array") {
 		global $lang;
 		// Get project object of attributes
-	
+		$Proj = new Project($pid);
 		// if project has not repeating forms or events
 
 		if(!$Proj->hasRepeatingFormsEvents()){
@@ -228,6 +264,7 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		}
 
 		$raw_values = $Proj->getRepeatingFormsEvents();
+		$csv = 'form_name,custom_form_label\n';
 
 		if($Proj->longitudinal){
 			$eventForms = $Proj->eventsForms;
@@ -246,16 +283,126 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		}else{//classic project
 			foreach (array_values($raw_values)[0] as $dkey=>$row){
 				$results[] = array('form_name'=>$dkey, 'custom_form_label'=>$row);
+				$csv .= "$dkey,$row\n";
 			}
 		}
 
-		return $results;
+		return ($format == "array") ? $results : $csv;
 	}
 
-	function get_report($report_id, $params) {
+	// Obtain any dynamic filters selected from query string params
+	function buildReportDynamicFilterLogicReferrer($report_id, $url_params)
+	{
+		global $Proj, $lang, $user_rights, $missingDataCodes;
+		// Validate report_id
+		if (!is_numeric($report_id) && $report_id != 'ALL' && $report_id != 'SELECTED') {
+			return "";
+		}
+		// Get report attributes
+		$report = DataExport::getReports($report_id);
+		if (empty($report)) return "empty"; //return "";
+		// Loop through fields
+		$dynamic_filters_logic = array();
+		$dynamic_filters_group_id = $dynamic_filters_event_id = "";
+
+		for ($i = 1; $i <= DataExport::MAX_LIVE_FILTERS; $i++) {
+			// Get field name
+			$field = $report['dynamic_filter'.$i];
+			// If we do not have a dynamic field set here or if the field no longer exists in the project, then return blank string
+			if (!(isset($field) && $field != '' )) continue; //&& ($field == DataExport::LIVE_FILTER_EVENT_FIELD || $field == DataExport::LIVE_FILTER_DAG_FIELD || isset($Proj->metadata[$field]))
+			if (!isset($url_params['lf'.$i]) || $url_params['lf'.$i] == '') continue;
+			
+			// Rights to view data from field? Must have form rights for fields, and if a DAG field, then must not be in a DAG.
+			if (isset($Proj->metadata[$field]) && $field != $Proj->table_pk && $user_rights['forms'][$Proj->metadata[$field]['form_name']] == '0') {
+				unset($url_params['lf'.$i]);
+				continue;
+			} elseif ($field == DataExport::LIVE_FILTER_DAG_FIELD && is_numeric($user_rights['group_id'])) {
+				unset($url_params['lf'.$i]);
+				continue;
+			}
+			
+			// Decode the query string param (just in case)
+			$url_params['lf'.$i] = rawurldecode(urldecode($url_params['lf'.$i]));
+			
+			// Get field choices
+			if ($field == DataExport::LIVE_FILTER_EVENT_FIELD) {
+				// Add blank choice at beginning
+				$choices = array(''=>"[".$lang['global_45']."]");
+				// Add event names
+				foreach ($Proj->eventInfo as $this_event_id=>$eattr) {
+					$choices[$this_event_id] = $eattr['name_ext'];
+				}
+				// Validate the value
+				if (isset($choices[$url_params['lf'.$i]])) {
+					$dynamic_filters_event_id = $url_params['lf'.$i];
+				}
+			} elseif ($field == DataExport::LIVE_FILTER_DAG_FIELD) {
+				$choices = $Proj->getGroups();
+				// Add blank choice at beginning
+				$choices = array(''=>"[".$lang['global_78']."]") + $choices;
+				// Validate the value
+				if (isset($choices[$url_params['lf'.$i]])) {
+					$dynamic_filters_group_id = $url_params['lf'.$i];
+				}
+			} elseif ($field == $Proj->table_pk) {
+				$choices = Records::getRecordList($Proj->project_id, $user_rights['group_id'], true);
+				// Add blank choice at beginning
+				$choices = array(''=>"[ ".strip_tags(label_decode($Proj->metadata[$field]['element_label']))." ]") + $choices;
+				// Validate the value
+				if (isset($choices[$url_params['lf'.$i]])) {
+					$value = (DataExport::LIVE_FILTER_BLANK_VALUE == $url_params['lf'.$i]) ? '' : str_replace("'", "\'", $url_params['lf'.$i]); // Escape apostrophes
+					$dynamic_filters_logic[] = "[$field] = '$value'";
+				}
+			} else {
+				$realChoices = $Proj->isSqlField($field) ? parseEnum(getSqlFieldEnum($Proj->metadata[$field]['element_enum'])) : parseEnum($Proj->metadata[$field]['element_enum']);
+				// Add blank choice at beginning + NULL choice
+				$choices = array(''=>"[ ".strip_tags(label_decode($Proj->metadata[$field]['element_label']))." ]")
+						+ $realChoices
+						+ array(DataExport::LIVE_FILTER_BLANK_VALUE=>$lang['report_builder_145']);
+				// Validate the value
+				if (isset($choices[$url_params['lf'.$i]]) || isset($missingDataCodes[$url_params['lf'.$i]])) {
+					$value = (DataExport::LIVE_FILTER_BLANK_VALUE == $url_params['lf'.$i]) ? '' : $url_params['lf'.$i];
+					$dynamic_filters_logic[] = "[$field] = '$value'";
+				}
+			}
+		}
+		
+		// Return logic and DAG group_id
+		return array(implode(" and ", $dynamic_filters_logic), $dynamic_filters_group_id, $dynamic_filters_event_id);
+	}
+
+	function get_accessible_fields($pid, $user_id, $report_id)
+	{
 		// Get user rights
-		$user_rights_proj_user = UserRights::getPrivileges(PROJECT_ID, USERID);
-		$user_rights = $user_rights_proj_user[PROJECT_ID][strtolower(USERID)];
+		$user_rights_proj_user = UserRights::getPrivileges($pid, $user_id);
+		$user_rights = $user_rights_proj_user[$pid][strtolower($user_id)];
+		unset($user_rights_proj_user);
+		
+		// TODO: should user access even with no rights?
+		
+		// Does user have De-ID rights?
+		$deidRights = ($user_rights['data_export_tool'] == '2');
+	
+		// De-Identification settings
+		$hashRecordID = ($deidRights);
+		$removeIdentifierFields = ($user_rights['data_export_tool'] == '3' || $deidRights);
+		$removeUnvalidatedTextFields = ($deidRights);
+		$removeNotesFields = ($deidRights);
+		$removeDateFields = ($deidRights);
+
+		$report_fields = DataExport::getReports($report_id)["fields"];
+
+		$removed_fields = $deidRights ? DataExport::deidFieldsToRemove($removeOnlyIdentifiers=true, 
+									   $removeDateFields=!$deidRights, $removeRecordIdIfIdentifier=$deidRights) : array();
+		
+		return array_diff($report_fields, $removed_fields);
+
+	}
+
+	function get_report($pid, $user_id, $report_id, $params, $format="csvraw") {
+		// Get user rights
+		$user_rights_proj_user = UserRights::getPrivileges($pid, $user_id);
+		$user_rights = $user_rights_proj_user[$pid][strtolower($user_id)];
 		unset($user_rights_proj_user);
 		
 		// TODO: should user access even with no rights?
@@ -271,71 +418,53 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		$removeDateFields = ($deidRights);
 		
 		// Build live filter logic from parameters
-		list ($liveFilterLogic, $liveFilterGroupId, $liveFilterEventId) = buildReportDynamicFilterLogicReferrer($report_id, $params);
+		list ($liveFilterLogic, $liveFilterGroupId, $liveFilterEventId) = self::buildReportDynamicFilterLogicReferrer($report_id, $params);
+
+		$as_array = ($format == "array") ?  $this->report_fields : array();
 	
 		// Retrieve report from redcap
-		$content = DataExport::doReport($report_id, 'export', 'csvraw', false, false,
+		$content = DataExport::doReport($report_id, 'export', $format, false, false,
 										false, false, $removeIdentifierFields, $hashRecordID, $removeUnvalidatedTextFields,
 										$removeNotesFields, $removeDateFields, false, false, array(), 
 										array(), false, false, 
-										false, true, true, $liveFilterLogic, $liveFilterGroupId, $liveFilterEventId, true, ",", '');
+										false, true, true, $liveFilterLogic, $liveFilterGroupId, $liveFilterEventId, true, ",", '', $as_array);
 	
 										
 		return $content;
 	}
 
-	function add_instrument_labels($grouped_fields, $instruments) {
-		// Create a dictionary that maps instrument names to instrument labels
-		$instruments_dictionary = array();
-
-		foreach ($instruments as $instrument) {
-			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
-		}
-
-		$instruments_dictionary['adv_graph_non_repeating'] = "Non-repeating instruments";
-
+	function add_instrument_labels($grouped_fields) {
+		if (!isset($this->instruments_dictionary))
+			return false;
 		// Add the appropriate instrument label to each instrument
 		foreach($grouped_fields as $instrument => $group) {
-			$grouped_fields[$instrument]['instrument_label'] = $instruments_dictionary[$instrument];
+			$grouped_fields[$instrument]['instrument_label'] = $this->instruments_dictionary[$instrument];
 		}
-		
-		// Let the non-repeating instruments have the label "Non-repeating instruments"
-		// $grouped_fields['adv_graph_non_repeating']['instrument_label'] = "Non-repeating instruments";
-		
-		// Remove the instruments whose choices aren't set
-		// foreach ($grouped_fields as $instrument => $group) {
-		// 	if (!isset($group[$must_be_set]))
-		// 		unset($grouped_fields[$instrument]);
-		// }
 
 		return $grouped_fields;
 	}
 	
 	// TODO: Documentation
 	// https://github.com/jsonform/jsonform/wiki#outline
-	function likert_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
+	function likert_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+
 		// TODO: Set keywords in module settings.
 		// field_types that are candidates for likert
 		$like_likert = array("dropdown", "radio");
 		
 		// If any of the following keywords are contained in the options
 		// it will be considered a likert category
-		$key_likert_words = array("victoria", "fas", "male", "not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "infatil", "completamente inutil", "completamente infatil", "dificil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo");
+		$key_likert_words = array("not useful", "not at all useful", "difficult", "none of my needs", "strongly disagree", "somewhat disagree", "completely disagree", "quite dissatisfied", "very dissatisfied", "Extremely dissatisfied", "poor", "never", "worse", "severely ill", "inutil", "infatil", "completamente inutil", "completamente infatil", "dificil", "ninguna de mis necesidades", "totalmente en desacuerdo", "parcialemnte en desacuerdo", "completamente en desacuerdo", "muy insatisfecho(a)", "totalmente insatisfecho(a)", "nunca", "peor", "gravemente enfermo");
 		
 		// Create an array that groups fields by repeating instruments
 		$likert_fields = array();
 
-		// Create a dicitionary that maps repeat instrument names to repeat instrument labels
-		$repeats_dictionary = array();
-
-		foreach ($repeat_instruments as $instrument) {
-			$repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
-		}
-
 		// For each report_field...
-		foreach ($report_fields as $field_name) {
+		foreach ($this->report_fields as $field_name) {
 			// Get all field attributes from data dictionary
-			$field = $data_dictionary[$field_name];
+			$field = $this->data_dictionary[$field_name];
 			
 			// Check that field type can be interpreted as likert
 			$type_matches = in_array($field['field_type'], $like_likert);
@@ -346,7 +475,7 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			// If the field can be interpreted as liekrt
 			if ($type_matches && $selection_matches) {
 				// Match it to the appopriate instrument.
-				if (in_array($field['form_name'], array_keys($repeats_dictionary))) {
+				if (in_array($field['form_name'], array_keys($this->repeats_dictionary))) {
 					$likert_fields[$field['form_name']]['choices'][$field['select_choices_or_calculations']][] = $field_name;
 					continue;
 				} 
@@ -362,11 +491,12 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 
 		
 		// Return the fields grouped by instrument
-		return self::add_instrument_labels($likert_fields, $instruments);
+		return self::add_instrument_labels($likert_fields);
 	}
 	
-	function numeric_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
-		echo "gof";
+	function numeric_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
 		// when searching for numeric fields
 		$ignored_names_numeric = array("latitude", "longitude", "latitud", "longitud");
 
@@ -376,32 +506,22 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		// Create an array that groups fields by repeating instruments
 		$numeric_fields = array();
 
-		// Create a dictionary that maps instrument names to instrument labels
-		$instruments_dictionary = array();
-
-		foreach ($instruments as $instrument) {
-			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
-		}
-
-		// Create a dicitionary that maps repeat instrument names to repeat instrument labels
-		$repeats_dictionary = array();
-
-		foreach ($repeat_instruments as $instrument) {
-			$repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
-		}
-		echo "one";
 		// For each field
-		foreach($report_fields as $field_name) {
-			$field = $data_dictionary[$field_name];
-			$field_type = $field['field_type'] ;
+		foreach($this->report_fields as $field_name) {
+			$field = $this->data_dictionary[$field_name];
+			
+			// Is the field text and has an accepted text validation for numerical fields?
 			$field_text_and_valid =  preg_match("/text/", $field['field_type']) && preg_match("/".implode("|", $accepted_text_validation)."/", strtolower($field['text_validation_type_or_show_slider_number']));
+			
+			// Is the field type calc?
 			$field_type_is_calc = preg_match("/calc/", $field['field_type']);
+
+			// Does the field name contain one of the ignored keywords?
 			$field_names_ignored = boolval(preg_match("/".implode("|", $ignored_names_numeric)."/", strtolower($field['field_name'])));
-			echo "$field_name type is '$field_type' text valid?" .  ($field_text_and_valid ? 'tue': 'false') . "| type is calc?" . ($field_type_is_calc ? 'tue': 'false') . " | ignored field name? " . ($field_names_ignored ? 'tue': 'false')."\n";
 			// If the field is numeric add it to the corresponding instrument
 			if (($field_text_and_valid | $field_type_is_calc) & !$field_names_ignored) {
 				// Match it to the appopriate instrument.
-				if (in_array($field['form_name'], array_keys($repeats_dictionary))) {
+				if (in_array($field['form_name'], array_keys($this->repeats_dictionary))) {
 					$numeric_fields[$field['form_name']]['fields'][] = $field_name;
 					continue;
 				} 
@@ -417,36 +537,25 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			return array();
 			
 		// Return the fields grouped by instrument
-		return self::add_instrument_labels($numeric_fields, $instruments);
+		return self::add_instrument_labels($numeric_fields);
 	}
 
-	function date_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
+	function date_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+		
 		// Create an array that groups fields by repeating instruments
 		$date_fields = array();
 
-		// Create a dictionary that maps instrument names to instrument labels
-		$instruments_dictionary = array();
-
-		foreach ($instruments as $instrument) {
-			$instruments_dictionary[$instrument['instrument_name']] = $instrument['instrument_label'];
-		}
-
-		// Create a dicitionary that maps repeat instrument names to repeat instrument labels
-		$repeats_dictionary = array();
-
-		foreach ($repeat_instruments as $instrument) {
-			$repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
-		}
-
 		// For each field
-		foreach($report_fields as $field_name) {
-			$field = $data_dictionary[$field_name];
+		foreach($this->report_fields as $field_name) {
+			$field = $this->data_dictionary[$field_name];
 			$validation_contains_date = preg_match("/^date/", strtolower($field['text_validation_type_or_show_slider_number']));
 
 			// If the field is numeric add it to the corresponding instrument
 			if ($validation_contains_date) {
 				// Match it to the appopriate instrument.
-				if (in_array($field['form_name'], array_keys($repeats_dictionary))) {
+				if (in_array($field['form_name'], array_keys($this->repeats_dictionary))) {
 					$date_fields[$field['form_name']]['fields'][] = $field_name;
 					continue;
 				} 
@@ -462,50 +571,212 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			return array();
 
 		// Return the fields grouped by instrument
-		return self::add_instrument_labels($date_fields, $instruments);
+		return self::add_instrument_labels($date_fields);
 	}
 
-	function scatter_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments) {
-		$numeric_grouped = self::numeric_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments);
+	function scatter_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+		$numeric_grouped = self::numeric_groups();
 		
-		$date_grouped = self::date_groups($data_dictionary, $report_fields, $instruments, $repeat_instruments);
+		$date_grouped = self::date_groups();
 
 		$scatter_groups = array();
 
 		foreach($numeric_grouped as $instrument => $scatter_field) {
 			foreach ($scatter_field['fields'] as $field) {
-				$scatter_groups[$instrument]['fields']['numeric'][] = $field;
+				$scatter_groups[$instrument]['fields']['Numeric'][] = $field;
 			}
 		}
 
 		foreach($date_grouped as $instrument => $scatter_field) {
 			foreach ($scatter_field['fields']  as $field) {
-				$scatter_groups[$instrument]['fields']['date'][] = $field;
+				$scatter_groups[$instrument]['fields']['Date'][] = $field;
 			}
 		}
 		
 
-		return self::add_instrument_labels($scatter_groups, $instruments);
+		return self::add_instrument_labels($scatter_groups);
+	}
+
+	function categorical_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+		
+		$categorical_types = array('radio', 'dropdown', 'yesno', 'truefalse');
+
+		// Create an array that groups fields by repeating instruments
+		$categorical_fields = array();
+
+		// For each field
+		foreach($this->report_fields as $field_name) {
+			$field = $this->data_dictionary[$field_name];
+
+			$type_is_categorical = in_array($field['field_type'], $categorical_types);
+
+			// If the field is categorical add it to the corresponding instrument
+			if ($type_is_categorical) {
+				// Match it to the appopriate instrument.
+				if (in_array($field['form_name'], array_keys($this->repeats_dictionary))) {
+					$categorical_fields[$field['form_name']]['fields'][] = $field_name;
+					continue;
+				} 
+
+				// If it does not belong to a repeat instrument map it to the non-repeating instrument category
+				$categorical_fields['adv_graph_non_repeating']['fields'][] = $field_name;
+			}
+		}
+			// If by instrument is empty return an empty array
+			if (!$categorical_fields)
+				return array();
+	
+			// Return the fields grouped by instrument
+			return self::add_instrument_labels($categorical_fields);
 	}
 	
-	function barplot_groups($data_dictionary, $instruments) {
-		
+	function barplot_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+
+			$barplot_grouped = array();
+
+			$numeric_grouped = self::numeric_groups();
+
+			foreach($numeric_grouped as $instrument => $barplot_field) {
+				foreach ($barplot_field['fields'] as $field) {
+					$barplot_grouped[$instrument]['fields']['Numeric'][] = $field;
+				}
+			}
+
+			$categorical_grouped = self::categorical_groups();
+
+			foreach($categorical_grouped as $instrument => $barplot_field) {
+				foreach ($barplot_field['fields'] as $field) {
+					$barplot_grouped[$instrument]['fields']['Categorical'][] = $field;
+				}
+			}
+
+			return self::add_instrument_labels($barplot_grouped);
 	}
 	
-	function crosstab_groups($data_dictionary, $instruments) {
+	
+	function cooridinate_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+
+		// Longitude and latitude keywords
+		$longitude_keywords = array("longitude", "longitud", "Longitude", "Longitud");
+		$latitude_keywords = array("latitude", "latitud", "Latitude", "Latitud");
+
+		$coordinate_fields = array();
+
+		foreach($this->report_fields as $field_name) {
+			$field = $this->data_dictionary[$field_name];
+
+			$is_longitude = preg_match("/".implode("|", $longitude_keywords)."/", $field_name);
+			$is_latitude = preg_match("/".implode("|", $latitude_keywords)."/", $field_name);
+
+			$form_name = in_array($field['form_name'], array_keys($this->repeats_dictionary)) ? $field['form_name'] : 'adv_graph_non_repeating';
+
+			if ($is_longitude) {
+				$stripped_name = preg_replace("/".implode("|", $longitude_keywords)."/", "", $field_name);
+
+				$matching_names = preg_grep("/".$stripped_name."/", $this->report_fields);
+
+				$matching_latitude = preg_grep("/".implode("|", $latitude_keywords)."/", $matching_names);
+
+				if (!$matching_latitude)
+					continue;
+
+				$coordinate_fields[$form_name]['coordinates'][] = array("longitude" => $field_name, "latitude" => array_pop($matching_latitude));
+			}
+
+		}
+
+		// If there is at least one longitude and latitude field
+		if ($coordinate_fields)
+			// Return the grouped fields
+			return self::add_instrument_labels($coordinate_fields);
+
+		// Otherwise return false
+		return array();
+
+	}
+
+	function map_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+
+		$coordinate_grouped = self::cooridinate_groups();
+
+		if (!$coordinate_grouped)
+			return array();
+
+		$categorical_grouped = self::categorical_groups();
+
+		$numeric_grouped = self::numeric_groups();
+
 		
+
+		$map_grouped = array();
+
+		foreach($numeric_grouped as $instrument => $map_field) {
+			foreach ($map_field['fields'] as $field) {
+				$map_grouped[$instrument]['fields']['Numeric'][] = $field;
+			}
+		}
+
+
+		foreach($categorical_grouped as $instrument => $map_field) {
+			foreach ($map_field['fields'] as $field) {
+				$map_grouped[$instrument]['fields']['Categorical'][] = $field;
+			}
+		}
+
+		foreach($coordinate_grouped as $instrument => $map_field) {
+			foreach ($map_field['coordinates'] as $field) {
+				$map_grouped[$instrument]['fields']['Coordinates'][] = $field;
+			}
+		}
+
+		return self::add_instrument_labels($map_grouped);
 	}
 	
-	function map_groups($data_dictionary, $instruments) {
-		
-	}
-	
-	function network_groups($data_dictionary, $instruments) {
-		
+	function network_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+		$network_fields = array();
+
+		foreach($this->report_fields as $field_name) {
+			$field = $this->data_dictionary[$field_name];
+
+			$text_type = $field['field_type'] == 'text';
+
+			$form_name = in_array($field['form_name'], array_keys($this->repeats_dictionary)) ? $field['form_name'] : 'adv_graph_non_repeating';
+
+			if ($text_type) {
+				$network_fields[$form_name]['fields'][] = $field_name;
+			}
+
+		}
+
+		foreach ($network_fields as $instrument_name => $instrument) {
+			if (count($instrument['fields']) < 2)
+				unset($network_fields[$instrument_name]);
+		}
+
+		// If there is at least one longitude and latitude field
+		if ($network_fields)
+			// Return the grouped fields
+			return self::add_instrument_labels($network_fields);
+
+		// Otherwise return false
+		return array();
+
 	}
 
 
-	function build_graphs($pid, $report_id, $params, $graphs) {
+	function build_graphs($pid, $user_id, $report_id, $params, $graphs) {
 		$input_data = array("inputs" => array(), "graphs" => array());
 		$input_data["inputs"]["report_data"] = tempnam(sys_get_temp_dir(), "report_data");
 		$input_data["inputs"]["data_dictionary"] = tempnam(sys_get_temp_dir(), "data_dictionary");
@@ -523,7 +794,7 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		}
 		$error_msg = '';
 
-		$report_data = get_report($report_id, $params);
+		$report_data = self::get_report($pid, $user_id, $report_id, $params, $format="csvraw");
 
 		if (!$report_data)
 			$error_msg .= '<h1 style=\"color:red;\">Failed to export report data</h1>';
@@ -534,7 +805,7 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			$error_msg .= '<h1 style=\"color:red;\">Failed to export data dictionary</h1>';
 		
 		
-		$repeat_instruments = get_repeat_instruments($pid);
+		$repeat_instruments = self::get_repeat_instruments($pid, "csv");
 	
 		if (!$repeat_instruments)
 			$repeat_instruments = "form_name,custom_form_label\n";
@@ -552,6 +823,7 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 			return $error_msg;
 		}
 
+		
 		$output_paths = array();
 
 		foreach($graphs as $graph) {
@@ -628,5 +900,15 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 					"r_output" => $exec_output
 				)
 			);
+	}
+
+	// Save a dashboard
+	public function save()
+	{
+		if (!isset($_GET['dash_id']) || !isinteger($_GET['dash_id'])) {
+			redirect(APP_PATH_WEBROOT."index.php?route=ProjectDashController:index&pid={$_GET['pid']}");
+		}
+		$dash = new ProjectDashboards();
+		$dash->saveDash();
 	}
 }

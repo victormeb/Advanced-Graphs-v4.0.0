@@ -86,6 +86,24 @@ print_table <- function(table, title = "") {
   cat("</div>")
 }
 
+crosstab_div <- function(table, title = "", ...) {
+  paste0(
+    "<div class=\"cross-tbl-container\">
+    <h5>", title, "</h5>",
+    table,
+    "</div>"
+  )
+}
+
+sumtab_div <- function(table, title = "", ...) {
+  paste0(
+    "<div class=\"sum-tbl-container\">
+    <h5>", title, "</h5>",
+    table,
+    "</div>"
+  )
+}
+
 print_other_table <- function(data, field_name, title = "") {
   cat("<div class=\"other-tbl-container\">")
   cat("<h5>", title, "</h5>")
@@ -260,9 +278,9 @@ n_spaces_indices_zeros_first <- function(data, n) {
 #   Output:
 #     
 #     A likert plot
-custom_likert <- function(x, title="", wrap_label = FALSE, label_wrap_length = 10, max_label_length = 30, label_text = 3, legend_text = 35, legend_rows = 1) {
+custom_likert <- function(x, title="", wrap_label = FALSE, max_label_length = 30, label_text = 3, legend_text = 35, legend_rows = 1, ...) {
   wrap_label <- as.logical(unlist(wrap_label))
-  label_wrap_length <- as.numeric(unlist(label_wrap_length))
+  max_label_length <- as.numeric(unlist(max_label_length))
   max_label_length <- as.numeric(unlist(max_label_length))
   legend_text <- as.numeric(unlist(legend_text))
   legend_rows <- as.numeric(unlist(legend_rows))
@@ -292,8 +310,8 @@ custom_likert <- function(x, title="", wrap_label = FALSE, label_wrap_length = 1
                   xlab = "Percent",
                   ylab.right = "")
   
-  if (wrap_label == TRUE && !is.null(label_wrap_length)) {
-    x_lab_func <- function(x) str_wrap(x, width = label_wrap_length)
+  if (wrap_label == TRUE && !is.null(max_label_length)) {
+    x_lab_func <- function(x) str_wrap(x, width = max_label_length)
   } else if (is.numeric(max_label_length) && max_label_length >= 3) {
     x_lab_func <- function(x) str_trunc(x, width = max_label_length)
   } else {
@@ -342,14 +360,23 @@ custom_likert <- function(x, title="", wrap_label = FALSE, label_wrap_length = 1
 
 }
 
-build_likert <- function(fields, options, title, ...) {
-  options <- parse_options(options)
-  report_data %>%
+build_likert <- function(...) {
+  args <- lapply(X = list(...), FUN = unlist)
+  
+  options <- parse_options(args[["options"]])
+  
+  print(options)
+  
+  fields <- args[["fields"]]
+  
+  print(fields)
+    
+  args[["x"]] <- report_data %>%
     data.frame() %>%
     # Select these fields from the data dictionary
     # Across changes the field_names to their corresponding field labels 
     transmute(
-      across(all_of(unlist(fields)), 
+      across(all_of(fields), 
       .fns = ~factor(.x, levels = options[,1], labels = options[,2]), 
       .names = "{names_to_labels[.col]}")) %>%
     (function(data) {
@@ -362,11 +389,12 @@ build_likert <- function(fields, options, title, ...) {
       }
       # Otherwise return the data as is
       return(data)
-    }) %>%
+    })
+  
     # Pass this dataframe to the custom likert
-    custom_likert(...) %>%
+    do.call(custom_likert, args) %>%
     # Create an html object from it.
-    plotTag(unlist(title))
+    plotTag(unlist(args[["title"]]))
 }
 
 # custom_scatter
@@ -404,9 +432,12 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
   title <- unlist(title)
   line <- unlist(line)
   
+  x_label <- names_to_labels[x]
+  y_label <- names_to_labels[y]
+  
   if (line)
     line <- TRUE
-  print(report_data)
+  # print(report_data)
   # Get date fields
   date_fields <- data_dictionary %>%
     # Select only fields in the report
@@ -424,10 +455,7 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
                                      text_validation_type_or_show_slider_number == "datetime_seconds_dmy"~ "%Y-%m-%d %H:%M:%S",
                                      text_validation_type_or_show_slider_number == "datetime_seconds_mdy"~ "%Y-%m-%d %H:%M:%S",
                                      text_validation_type_or_show_slider_number == "datetime_seconds_ymd"~ "%Y-%m-%d %H:%M:%S"))
-
-  cat("test2\n")
   report_data %>%
-    na.omit() %>%
     mutate(
       # Select all the date fields
       across(all_of(date_fields$field_name), 
@@ -436,7 +464,9 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
              # Try these formats,
              .names = "{.col}")
     ) %>%
-    custom_scatter(!!sym(x), !!sym(y), line) %>%
+    transmute(across(all_of(c(x, y)), .names = "{names_to_labels[.col]}")) %>%
+    na.omit() %>%
+    custom_scatter(!!sym(x_label), !!sym(y_label), line) %>%
     plotTag(unlist(title))
   }
 
@@ -464,11 +494,12 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, label_wrap_length = 20, max_label_length = 25) {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, max_label_length = 20, digits = 2, ...) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
   label2 <- enquo(label2)
+  digits <- as.numeric(digits)
   
   margin = 15
   angle_rotation = 45
@@ -539,22 +570,24 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
     v_just <- 0
   }
   
-  if (wrap_label == TRUE && !is.null(wrap_label)) {
-    x_lab_func <- function(x) str_wrap(x, width = label_wrap_length)
+  if (wrap_label == TRUE && !is.null(max_label_length)) {
+    x_lab_func <- function(x) str_wrap(x, width = max_label_length)
   } else if (is.numeric(max_label_length) && max_label_length >= 3) {
     x_lab_func <- function(x) str_trunc(x, width = max_label_length)
   } else {
     x_lab_func <- function(x) x
   }
+  
   # Pass the data to ggplot
   p <- list(data %>%
+    mutate(across(where(is.numeric), round, digits = digits)) %>%
     arrange(!!x) %>%
     # Use x and y as out x and y
     ggplot(aes(x=!!x, y = !!y, fill = !!x)) +
     # Create bars
     geom_bar(stat = "identity") +
     # Add viridis colors
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = function(x) str_wrap(x, label_wrap_length)) + 
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
     scale_x_discrete(breaks = bar_breaks, labels = x_lab_func, expand = expansion(c(0.05,0.05))) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
@@ -615,10 +648,11 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
 #   Output:
 #     
 #     A pie chart
-custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_length = 20) {
+custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 15, max_label_length = 20, digits = 2, ...) {
   # Enquo the x and y variables
   x <- enquo(x)
   y <- enquo(y)
+  digits <- as.numeric(digits)
   
   # Get the levels for the bars
   categories <- eval_tidy(x, data %>% arrange(!!x))
@@ -631,11 +665,24 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_lengt
   
   categories_kept <- categories[n_spaces_indices_zeros_first(eval_tidy(y, data %>% arrange(!!x)), max_labels)]
   
+  # Logic for determining label shortening
+  # If wrap_label is TRUE and max_label_length is set
+  if (wrap_label == TRUE && !is.null(max_label_length)) {
+    # Use str_wrap as the shortening function
+    x_lab_func <- function(x) str_wrap(x, width = max_label_length)
+  } else if (is.numeric(max_label_length) && max_label_length >= 3) {
+    # Otherwise use str_trunc as the shortening function
+    x_lab_func <- function(x) str_trunc(x, width = max_label_length)
+  } else {
+    # Otherwise leave as is
+    x_lab_func <- function(x) x
+  }
+  
   # Compute the label positions
   label_pos <- data %>% 
     arrange(!!x) %>%
     mutate(text_color = text_color, 
-           label = str_trunc(replace_na(as.character(!!x), "NA"), 250/length(categories_kept)),      
+           label = x_lab_func(replace_na(as.character(!!x), "NA")),      
            csum = rev(cumsum(rev(!!y))),
            pos = !!y/2 + lead(csum, 1),
            pos = if_else(is.na(pos), !!y/2, pos)) %>%
@@ -662,10 +709,10 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_lengt
     # Convert to pie
     coord_polar(theta = "y", clip = "off") +
     # Add "Turbo" viridis colours
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = categories_kept, labels = function(x) str_wrap(x, label_wrap_length)) +
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = categories_kept, labels = x_lab_func) +
     # Add labels to slices (amounts)
     
-    geom_text(aes(label = replace(!!y, !!y == 0, "")),
+    geom_text(aes(label = replace(round(!!y, digits), !!y == 0, "")),
               position = position_stack(vjust = 0.5),
               color = text_color) +
     guides(fill=guide_legend(title='')) +
@@ -730,11 +777,12 @@ custom_pie <- function(data, x, y, title = "", max_labels = 15, label_wrap_lengt
 #   Output:
 #     
 #     A stacked bar plot
-custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, label_wrap_length = 20) {
+custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, wrap_labels = FALSE, max_label_length = Inf, digits = 2, sumfunc = "sum", ...) {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
   y <- enquo(y)
   fill <- enquo(fill)
+  digits <- as.numeric(digits)
   
   # Returns max_bars evenly spaced bar labels
   bar_names <- eval_tidy(x, data = data) %>% unique()
@@ -756,12 +804,18 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   x_size = 8
   legend_size = 7
   
+  print(wrap_labels)
+  
+  label_func <- if (wrap_labels) str_wrap else str_trunc
+  
+  max_label_length <- as.numeric(max_label_length)
+  
   # If they are grouped bar plots
   if (position == "dodge") {
     # Set the size of the bar text based on the number of bars
     bar_text <-  max(1, 8 -7*x_bars*y_bars/(50))
     # Create a geom for the bar labels
-    bar_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(!!fill, !!fill == 0, "")),
+    bar_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(round(!!fill, digits), !!fill == 0, "")),
                             position = (position_dodge(width = 0.9)), size = bar_text, vjust = -0.2)
     # Make the stack_labels blank
     stack_labels <- geom_blank()
@@ -770,10 +824,15 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     # Set the size of the bar text based on the number of bars
     bar_text <- max(1, 8 - 7*x_bars/(50))
     # Create a geom for the bar labels
-    bar_labels <- geom_text(aes(x = !!x, y = !!fill, fill = NULL, label = replace(!!fill, !!fill == 0, "")),
+    bar_labels <- geom_text(aes(x = !!x, y = !!fill, fill = NULL, label = replace(round(label, digits), label == 0, "")),
               data = data %>%
                 group_by(!!x) %>%
-                summarise(!!fill := sum(!!fill)), size = bar_text, vjust = -0.2)
+                summarize(
+                  label = if (n() == 0 || all(is.na(!!fill))) 0 else match.fun(sumfunc)(!!fill, na.rm = TRUE),
+                  !!fill := sum(!!fill)
+                ) %>%
+                mutate(label = ifelse(is.na(label) | is.infinite(label), 0, label)),
+                size = bar_text, vjust = -0.2)
     
     # Stack text colors
     stack_colors <- if (any(is.na(color_names))) c(turbo(length(color_names) - 1), "grey") else turbo(length(color_names))
@@ -788,7 +847,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
       # Set the size for the text based off the bar size
     stack_text <- 1 + (bar_text-1)*stack_size/max(stack_size)
       # Create a geom of labels
-    stack_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(!!fill, !!fill == 0, "")),
+    stack_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(round(!!fill, digits), !!fill == 0, "")),
               position = (position_stack(vjust = 0.5)), color = stack_colors[["stack_text_colors"]], size = stack_text)
   }
   
@@ -820,9 +879,9 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
                        na.value = "grey",
                        # Only include max_colour colours in the legend
                        breaks = color_breaks, 
-                       labels = function(x) str_wrap(x, width = label_wrap_length)) +
+                       labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
     # Only include labels for max_bars bars
-    scale_x_discrete(breaks = replace(as.character(bar_names), !(bar_names %in% bar_breaks), ""), labels = function(x) str_wrap(x, width = label_wrap_length)) +
+    scale_x_discrete(breaks = replace(as.character(bar_names), !(bar_names %in% bar_breaks), ""), labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
     scale_y_continuous(expand = expansion(c(0, 0.25))) +
     # Add a title to the plot
     ggtitle(title) +
@@ -897,58 +956,246 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
 #   Output:
 #     
 #     A contingency table
-custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = FALSE) {
+custom_crosstab <- function(data, x, y, fill, title = "", table_percents = FALSE, percent_margin = NULL, margin = NULL, ...) {
+  x <- as_label(enquo(x))
+  y <- as_label(enquo(y))
+  fill <- as_label(enquo(fill))
+  
+  margin <- as.numeric(margin)
+  percent_margin <- as.numeric(percent_margin)
+  table_percents <- as.logical(table_percents)
+  
+
+  table <- xtabs(paste0("\`", fill, "\`~\`", x,"\`+\`",y, "\`"), data = data)
+  
+  out <- add_totals(table)
+  
+  if (percent_margin == 3 && table_percents)
+    out <- add_totals(prop.table(table)) %>%
+      apply(c(1,2), scales::percent)
+  
+  if (percent_margin %in% c(1, 2) && table_percents)
+    out <- add_totals(prop.table(add_totals(table, percent_margin %% 2 + 1), percent_margin), percent_margin) %>%
+      apply(c(1,2), scales::percent)
+  
+  # The text to show over the columns of the y field
+  y_spanner <- setNames(c(1, ncol(table), 1), c(" ", y, " "))
+
+  if (!(1 %in% margin))
+    out <- out[1:nrow(table), ]
+  
+  if (!(2 %in% margin)) {
+    out <- out[, 1:ncol(table)]
+    y_spanner <- y_spanner[1:2]
+  }
+    
+  span_length <- ncol(out)+1
+  
+  by <- "total"
+  
+  if (all(percent_margin == 1))
+   by <- "row"
+  
+  if (all(percent_margin == 2))
+    by <- "column"
+    
+    # return(table_to_kable(out, x, y, margin)) #%>%
+             #add_header_above(setNames(c(span_length), paste0("Percent of ", fill, " by ", by))))
+    print("test")
+    
+    output_data <- table_to_dataframe(out)
+    align = c("l", rep("c", times = ncol(out)))
+      #
+    kbl(output_data, format = "html", align = align, table.attr = paste0("class=\"", paste0(c("total-row", "total-column")[margin], collapse = " "), "\"")) %>% 
+      #add_header_above(y_spanner) %>%
+      htmltools::HTML() %>%
+      crosstab_div()
+}
+ 
+
+table_to_dataframe <- function(table) {
+  out <- table
+  # Add applicable total row/column to the table
+  # Create a column from the rownames to be used as the first column
+  # This allows kable to use the column in its output
+
+  first_col <- setNames(data.frame(rownames(out)), names(dimnames(table))[[1]])
+
+  # Let the output be the first column on the left with the other columns on the right
+  out <- cbind(first_col, out)
+  
+  # Unset the rownames
+  rownames(out) <- NULL
+  
+  return(out)
+  # # Add a spanner describing the columns
+  # spanner <- setNames(c(1, ncol(table)), c(" ", y_label))
+  # 
+  # 
+  # if (2 %in% margin)
+  #   spanner <- setNames(c(1, ncol(table)-1, 1), c(" ", y_label, " "))
+  # 
+  # # Create a vector describing the alignment
+  # align = c("l", rep("c", times = ncol(out)-1))
+  # 
+  # # Return the table
+  # out %>% 
+  #   kbl(format = "html", align = align, table.attr = paste0("class=\"", paste0(c("total-row", "total-column")[margin], collapse = " "), "\"")) %>% 
+  #     add_header_above(spanner) %>%
+  #     htmltools::HTML() %>%
+  #     crosstab_div()
+  # 
+  # 
+  
+}
+
+    
+
+
+add_totals <- function(table, margin = c(1, 2)) {
+  saved_names <- dimnames(table)
+
+  if (1 %in% margin) {
+    table <- cbind(table, apply(table, 1, sum, na.rm = TRUE))
+    saved_names[[2]] <- append(saved_names[[2]], "Total")
+  }
+    
+  
+  if (2 %in% margin) {
+    table <- rbind(table, apply(table, 2, sum, na.rm = TRUE))
+    saved_names[[1]] <- append(saved_names[[1]], "Total")
+  }
+  
+ 
+  dimnames(table) <- saved_names
+
+  return(table)
+}
+
+custom_sumtab <- function(data, x, y, digits = 0, table_percents = FALSE, ...) {
   # Enquo, x, y, and total columns
   x <- enquo(x)
   y <- enquo(y)
-  total <- enquo(total)
   
-  column_spanner <- if (is.null(column_spanner)) as_label(y) else column_spanner
+  digits <- as.numeric(digits)
   
-  # Get the levels of the y variable to be used as column names
-  y_levels <- unique(eval_tidy(y, data) %>% as.character()) %>% replace_na("NA")
+  if (table_percents) {
+    return(data %>%
+      group_by(!!x) %>%
+        summarise(across(.fns = sum)) %>%
+        ungroup() %>%
+        mutate(across(-!!x, .fns = ~ scales::percent(.x / sum(.x, na.rm = TRUE)))) %>%
+        transmute(!!x := !!x, !!sym(paste0("Percent of ", as_label(y))) := !!y) %>%
+        kable() %>%
+        # Output as html
+        htmltools::HTML() )
+  }
   
-  # Create a vector for the spanner where the middle value is the number
-  # of columns in y
-  spanner <- c(1, length(y_levels), 1)
-  
-  # Don't name the outide spanners but name the 
-  # middle spanner the name of y
-  names(spanner) <- c(" ", column_spanner, " ")
-  
-
   data %>%
-    # Convert x and y to character vectors
-    transmute(!!x := as.character(!!x), !!y := as.character(!!y), !!total := !!total) %>%
-    # Replace NA's with the string "NA"
-    mutate(across(where(is.character), ~replace_na(.x, "NA"))) %>%
-    # Transform the table so the y levels are columns
-    pivot_wider(names_from = !!y, values_from = !!total) %>%
-    # Add a row of totals by...
-    rows_insert(
-      # Taking the colSums of the data
-      colSums((.) %>% select(!all_of(as_label(x)))) %>% 
-        # Transmute the data
-        t() %>% 
-        # Convert it to data.frame
-        data.frame() %>%
-        # Set the column names to y_levels
-        setNames(y_levels) %>% 
-        # Add a column named the same as x with the values having "Total"
-        mutate(!!sym(rlang::as_label(x)) := "Total"), 
-      # Use "Total" as the name for this row insertion
-      by = rlang::as_label(x)) %>%
-    # Add a column of row sums
-    mutate(Total = rowSums((.) %>% select(where(is.numeric)))) %>%
-    mutate(across(-c(1), (if (percent) scales::percent else ~.x))) %>%
-    # Create a kable table
-    kbl(format = "html", align = c("l", rep("c", times = length(y_levels)+1))) %>%
-    # Add the spanner
-    add_header_above(spanner) %>%
+    mutate(!!x := as.character(!!x), across(where(is.numeric), .fns = round, digits = digits)) %>%
+    rows_append(
+      (.) %>%
+        mutate(!!x := "Total") %>%
+        group_by(!!x)%>%
+        summarize(across(.fns = sum))) %>%
+    kable() %>%
     # Output as html
-    htmltools::HTML()
+    htmltools::HTML() 
+}
 
+build_barplot <- function(...) {
+  args <- lapply(X = list(...), FUN = unlist)
+  if (!exists("x", args))
+    return("<h1>Must provide and x field</h1>")
+  
+  x <- args[['x']]
+  x_label <- names_to_labels[x]
+  args[['x']] <- sym(x_label)
+  
+  grouping_fnc <- . %>%
+    mutate(across(all_of(x), function(col) addNA(factor(col, options[[cur_column()]][['options_code']], options[[cur_column()]][['options_label']]), ifany = TRUE), .names = "{names_to_labels[.col]}")) %>%
+    group_by(!!sym(x_label), .drop = FALSE)
+  
+  summarised_fnc <- . %>%
+    summarize(Count = n()) %>%
+    ungroup()
+  
+  height_name <- "Count"
+  
+  # If count isn't passed
+  if (!exists("count", args)) {
+    # height field and summary function must  be passed
+    if (!exists("height", args) || !exists("sumfunc", args))
+      return("<h1>If not using count height and summary function must be provided</h1>")
     
+    sumfunc <- args[["sumfunc"]]
+    height <- args[["height"]]
+    
+    # Set height name to be "Func of field_label"
+    height_name <- paste0(title_caps(sumfunc), " of ", names_to_labels[height])
+    
+    # Set the summmary function to take the sumfunc of height_field
+    summarised_fnc <- . %>%
+      summarize(!!sym(height_name) := if (n() == 0 || all(is.na(!!sym(height)))) 0 else match.fun(sumfunc)(!!sym(height), na.rm = TRUE)) %>%
+      mutate(!!sym(height_name) := if_else(is.na(!!sym(height_name)) | is.infinite(!!sym(height_name)), 0, !!sym(height_name))) %>%
+      ungroup()
+  }
+  
+  graph_fnc <- custom_bars
+  
+  if (exists("pie", args)  && args[["pie"]] == "true")
+    graph_fnc <- custom_pie
+  
+  if (exists("crosstab", args)) {
+    if (!exists("y", args))
+      return("<h1>Must provide y field for crosstab</h1>")
+    
+    y <- args[['y']]
+    y_label <- names_to_labels[y]
+    args[['y']] <- sym(y_label)
+    
+    args[['fill']] <- sym(height_name)
+    
+    args[['position']] <- if (exists("grouped", args) && args[["grouped"]] == "true") "dodge" else "stack"
+    
+    grouping_fnc <- . %>%
+      mutate(across(all_of(c(x, y)), function(col) addNA(factor(col, options[[cur_column()]][['options_code']], options[[cur_column()]][['options_label']]), ifany = TRUE), .names = "{names_to_labels[.col]}")) %>%
+      group_by(!!sym(x_label), !!sym(y_label), .drop = FALSE)
+    
+    graph_fnc <- custom_stacked
+  } else {
+    args[['y']] <- sym(height_name)
+  }
+  
+  
+  
+  args[['data']] <- report_data %>%
+    grouping_fnc %>%
+    summarised_fnc
+  
+  p <- do.call(graph_fnc, args)
+  
+  if (is.list(plot))
+    p <- paste0(plotTag(p[[1]], ""), plot[[2]])
+  else
+    p <- plotTag(p, "")
+  
+  # If the table argument is present
+  if (exists("table", args)) {
+    
+    if (exists("crosstab", args)) {
+      args[["table"]] <- do.call(custom_crosstab, args)
+      cross_table <- do.call(crosstab_div, args)
+    } else {
+      args[["table"]] <- do.call(custom_sumtab, args)
+      cross_table <- do.call(sumtab_div, args)
+    }
+
+    p <- paste0(p, cross_table)
+  }
+  
+  return(p)
+  
 }
 
 # custom_map
@@ -973,9 +1220,9 @@ custom_crosstab <- function(data, x, y, total, column_spanner = NULL, percent = 
 #   Output:
 #     
 #     A map
-custom_map <- function(data, lat, lng, type = NULL, count = NULL, title = "") {
+custom_map <- function(data, lat, lng, type = NULL, weight = NULL, title = "", dot_size = 5, ...) {
   color = "#03F"
-  weight = 5
+  dot_size = as.numeric(dot_size)
   label = NULL
   labelOptions = NULL
   
@@ -984,9 +1231,9 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL, title = "") {
     color = pal(data[[type]])
   }
   
-  if (!is.null(count)) {
-    weight = 1 + 20*data[[count]]/max(data[[count]])
-    label = data[[count]]
+  if (!is.null(weight)) {
+    dot_size = dot_size*data[[weight]]/mean(data[[weight]])
+    label = data[[weight]]
     labelOptions = labelOptions(
       # Always show labels
       noHide = T, 
@@ -1001,7 +1248,7 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL, title = "") {
     
   
   data %>%
-    leaflet(height = 800,) %>%
+    leaflet(width = 800, height = 800) %>%
     addTiles() %>%
     addCircleMarkers(
       # Use the given longitude and latitude columns
@@ -1010,7 +1257,7 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL, title = "") {
       # Use the location factor to create colors
       color = color,
       # Make the size of the circles appropriate to the count column
-      weight = weight,
+      weight = dot_size,
       # Add labels to each circle
       label = label,
       labelOptions = labelOptions,
@@ -1020,7 +1267,7 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL, title = "") {
       fillOpacity = 1,
       fill = TRUE,
       # Cluster nearby circles together
-      clusterOptions = markerClusterOptions(maxClusterRadius = 50, spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1))
+      clusterOptions = markerClusterOptions(maxClusterRadius = 50, spiderfyOnMaxZoom = FALSE) # , spiderfyOnMaxZoom = TRUE, spiderLegPolylineOptions = list(weight = 1.5, color = "#FF0000", opacity = 1)
     ) %>%
     (
       function(map) {
@@ -1034,26 +1281,127 @@ custom_map <- function(data, lat, lng, type = NULL, count = NULL, title = "") {
     addControl(title, position = "bottomleft")
 }
 
-custom_network <- function(data, x, y) {
+build_map <- function(cluster_by, ...) {
+  args <- lapply(list(...), unlist)
+  
+  cluster_by <- unlist(cluster_by)
+  
+  grouping_fn <- . %>%
+    mutate()
+  
+  type_fn <- . %>%
+    mutate()
+
+  
+  summary_fn <- . %>%
+    summarise(Count = n()) %>%
+    ungroup()
+  
+  
+  if (args[['weight']] != '')
+    if (exists('sumfunc', args))
+      summary_fn <- . %>%
+    summarise(across(all_of(args[['weight']]), .fns = function(col) (if (all(is.na(col))) 0 else match.fun(args[['sumfunc']])(col, na.rm = TRUE)))) %>%
+    ungroup()
+  else
+    return("<h2 style=\"color: red;\">sumfunc must be set when count is numeric</h2>")
+  else
+    args[["weight"]] <- "Count"
+
+  
+  if (exists("type", args) && args[["type"]] == '')
+    args[["type"]] <- NULL
+  else if (exists("type", args)) {
+    options <- parse_options(data_dictionary[data_dictionary$field_name == args[["type"]], "select_choices_or_calculations"])
+    
+    original_name <- args[["type"]]
+    
+    type_fn <- . %>%
+      mutate(across(all_of(original_name), function(col) addNA(factor(col, options[,1], options[,2]), ifany = T), .names = "{names_to_labels[.col]}"))
+  
+    args[["type"]] <- names_to_labels[[args[["type"]]]]
+    
+    print(args[["type"]])
+  }
+  
+  if (cluster_by == "location")
+    grouping_fn <- . %>%
+    group_by(across(any_of(c(args[["lat"]], args[["lng"]], args[["type"]]))))
+  else {
+    summary_fn <- . %>% mutate()
+    args[["weight"]] <- NULL
+    args[["type"]] <- NULL
+  }
+  
+  args[['data']] <- report_data %>%
+    type_fn %>%
+    grouping_fn %>%
+    summary_fn
+  
+  print(args[['data']])
+  
+  # args[['type']] <- NULL
+  
+  m <- do.call(custom_map, args)
+  paste0(as.character(htmltools::tagList(m)), "<script>window.HTMLWidgets.staticRender();</script>")
+  # htmltools::tagList(m)
+  
+}
+
+custom_network <- function(data, x, y, directed = FALSE, 
+                           title = paste0(as_label(x), " -> " , as_label(y)), 
+                           title_size = 100,
+                           arrow_width = 0.5,
+                           arrow_size = 0.5,
+                           vertex_size = 5,
+                           vertex_label_size = .4,
+                           vertex_color = "cadetblue3",
+                           ...) {
   x <- enquo(x)
   y <- enquo(y)
+  
+  directed <- as.logical(directed)
+  title_size <- as.numeric(title_size)
+  arrow_width <- as.numeric(arrow_width)
+  arrow_size <- as.numeric(arrow_size)
+  vertex_size <- as.numeric(vertex_size)
+  vertex_label_size <- as.numeric(vertex_label_size)
   
   data %>%
     select(!!x, !!y) %>%
   # Create a graph from the data
-    graph_from_data_frame(directed = TRUE) %>%
+    graph_from_data_frame(directed = directed) %>%
     # Plot it
     plot.igraph(edge.width = 1,
-         main = paste0(as_label(x), " -> " , as_label(y)),
-         cex.main = 100,
+         main = title,
+         cex.main = title_size,
          sub = "",
-         edge.arrow.width = 0.5,
-         vertex.size = 5,
+         edge.arrow.width = arrow_width,
+         vertex.size = vertex_size,
          edge.arrow.size = 0.5,
          edge.color = "black",
-         vertex.size2 = 3,
-         vertex.label.cex = .40,
-         vertex.color = "cadetblue3",
+         # vertex.size2 = 3,
+         vertex.label.cex = vertex_label_size,
+         vertex.color = vertex_color,
          asp = 0)
   return(list())
+}
+
+build_network <- function(...) {
+  args <- lapply(list(...), unlist)
+  
+  x_field <- args[['x']]
+  y_field <- args[['y']]
+  
+  args[['x']] <- names_to_labels[[x_field]]
+  args[['y']] <- names_to_labels[[y_field]]
+  
+  if (args[['title']] == "")
+    args <- args[names(args) != 'title']
+  
+  args[['data']] <- report_data %>%
+    transmute(across(all_of(c(x_field, y_field)), .names = "{names_to_labels[.col]}"))
+  
+  suppressWarnings(do.call(custom_network, args)) %>%
+    plotTag("", width = 800, height = 800)
 }

@@ -7,7 +7,7 @@ if (!exists("input_data_path")) {
   quit("no", 0, FALSE)
 }
 
-type_to_method = list("likert" = "build_likert", "scatter" = "build_scatter")
+type_to_method = list("likert" = "build_likert", "scatter" = "build_scatter", "barplot" = "build_barplot", "map" = "build_map", "network" = "build_network")
 
 # source("./data_manipulation.R")
 # source("./custom_plots.R")
@@ -60,6 +60,9 @@ report_data <- read.csv(report_data_path, header = TRUE, sep = ",", stringsAsFac
 data_dictionary <- read.csv(data_dictionary_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 repeat_instruments <- read.csv(repeat_instruments_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
+# Create a list of options to map factors
+options <- parse_categories(data_dictionary)
+
 # Create list of labels
 # This is used to extract the text labels from the field names
 names_to_labels <- data_dictionary$field_label
@@ -75,7 +78,8 @@ for (graph in input_data$graphs) {
   # Open the temporary file created for this graph by php
   temp_file <- file(graph$output_file)
   
-  writeLines(as.character(html_plot), temp_file)
+  stored <- readLines(temp_file)
+  writeLines(paste0(as.character(html_plot), stored, sep="\n"), temp_file)
   
   close(temp_file)
 }

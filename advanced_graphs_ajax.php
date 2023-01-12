@@ -2,97 +2,22 @@
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
 
+
+
 $pid = $_POST["params"]["pid"];
 $report_id = $_POST["params"]["report_id"];
 $params = $_POST["params"];
 
 global $Proj;
 $Proj = new Project($pid);
+// echo json_encode("twist");
+// echo json_encode($module->print_blah());
 
 function nothing_to_show() {
 	return "<h1>Nothing to show here</h1>";
 }
 
-// Obtain any dynamic filters selected from query string params
-function buildReportDynamicFilterLogicReferrer($report_id, $url_params)
-{
-	global $Proj, $lang, $user_rights, $missingDataCodes;
-	// Validate report_id
-	if (!is_numeric($report_id) && $report_id != 'ALL' && $report_id != 'SELECTED') {
-		return "";
-	}
-	// Get report attributes
-	$report = DataExport::getReports($report_id);
-	if (empty($report)) return "empty"; //return "";
-	// Loop through fields
-	$dynamic_filters_logic = array();
-	$dynamic_filters_group_id = $dynamic_filters_event_id = "";
 
- 	for ($i = 1; $i <= DataExport::MAX_LIVE_FILTERS; $i++) {
-		// Get field name
-		$field = $report['dynamic_filter'.$i];
-		// If we do not have a dynamic field set here or if the field no longer exists in the project, then return blank string
-		if (!(isset($field) && $field != '' )) continue; //&& ($field == DataExport::LIVE_FILTER_EVENT_FIELD || $field == DataExport::LIVE_FILTER_DAG_FIELD || isset($Proj->metadata[$field]))
-		if (!isset($url_params['lf'.$i]) || $url_params['lf'.$i] == '') continue;
-		
-		// Rights to view data from field? Must have form rights for fields, and if a DAG field, then must not be in a DAG.
-		if (isset($Proj->metadata[$field]) && $field != $Proj->table_pk && $user_rights['forms'][$Proj->metadata[$field]['form_name']] == '0') {
-			unset($url_params['lf'.$i]);
-			continue;
-		} elseif ($field == DataExport::LIVE_FILTER_DAG_FIELD && is_numeric($user_rights['group_id'])) {
-			unset($url_params['lf'.$i]);
-			continue;
-		}
-		
-		// Decode the query string param (just in case)
-		$url_params['lf'.$i] = rawurldecode(urldecode($url_params['lf'.$i]));
-		
-		// Get field choices
-		if ($field == DataExport::LIVE_FILTER_EVENT_FIELD) {
-			// Add blank choice at beginning
-			$choices = array(''=>"[".$lang['global_45']."]");
-			// Add event names
-			foreach ($Proj->eventInfo as $this_event_id=>$eattr) {
-				$choices[$this_event_id] = $eattr['name_ext'];
-			}
-			// Validate the value
-			if (isset($choices[$url_params['lf'.$i]])) {
-				$dynamic_filters_event_id = $url_params['lf'.$i];
-			}
-		} elseif ($field == DataExport::LIVE_FILTER_DAG_FIELD) {
-			$choices = $Proj->getGroups();
-			// Add blank choice at beginning
-			$choices = array(''=>"[".$lang['global_78']."]") + $choices;
-			// Validate the value
-			if (isset($choices[$url_params['lf'.$i]])) {
-				$dynamic_filters_group_id = $url_params['lf'.$i];
-			}
-		} elseif ($field == $Proj->table_pk) {
-			$choices = Records::getRecordList($Proj->project_id, $user_rights['group_id'], true);
-			// Add blank choice at beginning
-			$choices = array(''=>"[ ".strip_tags(label_decode($Proj->metadata[$field]['element_label']))." ]") + $choices;
-			// Validate the value
-			if (isset($choices[$url_params['lf'.$i]])) {
-				$value = (DataExport::LIVE_FILTER_BLANK_VALUE == $url_params['lf'.$i]) ? '' : str_replace("'", "\'", $url_params['lf'.$i]); // Escape apostrophes
-				$dynamic_filters_logic[] = "[$field] = '$value'";
-			}
-		} else {
-			$realChoices = $Proj->isSqlField($field) ? parseEnum(getSqlFieldEnum($Proj->metadata[$field]['element_enum'])) : parseEnum($Proj->metadata[$field]['element_enum']);
-			// Add blank choice at beginning + NULL choice
-			$choices = array(''=>"[ ".strip_tags(label_decode($Proj->metadata[$field]['element_label']))." ]")
-					 + $realChoices
-					 + array(DataExport::LIVE_FILTER_BLANK_VALUE=>$lang['report_builder_145']);
-			// Validate the value
-			if (isset($choices[$url_params['lf'.$i]]) || isset($missingDataCodes[$url_params['lf'.$i]])) {
-				$value = (DataExport::LIVE_FILTER_BLANK_VALUE == $url_params['lf'.$i]) ? '' : $url_params['lf'.$i];
-				$dynamic_filters_logic[] = "[$field] = '$value'";
-			}
-		}
-	}
-	
-	// Return logic and DAG group_id
-	return array(implode(" and ", $dynamic_filters_logic), $dynamic_filters_group_id, $dynamic_filters_event_id);
- }
 
  function get_report($report_id, $params) {
 	// Get user rights
@@ -522,7 +447,9 @@ switch($_POST["method"]) {
 		} 
 		break;
 	case "build_graphs":
-		echo $module->build_graphs($pid, $report_id, $params, $_POST["graphs"]);
+		// echo json_encode("bloat");
+		// echo json_encode($module->print_blah());
+		echo $module->build_graphs($pid, USERID, $report_id, $params, $_POST["graphs"]);
 		break;
 	default:
 		echo nothing_to_show();
