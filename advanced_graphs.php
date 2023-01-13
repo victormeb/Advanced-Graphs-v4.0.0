@@ -1,10 +1,15 @@
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 <?php
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
 
-// require_once dirname(dirname(__FILE__)) . '/Config/init_project.php';
+// echo "why no find: ";
+// echo var_dump($module);
+$rows = $module->query("describe redcap_project_dashboards", []);
+print_r($rows->fetch_fields());
+print_r($rows->fetch_all());
+#echo "<script>alert(\"$alert_output\");</script>";
+
+// require_once dirname(dirname(__FILE__)) . '/AdvancedGraphsDashboard.php';
 
 // Header
 include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';

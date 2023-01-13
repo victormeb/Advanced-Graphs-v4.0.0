@@ -105,7 +105,7 @@ function likert_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-									<label>Instrument<select class="instrument-selector">${instruments}</select></label><br>
+									<label>Instrument<select class="instrument-selector" name="instrument">${instruments}</select></label><br>
 									<label>Option group<select class="options-selector" name="options"></select></label>
 								</div>
 								<div class="form-right"></div>`;
@@ -230,6 +230,8 @@ function likert_form(button) {
 
 	
 	label_length_logic(new_form);
+
+	return new_form;
 }
 
 function scatter_div() {
@@ -275,7 +277,7 @@ function scatter_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-							<label>Instrument<select class="instrument-selector">${instruments}</select></label><br>
+							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
 							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
 							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
 							<label class="container line">Line?<input type="checkbox" name="line" value="true"><span class="checkmark"></span></label>
@@ -434,7 +436,7 @@ function barplot_form(button) {
 	}
 
 	let main_options = `<div class="form-child">
-							<label>Instrument<select class="instrument-selector">${instruments}</select></label><br>
+							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
 							<label class="container cross-tab">Cross Tabulation<input type="checkbox" name="crosstab" value="true"><span class="checkmark"></span></label>
 							<div class="radio grouped">
 								<label class="radio-label">
@@ -843,7 +845,7 @@ function map_form(button) {
 	}
 
 	let main_options = `<div class="form-child">
-							<label>Instrument<select class="instrument-selector">${instruments}</select></label><br>
+							<label>Instrument<select class="instrument-selector"  name="instrument>${instruments}</select></label><br>
 							<div class="field-selector">
 								<label>Longitude<select class="longitude-field" name="lng"></select></label><br>
 								<label>Latitude<select class="latitude-field" name="lat"></select></label>
@@ -1124,7 +1126,7 @@ function network_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-							<label>Instrument<select class="instrument-selector">${instruments}</select></label><br>
+							<label>Instrument<select class="instrument-selector"  name="instrument>${instruments}</select></label><br>
 							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
 							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
 							<label class="container directed">Directed?<input type="checkbox" name="directed" value="true" checked><span class="checkmark"></span></label>
@@ -1238,11 +1240,11 @@ function toggle_form(form, enabled) {
 }
 
 function update_report(form) {
-	if (form.find('.preview').prop('disabled')) {
-		if (report_object.has(form))
-			report_object.delete(form);
-		return;
-	}
+	// if (form.find('.preview').prop('disabled')) {
+	// 	if (report_object.has(form))
+	// 		report_object.delete(form);
+	// 	return;
+	// }
 
 	let graph = {params: {}};
 	let form_data = form.serializeArray();
@@ -1257,6 +1259,8 @@ function update_report(form) {
 	}
 
 	graph['type'] = form.parent().attr('id');
+
+	graph['enabled'] = !form.find('.preview').prop('disabled');
 
 	report_object.set(form, graph);
 }
@@ -1326,15 +1330,22 @@ function label_length_logic(form) {
 
 function generate_graph(form) {
 	if (!report_object.has(form)) {
+		console.log("An error has occured, user should not be able to generate a non-existent graph");
+		return;
+	}
+
+	let graph = report_object.get(form);
+
+	if (!graph['enabled']) {
 		console.log("An error has occured, user should not be able to generate a disabled graph");
 		return;
 	}
 
 	form.find(".preview-pane").html("<h2>Loading your graph...</h2>");
 
-	console.log(report_object.get(form));
+	console.log(graph);
 
-	$.ajax(ajax_url, {data: {params: refferer_parameters, graphs: [report_object.get(form)], method: "build_graphs"}, dataType: "json", method: "POST"}).done(function(data) { //, dataType: "html"
+	$.ajax(ajax_url, {data: {params: refferer_parameters, graphs: [graph], method: "build_graphs"}, dataType: "json", method: "POST"}).done(function(data) { //, dataType: "html"
 		console.log(data);
 		if (!data["status"]) {
 			form.find(".preview-pane").html("<h2 style=\"color: red;\">There was an error loading your graph</h2>");
@@ -1346,4 +1357,8 @@ function generate_graph(form) {
 	});
 }
 
+function saveDash() {
+	let graph_array = Array.from(report_object, ([name, value]) => value);
 
+	$.post(save_dash_url, {params: refferer_parameters, graph_array: graph_array})
+}

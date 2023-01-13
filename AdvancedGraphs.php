@@ -21,6 +21,8 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	public $instruments_dictionary;
 	public $repeat_instruments;
 	public $repeats_dictionary;
+
+	public $query_result;
 	
     public function __construct()
     {
@@ -41,6 +43,7 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 
 		$this->module_js_path = str_replace("\\","/",$this->getModulePath())."js/";
 		$this->module_css_path = str_replace("\\","/",$this->getModulePath())."css/";
+		$this->module_path = str_replace("\\","/",$this->getModulePath());
     }
 
 	function initialize_report($pid, $user_id, $report_id, $params) {
@@ -69,6 +72,24 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		foreach ($this->repeat_instruments as $instrument) {
 			$this->repeats_dictionary[$instrument['form_name']] = $instrument['custom_form_label'];
 		}	
+	}
+
+	function redcap_module_system_enable($version) {
+		// Do stuff, e.g. create DB table.
+		$result = $this->query("CREATE TABLE if not exists advanced_graphs_dashboards (
+			dash_id INT(10) AUTO_INCREMENT NOT NULL,
+			project_id INT(10) NOT NULL,
+			title TEXT,
+			body JSON,
+			dash_order INT(3),
+			user_access enum('ALL','SELECTED') DEFAULT 'ALL' NOT NULL,
+			hash varchar(11) UNI,
+			short_url varchar(100),
+			is_public tinyint(1) DEFAULT 0 NOT NULL,
+			cache_time datetime,
+			cache_content longtext,
+			PRIMARY KEY (dash_id, project_id)
+		)");
 	}
 	
 	function redcap_module_save_configuration($project_id) {
@@ -911,4 +932,121 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		$dash = new ProjectDashboards();
 		$dash->saveDash();
 	}
+
+		// Save dashboard
+		public function saveDash()
+		{
+			extract($GLOBALS);
+	
+			// Count errors
+			$errors = 0;
+	
+			// Validate dash_id and see if already exists
+			$dash_id = (int)$_GET['dash_id'];
+			if ($dash_id != 0) {
+				$dash = $this->getDashboards($_GET['pid'], $dash_id);
+				if (empty($dash)) exit('0');
+			}
+	
+			// Report title
+			$title = decode_filter_tags($_POST['title']);
+			$body = decode_filter_tags($_POST['body']);
+			$is_public = (isset($_POST['is_public']) && $_POST['is_public'] == 'on') ? "1" : "0";
+			// User access rights
+			$user_access_users = $user_access_roles = $user_access_dags = array();
+			if (isset($_POST['user_access_users'])) {
+				$user_access_users = $_POST['user_access_users'];
+				if (!is_array($user_access_users)) $user_access_users = array($user_access_users);
+			}
+			if (isset($_POST['user_access_roles'])) {
+				$user_access_roles = $_POST['user_access_roles'];
+				if (!is_array($user_access_roles)) $user_access_roles = array($user_access_roles);
+			}
+			if (isset($_POST['user_access_dags'])) {
+				$user_access_dags = $_POST['user_access_dags'];
+				if (!is_array($user_access_dags)) $user_access_dags = array($user_access_dags);
+			}
+			$user_access = ($_POST['user_access_radio'] == 'SELECTED'
+				&& (count($user_access_users) + count($user_access_roles) + count($user_access_dags)) > 0) ? 'SELECTED' : 'ALL';
+	
+			// Set up all actions as a transaction to ensure everything is done here
+			db_query("SET AUTOCOMMIT=0");
+			db_query("BEGIN");
+	
+			// Save report in reports table
+			if ($dash_id != 0) {
+				// Update
+				$sqlr = $sql = "update redcap_project_dashboards 
+								set title = '".db_escape($title)."', body = '".db_escape($body)."', user_access = '".db_escape($user_access)."', is_public = $is_public
+								where project_id = ".PROJECT_ID." and dash_id = $dash_id";
+				if (!db_query($sql)) $errors++;
+			} else {
+				// Get next dash_order number
+				$q = db_query("select max(dash_order) from redcap_project_dashboards where project_id = ".PROJECT_ID);
+				$new_dash_order = db_result($q, 0);
+				$new_dash_order = ($new_dash_order == '') ? 1 : $new_dash_order+1;
+				// Insert
+				$sqlr = $sql = "insert into redcap_project_dashboards (project_id, title, body, user_access, dash_order, is_public)
+								values (".PROJECT_ID.", '".db_escape($title)."', ".checkNull($body).", '".db_escape($user_access)."', $new_dash_order, $is_public)";
+				if (!db_query($sql)) $errors++;
+				// Set new dash_id
+				$dash_id = db_insert_id();
+			}
+	
+			// USER ACCESS
+			$sql = "delete from redcap_project_dashboards_access_users where dash_id = $dash_id";
+			if (!db_query($sql)) $errors++;
+			foreach ($user_access_users as $this_user) {
+				$sql = "insert into redcap_project_dashboards_access_users values ($dash_id, '".db_escape($this_user)."')";
+				if (!db_query($sql)) $errors++;
+			}
+			$sql = "delete from redcap_project_dashboards_access_roles where dash_id = $dash_id";
+			if (!db_query($sql)) $errors++;
+			foreach ($user_access_roles as $this_role_id) {
+				$this_role_id = (int)$this_role_id;
+				$sql = "insert into redcap_project_dashboards_access_roles values ($dash_id, '".db_escape($this_role_id)."')";
+				if (!db_query($sql)) $errors++;
+			}
+			$sql = "delete from redcap_project_dashboards_access_dags where dash_id = $dash_id";
+			if (!db_query($sql)) $errors++;
+			foreach ($user_access_dags as $this_group_id) {
+				$this_group_id = (int)$this_group_id;
+				$sql = "insert into redcap_project_dashboards_access_dags values ($dash_id, '".db_escape($this_group_id)."')";
+				if (!db_query($sql)) $errors++;
+			}
+	
+			// If there are errors, then roll back all changes
+			if ($errors > 0) {
+				// Errors occurred, so undo any changes made
+				db_query("ROLLBACK");
+				// Return '0' for error
+				exit('0');
+			} else {
+				// Logging
+				if ($dash_id != 0) {
+					$log_descrip = "Edit project dashboard";
+				} else {
+					$log_descrip = "Create project dashboard";
+				}
+				Logging::logEvent($sqlr, "redcap_project_dashboards", "MANAGE", $dash_id, "dash_id = $dash_id", $log_descrip . " - \"".$this->getDashboardName($dash_id)."\"");
+				// Since we've modified the dashboard, also clear the dashboard cache
+				if ($dash_id != 0) {
+					$this->resetCache($dash_id, false);
+				}
+				// Commit changes
+				db_query("COMMIT");
+				// Response
+				$dialog_title = 	RCView::img(array('src'=>'tick.png', 'style'=>'vertical-align:middle')) .
+					RCView::span(array('style'=>'color:green;vertical-align:middle'), $lang['dash_19']);
+				$dialog_content = 	RCView::div(array('style'=>'font-size:14px;'),
+					$lang['dash_18'] . " \"" .
+					RCView::span(array('style'=>'font-weight:bold;'), RCView::escape($title)) .
+					"\" " . $lang['report_builder_74']
+				);
+				// Output JSON response
+				header("Content-Type: application/json");
+				print json_encode_rc(array('dash_id'=>$dash_id, 'newdash'=>($_GET['dash_id'] == 0 ? 1 : 0),
+					'title'=>$dialog_title, 'content'=>$dialog_content));
+			}
+		}
 }
