@@ -1405,3 +1405,16 @@ build_network <- function(...) {
   suppressWarnings(do.call(custom_network, args)) %>%
     plotTag("", width = 800, height = 800)
 }
+
+advanced_graph_div <- function(plot, title, description) {
+  paste0(
+    "<div class=\"plot-div\"><h1>",
+    title,
+    "</h1>",
+    plot,
+    "<p>",
+    description,
+    "</p>",
+    "</div>"
+  )
+}

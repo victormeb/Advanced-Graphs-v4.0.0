@@ -429,11 +429,6 @@ function select_fields() {
 	//readfile($output);
 }
 
-/* sleep(1);
-echo print_r($_POST)."!";
-echo $_POST["method"]."!";
-echo $_POST["params"]["pid"]."!"; */
-
 switch($_POST["method"]) {
 	case "get_fields":
 		echo get_fields();
@@ -449,10 +444,22 @@ switch($_POST["method"]) {
 	case "build_graphs":
 		// echo json_encode("bloat");
 		// echo json_encode($module->print_blah());
-		echo $module->build_graphs($pid, USERID, $report_id, $params, $_POST["graphs"]);
+		// echo json_encode($params);
+		echo $module->build_graphs($_POST['pid'], USERID, $_POST['report_id'], $_POST['live_filters'], $_POST["graphs"]);
+		break;
+	case "save_dash":
+		
+		$module->saveDash($_POST['pid'], $_POST['report_id'], $_POST['live_filters'], $_POST['dash_id'], $_POST['title'], $_POST['graphs'], $_POST['is_public']);
+		// echo $module->build_graphs($pid, USERID, $report_id, $params, $_POST["graphs"]);
+		break;
+	case "delete_dash":
+		// echo json_encode("hey there");
+		// return;
+		echo json_encode($module->deleteDash($_POST['pid'], $_POST['dash_id']) ? '1' : '0');
 		break;
 	default:
-		echo nothing_to_show();
+		echo json_encode($_POST["method"]);
+		// echo nothing_to_show();
 		break;
 }
 

@@ -23,9 +23,16 @@
     ],
     "project": [
       {
-        "name": "Advanced Graphs",
+        "name": "New Advanced Graphs Dashboard",
         "icon": "gear",
-        "url": "advanced_graphs.php"
+        "url": "edit_dash.php",
+		"id": "edit_dash"
+      },
+	  {
+        "name": "Advanced Graphs Dashboards",
+        "icon": "list_red_messaging",
+        "url": "advanced_graphs.php",
+		"id": "advanced_graphs"
       }
     ]
   },

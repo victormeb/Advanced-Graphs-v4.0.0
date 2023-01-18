@@ -106,6 +106,28 @@
   }
 /*#endregion*/ 
   /* My own */
+
+  .plot-div {
+    margin: auto;
+    width: 50%;
+    border: 3px solid green;
+  }
+
+  .plot-div img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+  }
+
+
+  .plot-div h1 {
+    text-align: center;
+  }
+
+  .plot-div p {
+    text-align: center;
+  }
   
   .graph-type {
       display: block;

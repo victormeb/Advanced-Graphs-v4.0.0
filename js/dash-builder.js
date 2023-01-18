@@ -1,3 +1,21 @@
+var langNoTitle = 'You have not provided a title for the dashboard. Please enter a title and try again.';
+var langNoBody = 'You have not provided any content for the body for the dashboard. Please add some content and try again.';
+var langNoUserAccessSelected = 'No users have been given access to this dashboard. Please select some users in the User Access section and try again.';
+var langBtn1 = 'Continue editing dashboard';
+var langBtn2 = 'Return to My Dashboards';
+var langBtn3 = 'View dashboard';
+var langCopy = 'Copy';
+var langCopyReport = 'COPY DASHBOARD?';
+var langCopyDashboardConfirm = 'Are you sure you wish to COPY the dashboard named';
+var langQuestionMark = '?';
+var closeBtnTxt = 'Cancel';
+var langDelete = 'Delete';
+var langDeleteReport = 'DELETE DASHBOARD?';
+var langDeleteDashboardConfirm = 'Are you sure you wish to DELETE the dashboard named';
+var langDragReport = 'Drag report up or down to move it';
+var langCreateCustomLink = 'SUCCESS! The following custom dashboard link was successfully created:';
+        
+
 function escapeHtml(unsafe)
 {
     return unsafe
@@ -8,9 +26,25 @@ function escapeHtml(unsafe)
          .replace(/'/g, "&#039;");
  }
 
-function save_button() {
+function dashboard_title(dash_title) {
+	let title = 
+	`<tbody class="dash-title" style="display:block;margin-bottom:12px;">
+		<tr>
+			<td class="labelrc  nowrap fs14 align-top px-2" style="height:50px;width:160px;padding-top:12px">Dashboard title:</td>
+			<td class="labelrc " style="height:50px;padding:5px 10px;">
+				<input id="dash_title" name="dash_title" value="${dash_title}" class="x-form-text x-form-field" onkeydown="if(event.keyCode == 13) return false;" style="height:32px;padding: 4px 6px 3px;font-size:16px;width:99%;" type="text" autocomplete="new-password">
+			</td>
+		</tr>
+	</tbody>`;
+
+// `<div class="dash-title"><label>Dashboard Title:<br> <input id="dash_title" name="dash_title" type="text" value="New Dashboard"></label></div>`;
+
+	$('#advanced_graphs').append(title);
+}
+
+function save_button(dash_id) {
 	let save_button = `<div style=\"text-align:center;margin:30px 0 50px;\">
-<button class=\"btn btn-primaryrc\" style=\"font-size:15px !important;\" onclick=\"saveDash(4);\">Save Dashboard</button>
+<button class=\"btn btn-primaryrc\" style=\"font-size:15px !important;\" onclick=\"saveDash(${dash_id});\">Save Dashboard</button>
 <a href=\"javascript:;\" style=\"text-decoration:underline;margin-left:20px;font-size:13px;\" onclick=\"window.location.href=app_path_webroot+'index.php?pid='+pid+'&amp;route=ProjectDashController:index'\">Cancel</a>
 </div>`;
 
@@ -105,6 +139,7 @@ function likert_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
+									<label>Title<input type="text" name="title" placeholder="Default"></label>
 									<label>Instrument<select class="instrument-selector" name="instrument">${instruments}</select></label><br>
 									<label>Option group<select class="options-selector" name="options"></select></label>
 								</div>
@@ -112,7 +147,7 @@ function likert_form(button) {
 
 	let other_options = 
 			`
-			<label>Title<input type="text" name="title" placeholder="Default"></label>
+			<label>Description<input type="text" name="description"></label>
 			<br><label>Size of field labels<input type="number" step="1" name="label_text" value="10"></input> characters</label>
 			<div class="radio label-length">
 				<label>Bar Label Digits <input type="number" step="1" name="digits" value="2"></label>
@@ -277,6 +312,7 @@ function scatter_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
+							<label>Title<input type="text" name="title" placeholder="Default"></label>
 							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
 							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
 							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
@@ -286,7 +322,7 @@ function scatter_form(button) {
 
 	let other_options = 
 			`
-			<label>Title<input type="text" name="title" placeholder="Default"></input></label>
+			<label>Description<input type="text" name="description"></label>
 			<button class="close-options" type="button">Close</button>`;
 
 	// Create a new form with default buttons
@@ -436,6 +472,7 @@ function barplot_form(button) {
 	}
 
 	let main_options = `<div class="form-child">
+							<label>Title<input type="text" name="title" placeholder="Default"></label>
 							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
 							<label class="container cross-tab">Cross Tabulation<input type="checkbox" name="crosstab" value="true"><span class="checkmark"></span></label>
 							<div class="radio grouped">
@@ -507,7 +544,7 @@ function barplot_form(button) {
 
 	let other_options = 
 			`
-			<label>Title<input type="text" name="title" placeholder="Default"></label>
+			<label>Description<input type="text" name="description"></label>
 			<hr>
 			<div class="radio label-length">
 				<label>Bar Label Digits <input type="number" step="1" name="digits" value="2"></label>
@@ -845,7 +882,8 @@ function map_form(button) {
 	}
 
 	let main_options = `<div class="form-child">
-							<label>Instrument<select class="instrument-selector"  name="instrument>${instruments}</select></label><br>
+							<label>Title<input type="text" name="title" placeholder="Default"></label>
+							<label>Instrument<select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
 							<div class="field-selector">
 								<label>Longitude<select class="longitude-field" name="lng"></select></label><br>
 								<label>Latitude<select class="latitude-field" name="lat"></select></label>
@@ -874,7 +912,7 @@ function map_form(button) {
 
 	let other_options = 
 			`
-			<label>Title<input type="text" name="title" placeholder="Default"></label>
+			<label>Description<input type="text" name="description"></label>
 			<hr>
 			<label>Mean dot size<input type="number" step="1" name="dot_size" value="10"></label>
 			<button class="close-options" type="button">Close</button>`;
@@ -912,11 +950,6 @@ function map_form(button) {
 				if ($(this).find(':selected').val() == value['longitude']) 
 					new_form.find('.latitude-field').val(value['latitude']);
 			});
-		});
-
-		// Add each of the latitude fields
-		$.each(map_fields[selected_instrument]['fields']['Latitude'], function (key, value) {
-			
 		});
 
 		// Add the count option to the heights bar
@@ -1126,7 +1159,8 @@ function network_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-							<label>Instrument<select class="instrument-selector"  name="instrument>${instruments}</select></label><br>
+							<label>Title<input type="text" name="title" placeholder="Default"></label>
+							<label>Instrument<select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
 							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
 							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
 							<label class="container directed">Directed?<input type="checkbox" name="directed" value="true" checked><span class="checkmark"></span></label>
@@ -1135,7 +1169,7 @@ function network_form(button) {
 
 	let other_options = 
 			`
-			<label>Title<input type="text" name="title" placeholder="Default"></input></label><hr>
+			<label>Description<input type="text" name="description"></label>
 			<label>Title Size<input type="number" step="1" name="title_size" value = "100"></input></label><br>
 			<label>Arrow Width<input type="number" step="0.1" name="arrow_width" value = "0.5"></input></label><br>
 			<label>Arrow Size<input type="number" step="0.1" name="arrow_width" value = "0.5"></input></label><br>
@@ -1345,7 +1379,7 @@ function generate_graph(form) {
 
 	console.log(graph);
 
-	$.ajax(ajax_url, {data: {params: refferer_parameters, graphs: [graph], method: "build_graphs"}, dataType: "json", method: "POST"}).done(function(data) { //, dataType: "html"
+	$.ajax(ajax_url, {data: {pid: pid, report_id: report_id, live_filters: live_filters, graphs: [graph], method: "build_graphs"}, dataType: "json", method: "POST"}).done(function(data) { //, dataType: "html"
 		console.log(data);
 		if (!data["status"]) {
 			form.find(".preview-pane").html("<h2 style=\"color: red;\">There was an error loading your graph</h2>");
@@ -1357,8 +1391,303 @@ function generate_graph(form) {
 	});
 }
 
-function saveDash() {
-	let graph_array = Array.from(report_object, ([name, value]) => value);
+function generate_graphs() {
+	$.ajax(ajax_url, {data: {pid: pid, report_id: report_id, live_filters: live_filters, graphs: report_object, method: "build_graphs"}, dataType: "json", method: "POST"}).done(function(data) { //, dataType: "html"
+		console.log("hey");
+		console.log(data);
+		if (!data["status"]) {
+			$("#advanced_graphs").html("<h2 style=\"color: red;\">There was an error loading your graphs</h2>");
+			console.log(data["r_output"]);
+			return;
+		}
+		
+		$("#advanced_graphs").html(data["html"]);
+	});
+}
 
-	$.post(save_dash_url, {params: refferer_parameters, graph_array: graph_array})
+function saveDash(dash_id) {
+	let title = $("#dash_title").val();
+	let min_wait_time = 1;
+	let graph_array = Array.from(report_object, ([name, value]) => value);
+	var start_time = new Date().getTime();
+	$.ajax(ajax_url, {data: {pid: pid, report_id: report_id, live_filters: live_filters, title: title, graphs: graph_array, dash_id: dash_id, is_public: true, method: "save_dash"}, dataType: "json", method: "POST"}).done(function (data) {
+		console.log("heya");
+		console.log(data);
+		
+		if (data == '0') {
+            alert("Whoops saveDash() did not return any data"); //TODO lang
+            return;
+        }
+		// if (!data["status"]) {
+		// 	$("#advanced_graphs").html("<h2 style=\"color: red;\">There was an error loading your graphs</h2>");
+		// 	console.log(data["r_output"]);
+		// 	return;
+		// }
+		
+
+
+		$("#advanced_graphs").html(data["html"]);
+		var btns =	[{ text: langBtn1, click: function() { //TODO lang
+			if (data['newdash']) {
+				// Reload page with new dash_id
+				// window.location.href = edit_dash_url +'&pid='+pid + '&dash_id='+data['dash_id'];
+				alert("This function is still in development");
+			} else {
+				$(this).dialog('close').dialog('destroy');
+			}
+		}},
+		{text: langBtn2, click: function() {
+			window.location.href = dash_list_url + "&pid=" + pid;
+		}},
+	{text: langBtn3, click: function() {
+		window.location.href = view_dash_url + "&pid=" + pid + "&dash_id=" + data['dash_id'];		
+	}}];
+
+		// End clock
+		var total_time = new Date().getTime() - start_time;
+		// If total_time is less than min_wait_time, then wait till it gets to min_wait_time
+		var wait_time = (total_time < min_wait_time) ? (min_wait_time-total_time) : 0;
+		// Set wait time, if any
+		setTimeout(function(){
+			showProgress(0,0);
+			// Display success dialog
+			initDialog('dashboard_saved_success_dialog');
+			$('#dashboard_saved_success_dialog').html(data['content']).dialog({ bgiframe: true, modal: true, width: 640,
+				title: data['title'], buttons: btns, close: function(){
+					if (data['newdash']) {
+						// Reload page with new dash_id
+						showProgress(1);
+						// window.location.href = edit_dash_url+data['dash_id']+'&addedit=1';
+						window.location.href = view_dash_url + "&pid=" + pid + "&dash_id=" + data['dash_id']; //TODO
+					} else {
+						$(this).dialog('destroy');
+					}
+				} });
+			$('#dashboard_saved_success_dialog').dialog("widget").find(".ui-dialog-buttonpane button").eq(2).css({'font-weight':'bold', 'color':'#333'});
+		}, wait_time);
+	}).fail(function(err1, err2, err3) {
+		console.log(err1);
+		console.log(err2);
+		console.log(err3);
+	});
+}
+
+function openDashboard(dash_id) {
+	window.location.href = view_dash_url + "&pid=" + pid + "&dash_id=" + dash_id;	
+}
+
+// Open a public dashboard
+function openDashboardPublic(hash) {
+    window.open(app_path_webroot_full+'Surveys/index.php?dashboard='+hash,'_blank');
+}
+
+// Edit a dashboard
+function editDashboard(dash_id) {
+    // window.location.href = edit_dash_url +'&dash_id='+dash_id+'&addedit=1&pid='+pid;
+	alert("This function is still in development");
+}
+
+// Copy a dashboard
+function copyDashboard(dash_id, confirmCopy) {
+    if (confirmCopy == null) confirmCopy = true;
+    // Get dashboard title from table
+    var row_id = $('#repcopyid_'+dash_id).parents('tr:first').attr('id');
+    var dash_title = trim($('#repcopyid_'+dash_id).parents('tr:first').find('td:eq(2)').find('.dash-title').text());
+    if (confirmCopy) {
+        // Prompt user to confirm copy
+        simpleDialog(langCopyDashboardConfirm
+            + ' "<span style="color:#C00000;font-size:14px;">'+dash_title+'</span>"'+langQuestionMark,
+            langCopyReport,null,350,null,closeBtnTxt,"copyDashboard("+dash_id+",false);",langCopy);
+    } else {
+        // Copy via ajax
+		$.ajax(ajax_url, {data: {pid: pid, dash_id: dash_id, method: "copy_dash"}, dataType: "json", method: "POST"}).done(function (data) {
+			if (data == '0') {
+                alert("Dashboard copy may have failed (no data returned from ajax)");
+                return;
+            }
+			// Replace current report list on page
+			$('#dashboard_list_parent_div').html(data['html']);
+
+			// Re-enable table
+			enableDashboardListTable();
+			initWidgets();
+
+			// Highlight new row then remove row from table
+			var i = 1;
+			$('tr#reprow_'+data['new_dash_id']+' td').each(function(){
+				if (i++ != 1) $(this).effect('highlight',{},2000);
+			});
+		});
+    }
+}
+
+// Delete a dashboard
+function deleteDashboard(dash_id, confirmDelete) {
+    if (confirmDelete == null) confirmDelete = true;
+    // Get report title from table
+    // var row_id = $('#repdelid_'+dash_id).parents('tr:first').attr('id');
+	var row = $('#repdelid_'+dash_id).parents('tr:first');
+    var dash_title = trim($('#repdelid_'+dash_id).parents('tr:first').find('td:eq(2)').find('.dash-title').text());
+
+    if (confirmDelete) {
+        // Prompt user to confirm deletion
+        simpleDialog(langDeleteDashboardConfirm
+            + ' "<span style="color:#C00000;font-size:14px;">'+dash_title+'</span>"'+langQuestionMark,
+            langDeleteReport,null,350,null,closeBtnTxt,"deleteDashboard("+dash_id+",false);",langDelete);
+    } else {
+        // Delete via ajax
+		console.log(ajax_url);
+		$.ajax(ajax_url, {data: {pid: pid, dash_id: dash_id, method: "delete_dash"}, method: "POST"}).done(function (data) {
+			console.log(data);
+            if (data == '0') {
+                alert("Dashboard deletion may have failed (no data returned from ajax)");
+                return;
+            }
+            // Highlight deleted row then remove row from table
+            var i = 1;
+            row.find('td').each(function(){
+                if (i++ != 1) $(this).effect('highlight',{},700);
+            });
+            setTimeout(function(){
+                row.hide('fade',function(){
+                    row.remove();
+                    resetDashboardOrderNumsInTable();
+                    restripeDashboardListRows();
+                });
+            },300);
+        }).fail(function ( jqXHR, textStatus, errorThrown) {
+			console.log(jqXHR);
+			console.log(textStatus);
+			console.log(errorThrown);
+		});
+    }
+}
+
+
+// Validate report attributes when adding/editing report
+function validateCreateDash() {
+    // Make sure there is a title
+    var title_ob = $('#create_report_table input[name="title"]');
+    title_ob.val( trim(title_ob.val()) );
+    if (title_ob.val() == '') {
+        simpleDialog(langNoTitle,null,null,null,"$('#create_report_table input[name=title]').focus();");
+        return false;
+    }
+    // Make sure there is a body
+    var body_ob = $('#create_report_table :input[name="body"]');
+    body_ob.val( trim(body_ob.val()) );
+    if (body_ob.val() == '') {
+        simpleDialog(langNoBody);
+        return false;
+    }
+    // If doing custom user access, make sure something is selected
+    if ($('#create_report_table input[name="user_access_radio"]:checked').val() != 'ALL'
+        && ($('#create_report_table select[name="user_access_users"] option:selected').length
+            + $('#create_report_table select[name="user_access_dags"] option:selected').length
+            + $('#create_report_table select[name="user_access_roles"] option:selected').length) == 0) {
+        simpleDialog(langNoUserAccessSelected);
+        return false;
+    }
+    // If we made it this far, then all is well
+    return true;
+}
+
+// Enable report list table
+function enableDashboardListTable() {
+    // Add dragHandle to first cell in each row
+    $("table#table-project_dashboard_list tr").each(function() {
+        var dash_id = trim($(this.cells[0]).text());
+        $(this).prop("id", "reprow_"+dash_id).attr("dashid", dash_id);
+        if (isNumeric(dash_id)) {
+            // User-defined reports (draggable)
+            $(this.cells[0]).addClass('dragHandle');
+            // $(this.cells[3]).addClass('opacity50');
+            // $(this.cells[4]).addClass('opacity50');
+        } else {
+            // Pre-defined reports
+            $(this).addClass("nodrop").addClass("nodrag");
+        }
+    });
+    // Restripe the report list rows
+    restripeDashboardListRows();
+    // Enable drag n drop (but only if user has "reports" user rights)
+    $('table#table-project_dashboard_list').tableDnD({
+        onDrop: function(table, row) {
+            // Loop through table
+            var ids = "";
+            var this_id = $(row).prop('id');
+            $("table#table-project_dashboard_list tr").each(function() {
+                // Gather form_names
+                var row_id = $(this).attr("dashid");
+                if (isNumeric(row_id)) {
+                    ids += row_id + ",";
+                }
+            });
+            // Save new order via ajax
+            $.post(app_path_webroot+'index.php?pid='+pid+'&route=ProjectDashController:reorder', { dash_ids: ids }, function(data) {
+                if (data == '0') {
+                    alert(woops);
+                    window.location.reload();
+                } else if (data == '2') {
+                    window.location.reload();
+                }
+                // Update left-hand menu panel of Reports
+                updateDashboardPanel();
+            });
+            // Reset report order numbers in report list table
+            resetDashboardOrderNumsInTable();
+            // Restripe table rows
+            restripeDashboardListRows();
+            // Highlight row
+            setTimeout(function(){
+                var i = 1;
+                $('tr#'+this_id+' td').each(function(){
+                    if (i++ != 1) $(this).effect('highlight',{},2000);
+                });
+            },100);
+        },
+        dragHandle: "dragHandle"
+    });
+    // Create mouseover image for drag-n-drop action and enable button fading on row hover
+    $("table#table-project_dashboard_list tr:not(.nodrag)").mouseenter(function() {
+        $(this.cells[0]).css('background','#ffffff url("'+app_path_images+'updown.gif") no-repeat center');
+        $(this.cells[0]).css('cursor','move');
+        // $(this.cells[3]).removeClass('opacity50');
+        // $(this.cells[4]).removeClass('opacity50');
+    }).mouseleave(function() {
+        $(this.cells[0]).css('background','');
+        $(this.cells[0]).css('cursor','');
+        // $(this.cells[3]).addClass('opacity50');
+        // $(this.cells[4]).addClass('opacity50');
+    });
+    // Set up drag-n-drop pop-up tooltip
+    var first_hdr = $('#report_list .hDiv .hDivBox th:first');
+    first_hdr.prop('title',langDragReport);
+    first_hdr.tooltip2({ tipClass: 'tooltip4sm', position: 'top center', offset: [25,0], predelay: 100, delay: 0, effect: 'fade' });
+    $('.dragHandle').mouseenter(function() {
+        first_hdr.trigger('mouseover');
+    }).mouseleave(function() {
+        first_hdr.trigger('mouseout');
+    });
+}
+
+// Restripe the rows of the report list table
+function restripeDashboardListRows() {
+    var i = 1;
+    $("table#table-project_dashboard_list tr").each(function() {
+        // Restripe table
+        if (i++ % 2 == 0) {
+            $(this).addClass('erow');
+        } else {
+            $(this).removeClass('erow');
+        }
+    });
+}
+
+// Reset report order numbers in report list table
+function resetDashboardOrderNumsInTable() {
+    var i = 1;
+    $("table#table-project_dashboard_list tr:not(.nodrag)").each(function(){
+        $(this).find('td:eq(1) div').html(i++);
+    });
 }

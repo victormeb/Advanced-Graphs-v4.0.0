@@ -69,17 +69,31 @@ names_to_labels <- data_dictionary$field_label
 names(names_to_labels) <- data_dictionary$field_name
 
 for (graph in input_data$graphs) {
+  
+  if (!as.logical(graph$enabled))
+    next
 
   method <- unlist(type_to_method[graph$type])
 
+  title <- ""
+  description = ""
+  
+  if (exists('title', graph$params))
+    title <- unlist(graph$params$title)
+  
+  if (exists('description', graph$params))
+    description <- unlist(graph$params$description)
+  
   # Create graph with parameters
   html_plot <- do.call(method, graph$params)
+  
+  html_div <- advanced_graph_div(html_plot, title, description)
   
   # Open the temporary file created for this graph by php
   temp_file <- file(graph$output_file)
   
   stored <- readLines(temp_file)
-  writeLines(paste0(as.character(html_plot), stored, sep="\n"), temp_file)
+  writeLines(paste0(as.character(html_div), stored, sep="\n"), temp_file)
   
   close(temp_file)
 }
