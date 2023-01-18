@@ -79,38 +79,27 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	}
 
 	function redcap_module_system_enable($version) {
-		// Do stuff, e.g. create DB table.
-		// $this->query("DROP TABLE IF EXISTS advanced_graphs_dashboards");
-		$result = $this->query("CREATE TABLE if not exists advanced_graphs_dashboards (
-			dash_id INT(10) AUTO_INCREMENT PRIMARY KEY,
-			project_id INT(10), INDEX(project_id),
-			report_id INT(10),
-			live_filters JSON,
-			title TEXT,
-			body JSON,
-			dash_order INT(3),
-			user_access enum('ALL','SELECTED') DEFAULT 'ALL' NOT NULL,
-			hash varchar(11) UNIQUE,
-			short_url varchar(100),
-			is_public tinyint(1) DEFAULT 0 NOT NULL,
-			cache_time datetime,
-			cache_content longtext)"
-		, []);
-		// die("test");
-		$rows = $this->query("describe advanced_graphs_dashboards", [])->fetch_all(MYSQLI_ASSOC);
-		$result = "";
-
-		foreach ($rows as $row) {
-			$result .= implode(' ', $row)."\n";
+		// Do stuff, e.g. create DB table
+		try {
+			$result = $this->query("CREATE TABLE if not exists advanced_graphs_dashboards (
+				dash_id INT(10) AUTO_INCREMENT PRIMARY KEY,
+				project_id INT(10), INDEX(project_id),
+				report_id INT(10),
+				live_filters JSON,
+				title TEXT,
+				body JSON,
+				dash_order INT(3),
+				user_access enum('ALL','SELECTED') DEFAULT 'ALL' NOT NULL,
+				hash varchar(11) UNIQUE,
+				short_url varchar(100),
+				is_public tinyint(1) DEFAULT 0 NOT NULL,
+				cache_time datetime,
+				cache_content longtext)"
+			, []);
+			$this->log("Created new advanced_graphs_dashboards table (if one did not already exist)");
+		} catch (\Throwable $e) {
+			$this->log("Failed $this->PREFIX to create table advanced_graphs_dashboards with error:\n".$e->getMessage());
 		}
-		die($result);
-
-
-		// NOT NULL AUTO_INCREMENT
-		// NOT NULL
-
-// ,
-
 	}
 
 	// function redcap_module_system_disable($version) {
@@ -119,14 +108,13 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 	// }
 
 	function delete_advanced_graphs_table() {
-		$this->query("DROP TABLE IF EXISTS advanced_graphs_dashboards");
-		$rows = $this->query("describe advanced_graphs_dashboards", [])->fetch_all(MYSQLI_ASSOC);
-		$result = "";
-
-		foreach ($rows as $row) {
-			$result .= implode(' ', $row)."\n";
+		try {
+			$this->query("DROP TABLE IF EXISTS advanced_graphs_dashboards", []);
+			$this->log("Deleted advanced_graphs_dashboards table");
+		} catch (\Throwable $e) {
+			$this->log("Failed to delete table advanced_graphs_dashboards with error:\n".$e->getMessage());
+			// throw new PoppingException("Failed to delete table advanced_graphs_dashboards with error:\n".$e->getMessage());
 		}
-		die($result);
 	}
 	
 	function redcap_module_save_configuration($project_id) {
@@ -1077,9 +1065,10 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		// If there are errors, then roll back all changes
 		if ($errors > 0) {
 			// Errors occurred, so undo any changes made
+			echo json_encode(db_error());
 			db_query("ROLLBACK");
 			// Return '0' for error
-
+			return;
 			exit('0');
 
 		} else {
@@ -1437,8 +1426,3 @@ class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
 		return true;
 	}
 }
-
-
-
-
-
