@@ -939,8 +939,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			$r_path = $r_path[0];
 		}
 		
-		$libPaths = $module->getSystemSetting("r-libraries-path");
-		if(is_array($arr_libPaths)){
+		$libPaths = $this->getSystemSetting("r-libraries-path");
+		if(is_array($libPaths)){
 			$libPaths = $libPaths[0];
 		}
 		$libPaths_r = ".libPaths(c('$libPaths'));";				
