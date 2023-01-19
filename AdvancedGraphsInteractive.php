@@ -148,7 +148,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 					}
 				}	
 		if($error!="") {
-			die($error);
+			$this->log("Error configuring settings: $error");
+			$this->disable($this->PREFIX, false);
 		}
 	}
 	
