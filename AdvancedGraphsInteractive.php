@@ -85,9 +85,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				dash_id INT(10) AUTO_INCREMENT PRIMARY KEY,
 				project_id INT(10), INDEX(project_id),
 				report_id INT(10),
-				live_filters JSON,
+				live_filters LONGTEXT,
 				title TEXT,
-				body JSON,
+				body LONGTEXT,
 				dash_order INT(3),
 				user_access enum('ALL','SELECTED') DEFAULT 'ALL' NOT NULL,
 				hash varchar(11) UNIQUE,
@@ -938,12 +938,18 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		if(is_array($r_path)){
 			$r_path = $r_path[0];
 		}
+		
+		$libPaths = $module->getSystemSetting("r-libraries-path");
+		if(is_array($arr_libPaths)){
+			$libPaths = $libPaths[0];
+		}
+		$libPaths_r = ".libPaths(c('$libPaths'));";				
 
 		$data_manipulation_path = $module_physical_path.'data_manipulation.R';
 		$custom_plots_path = $module_physical_path.'custom_plots.R';
 
 		$r_code = "\"$r_path\" -e
-		\"$libPaths 
+		\"$libPaths_r 
 		input_data_path <- '$input_path';
 		source('$data_manipulation_path');
 		source('$custom_plots_path');
