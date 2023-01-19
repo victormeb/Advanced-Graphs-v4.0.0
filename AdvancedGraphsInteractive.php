@@ -1003,7 +1003,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// Report title
 		$title = decode_filter_tags($title);
 		$body = json_encode($graphs);
-		$is_public = $is_public ? "1" : "0";
+		$is_public = "0"; // $is_public ? "1" : "0";
 		// // User access rights
 		// $user_access_users = $user_access_roles = $user_access_dags = array();
 		// if (isset($_POST['user_access_users'])) {
@@ -1323,9 +1323,10 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		}
 		// Add last row as "add new report" button
 		$rows[$item_num] = array('', '',
-			RCView::button(array('class'=>'btn btn-xs btn-defaultrc fs12', 'style'=>'color:#000080;margin:12px 0;', 'onclick'=>"window.location.href = app_path_webroot+'index.php?route=ProjectDashController:index&addedit=1&pid='+pid;"),
+			/* RCView::button(array('class'=>'btn btn-xs btn-defaultrc fs12', 'style'=>'color:#000080;margin:12px 0;', 'onclick'=>"window.location.href = app_path_webroot+'index.php?route=ProjectDashController:index&addedit=1&pid='+pid;"),
 				'<i class="fas fa-plus fs11"></i> ' . $lang['dash_01']
-			), '');
+			), ''); */
+				RCView::p(array(), "Create a new dashboard by creating a report and clicking 'Advanced Graphs Dashboards' under external modules"), '');
 		// Set table headers and attributes
 		$col_widths_headers = array();
 		$col_widths_headers[] = array(18, "", "center");

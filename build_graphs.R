@@ -1,3 +1,5 @@
+options(warn = -1)
+
 library(jsonlite) # TODO: add dependency
 
 # Get information for which graphs to build, 

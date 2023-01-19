@@ -1489,7 +1489,8 @@ function editDashboard(dash_id) {
 
 // Copy a dashboard
 function copyDashboard(dash_id, confirmCopy) {
-    if (confirmCopy == null) confirmCopy = true;
+	alert("This function is still in development");
+/*     if (confirmCopy == null) confirmCopy = true;
     // Get dashboard title from table
     var row_id = $('#repcopyid_'+dash_id).parents('tr:first').attr('id');
     var dash_title = trim($('#repcopyid_'+dash_id).parents('tr:first').find('td:eq(2)').find('.dash-title').text());
@@ -1518,7 +1519,7 @@ function copyDashboard(dash_id, confirmCopy) {
 				if (i++ != 1) $(this).effect('highlight',{},2000);
 			});
 		});
-    }
+    } */
 }
 
 // Delete a dashboard
