@@ -110,7 +110,7 @@
   .plot-div {
     margin: auto;
     width: 50%;
-    border: 3px solid green;
+    /* border: 3px solid green; */
   }
 
   .plot-div img {
@@ -163,8 +163,8 @@
   
   .preview-pane {
       grid-area: preview-pane;
-      margin: auto;
-       width: 50%;
+      /* margin: auto;
+       width: 50%; */
   }
   
   .preview-pane img {

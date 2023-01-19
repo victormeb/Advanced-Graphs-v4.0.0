@@ -1,6 +1,6 @@
 {
-	"name": "AdvancedGraphs",
-	"namespace": "VIHA\\AdvancedGraphs",
+	"name": "AdvancedGraphsInteractive",
+	"namespace": "VIHA\\AdvancedGraphsInteractive",
 	"description": "A module for create advanced graphs from a REDCap report using a R script",
 	"versions": [{
 		"1.0": "Initial Development Version on EMs"

@@ -139,7 +139,7 @@ function likert_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-									<label>Title<input type="text" name="title" placeholder="Default"></label>
+									<label>Title<br><input type="text" name="title" placeholder="Default"></label>
 									<label>Instrument<select class="instrument-selector" name="instrument">${instruments}</select></label><br>
 									<label>Option group<select class="options-selector" name="options"></select></label>
 								</div>
@@ -312,7 +312,7 @@ function scatter_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-							<label>Title<input type="text" name="title" placeholder="Default"></label>
+							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
 							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
 							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
 							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
@@ -472,7 +472,7 @@ function barplot_form(button) {
 	}
 
 	let main_options = `<div class="form-child">
-							<label>Title<input type="text" name="title" placeholder="Default"></label>
+							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
 							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
 							<label class="container cross-tab">Cross Tabulation<input type="checkbox" name="crosstab" value="true"><span class="checkmark"></span></label>
 							<div class="radio grouped">
@@ -882,7 +882,7 @@ function map_form(button) {
 	}
 
 	let main_options = `<div class="form-child">
-							<label>Title<input type="text" name="title" placeholder="Default"></label>
+							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
 							<label>Instrument<select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
 							<div class="field-selector">
 								<label>Longitude<select class="longitude-field" name="lng"></select></label><br>
@@ -1159,7 +1159,7 @@ function network_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-							<label>Title<input type="text" name="title" placeholder="Default"></label>
+							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
 							<label>Instrument<select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
 							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
 							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>

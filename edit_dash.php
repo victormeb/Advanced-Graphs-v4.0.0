@@ -75,10 +75,10 @@ var report_id = <?php echo $report_id?>;
 var report = <?php echo json_encode($module->report);?>;
 
 // Urls to other pages
-var ajax_url = "<?php echo  ExternalModules::getPageUrl("advanced_graphs", "advanced_graphs_ajax");?>" + "&pid=" + pid;
-var edit_dash_url = "<?php echo  ExternalModules::getPageUrl("advanced_graphs", "edit_dash.php");?>";
-var dash_list_url = "<?php echo  ExternalModules::getPageUrl("advanced_graphs", "advanced_graphs.php");?>";
-var view_dash_url = "<?php echo  ExternalModules::getPageUrl("advanced_graphs", "view_dash.php");?>";
+var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax.php");?>" + "&pid=" + pid;
+var edit_dash_url = "<?php echo  $module->getUrl("edit_dash.php");?>";
+var dash_list_url = "<?php echo  $module->getUrl("advanced_graphs.php");?>";
+var view_dash_url = "<?php echo  $module->getUrl("view_dash.php");?>";
 
 // Passed to ajax request to preserve live filters on a given report for each dashboard
 var live_filters = <?php echo json_encode($live_filters);?>;

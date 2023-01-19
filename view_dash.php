@@ -45,8 +45,11 @@ $original_params = json_encode($query);
     var pid = <?php echo $pid;?>;
     var report_id = <?php echo $dashboard['report_id'];?>;
     var refferer_parameters = <?php echo $original_params;?>;
-    var ajax_url = "<?php echo  ExternalModules::getPageUrl("advanced_graphs", "advanced_graphs_ajax");?>";
-    var ajax_url = ajax_url+ "&pid=" + pid;
+    // Urls to other pages
+    var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax.php");?>" + "&pid=" + pid;
+    var edit_dash_url = "<?php echo  $module->getUrl("edit_dash.php");?>";
+    var dash_list_url = "<?php echo  $module->getUrl("advanced_graphs.php");?>";
+    var view_dash_url = "<?php echo  $module->getUrl("view_dash.php");?>";
     console.log(report_object);
     generate_graphs();
 </script>

@@ -1,5 +1,5 @@
 <?php
-namespace VIHA\AdvancedGraphs;
+namespace VIHA\AdvancedGraphsInteractive;
 
 use \REDCap as REDCap;
 use ExternalModules\AbstractExternalModule;
@@ -16,7 +16,7 @@ use RCView;
 use Form;
 use Piping;
 
-class AdvancedGraphs extends \ExternalModules\AbstractExternalModule
+class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 {
 	private $enabled_projects;
 	public $data_dictionary;
