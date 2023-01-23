@@ -18,12 +18,18 @@ $report_id = $query['report_id'];
 
 $dash_title = "New Dashboard";
 
+$dashboard_body = [];
+$is_public = "false";
+
 if ($dash_id != '0') {
 	$dashboard = $module->getDashboards($pid, $dash_id);
+	$dashboard_body = $dashboard['body'];
 	$report_id = $dashboard['report_id'];
 	$live_filters = $dashboard['live_filters'];
-	$dash_tile = $module->getDashboardName($pid, $dash_id);
+	$is_public = $dashboard['is_public'];
+	$dash_title = $module->getDashboardName($pid, $dash_id);
 }
+
 
 // Header
 include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
@@ -44,13 +50,14 @@ $module->loadJS("leaflet.markercluster.layersupport.js", "mapdependencies/leafle
 $module->loadCSS("advanced-graphs.css");
 $title = $report_id ? "<h1>Advanced Graphs</h1>" : "<h1>New Advanced Graphs Dashboards must be run from the context of a report</h1>";
 echo "<div id=\"advanced_graphs\">$title</div>";
+
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 
 if (!$report_id)
 	exit(0);
 
 $module->initialize_report($pid, USERID, $report_id, $query);
-
+// echo "report id is $report_id";
 $data_dictionary = MetaData::getDataDictionary("array", false, array(), array(), false, false, null, $_GET['pid']);
 
 $graph_groups = json_encode(
@@ -65,6 +72,8 @@ $graph_groups = json_encode(
 
 ?>
 <script>
+var dashboard_public = <?php echo $is_public?>;
+var dashboard_body = <?php echo $dashboard_body;?>;
 var data_dictionary = <?php echo json_encode($module->data_dictionary);?>;
 var pid = <?php echo $pid?>;
 var dash_id = <?php echo $dash_id?>;
@@ -81,7 +90,7 @@ var dash_list_url = "<?php echo  $module->getUrl("advanced_graphs.php");?>";
 var view_dash_url = "<?php echo  $module->getUrl("view_dash.php");?>";
 
 // Passed to ajax request to preserve live filters on a given report for each dashboard
-var live_filters = <?php echo json_encode($live_filters);?>;
+var live_filters = <?php echo $live_filters;?>;
 
 // These contain the available fields for each graph group e.g. Scatter plots, Likert graphs, Bar plots
 var graph_groups = <?php echo $graph_groups;?>;
@@ -97,9 +106,11 @@ $(document).ready(function() {
 	barplot_div();
 	map_div();
 	network_div();
-	save_button();
+	save_button(dash_id);
+	edit_form(dashboard_body);
 });
-console.log(dash_id);
+
+
 
 
 </script>

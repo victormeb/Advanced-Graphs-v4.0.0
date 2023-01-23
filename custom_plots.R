@@ -292,10 +292,12 @@ custom_likert <- function(x, title="", wrap_label = FALSE, max_label_length = 30
     mutate(count = n()) %>%
     group_by(Item, variable) %>%
     summarise(percent = n()/first(count))
+  
+  print(levels(x[[1]]))
 
   p <- likert.bar.plot(likert(x),
                   as.percent = TRUE,
-                  colors = if (!any(is.na(x))) colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]]))) else c(colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]])) - 1), "grey"),
+                  colors = if (!any(is.na(levels(x[[1]])))) colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]]))) else c(colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]])) - 1), "grey"),
                   # low.color="forestgreen",
                   # high.color = "red3",
                   # neutral.color = "lightgoldenrod",
@@ -370,6 +372,31 @@ build_likert <- function(...) {
   fields <- args[["fields"]]
   
   print(fields)
+  
+  na_fnc <- . %>% mutate()
+  
+  if (exists('include_na', args))
+    na_fnc <- . %>% transmute(across(.fns = addNA))
+    
+    # function(data) {
+    #   # If any of the fields contain an NA
+    #   if (any(is.na(data))) {
+    #     return(
+    #       # Add an NA field to each factor
+    #       transmute(data, across(.fns = addNA))
+    #     )
+    #   }
+    #   # Otherwise return the data as is
+    #   return(data)
+    # }
+  
+  option_codes <- options[,1]
+  option_labels <- options[,2]
+  
+  if (exists('reverse_levels', args)) {
+    option_codes <- rev(option_codes)
+    option_labels <- rev(option_labels)
+  }
     
   args[["x"]] <- report_data %>%
     data.frame() %>%
@@ -377,19 +404,12 @@ build_likert <- function(...) {
     # Across changes the field_names to their corresponding field labels 
     transmute(
       across(all_of(fields), 
-      .fns = ~factor(.x, levels = options[,1], labels = options[,2]), 
-      .names = "{names_to_labels[.col]}")) %>%
-    (function(data) {
-      # If any of the fields contain an NA
-      if (any(is.na(data))) {
-        return(
-          # Add an NA field to each factor
-          transmute(data, across(.fns = addNA))
-        )
-      }
-      # Otherwise return the data as is
-      return(data)
-    })
+      .fns = ~factor(.x, levels = option_codes, labels = option_labels), 
+       .names = "{names_to_labels[.col]}")) %>%
+    na_fnc
+
+  
+
   
     # Pass this dataframe to the custom likert
     do.call(custom_likert, args) %>%
@@ -1220,7 +1240,7 @@ build_barplot <- function(...) {
 #   Output:
 #     
 #     A map
-custom_map <- function(data, lat, lng, type = NULL, weight = NULL, title = "", dot_size = 5, ...) {
+custom_map <- function(data, lat, lng, type = NULL, weight = NULL, title = "", dot_size = 5, digits = 1, ...) {
   color = "#03F"
   dot_size = as.numeric(dot_size)
   label = NULL
@@ -1233,7 +1253,7 @@ custom_map <- function(data, lat, lng, type = NULL, weight = NULL, title = "", d
   
   if (!is.null(weight)) {
     dot_size = dot_size*data[[weight]]/mean(data[[weight]])
-    label = data[[weight]]
+    label = round(data[[weight]], digits)
     labelOptions = labelOptions(
       # Always show labels
       noHide = T, 

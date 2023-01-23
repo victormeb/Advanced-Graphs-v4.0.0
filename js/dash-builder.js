@@ -30,9 +30,18 @@ function dashboard_title(dash_title) {
 	let title = 
 	`<tbody class="dash-title" style="display:block;margin-bottom:12px;">
 		<tr>
-			<td class="labelrc  nowrap fs14 align-top px-2" style="height:50px;width:160px;padding-top:12px">Dashboard title:</td>
+		<td class="labelrc create_rprt_hdr nowrap fs14 align-top px-2" style="background-color:#e6e6e6;height:50px;color:#0450a5;width:160px;padding-top:12px">Dashboard title:</td>
 			<td class="labelrc " style="height:50px;padding:5px 10px;">
 				<input id="dash_title" name="dash_title" value="${dash_title}" class="x-form-text x-form-field" onkeydown="if(event.keyCode == 13) return false;" style="height:32px;padding: 4px 6px 3px;font-size:16px;width:99%;" type="text" autocomplete="new-password">
+			</td>
+		</tr>
+		<tr>
+		<td class="labelrc fs14 align-top p-2" style="width:160px;color:#0450a5;">Set as "public":</td>
+			<td class="labelrc  nowrap fs14 align-top px-2">
+			<div class="custom-control custom-switch mt-2">
+			<input class="custom-control-input" name="is_public" id="is_public" type="checkbox">
+			<label class="custom-control-label" for="is_public">Dashboard is publicly viewable by anyone with the public link</label>
+		</div>
 			</td>
 		</tr>
 	</tbody>`;
@@ -40,6 +49,8 @@ function dashboard_title(dash_title) {
 // `<div class="dash-title"><label>Dashboard Title:<br> <input id="dash_title" name="dash_title" type="text" value="New Dashboard"></label></div>`;
 
 	$('#advanced_graphs').append(title);
+
+	$('#is_public').prop('checked', dashboard_public);
 }
 
 function save_button(dash_id) {
@@ -139,11 +150,16 @@ function likert_form(button) {
 	}
 
 	let main_options = `<div class="form-left">
-									<label>Title<br><input type="text" name="title" placeholder="Default"></label>
-									<label>Instrument<select class="instrument-selector" name="instrument">${instruments}</select></label><br>
-									<label>Option group<select class="options-selector" name="options"></select></label>
-								</div>
-								<div class="form-right"></div>`;
+							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
+							<label>Instrument<select class="instrument-selector" name="instrument">${instruments}</select></label><br>
+							<label>Option group<select class="options-selector" name="options"></select></label>
+							<div class="include-na">
+								<label class="container">Include NAs<input type="checkbox" name="include_na" value="true"><span class="checkmark"></span></label>
+								<p class="small-warning">Warning: the center of the responses will be shifted</p>
+							</div>
+							<label class="container">Reverse option order<input type="checkbox" name="reverse_levels" value="true"><span class="checkmark"></span></label>
+						</div>
+						<div class="form-right"></div>`;
 
 	let other_options = 
 			`
@@ -215,6 +231,14 @@ function likert_form(button) {
 		// Otherwise hide the options selector
 		new_form.find('.options-selector').hide();
 
+	new_form.find('.include-na').find('.small-warning').hide();
+
+	new_form.find('.include-na').change(function () {
+		if  ($(this).find('input[name=include_na]').prop('checked'))
+			return $(this).find('.small-warning').show();
+
+			$(this).find('.small-warning').hide();
+	});
 	// If there is only one instrument
 	if (!multiple_instruments) {
 		// Hide the instrument selector
@@ -244,9 +268,9 @@ function likert_form(button) {
 	});
 
 	// Whenever the checkbox changes
-	new_form.find('.form-right').change(function () {
+	new_form.change(function () {
 		// If any fields are checked
-		if ($(this).find('input:checkbox:checked').not('.select-all').length) {
+		if ($(this).find('.form-right').find('input:checkbox:checked').not('.select-all').length) {
 			// Consider this form ready to preview
 			toggle_form(new_form, true);
 			return;
@@ -258,10 +282,10 @@ function likert_form(button) {
 	});
 
 	// If any of the graph-options change
-	new_form.find('.graph-options').change(function() {
-		// Update the report
-		update_report(new_form);
-	});
+	// new_form.change(function() {
+	// 	// Update the report
+	// 	update_report(new_form);
+	// });
 
 	
 	label_length_logic(new_form);
@@ -399,7 +423,7 @@ function scatter_form(button) {
 	});
 
 	// When a field gets selected
-	new_form.find('.field-selector').change(function () {
+	new_form.change(function () {
 		// If fewer than 2 fields are selected
 		if (new_form.find('.field-selector :selected').not(':disabled').length != 2) {
 			// Disable the form
@@ -414,7 +438,9 @@ function scatter_form(button) {
 	// Any time the line checkbox is clicked. Update the form
 	new_form.find('.line').change(function () {
 		update_report(new_form);
-	})
+	});
+
+	return new_form;
 
 }
 
@@ -477,7 +503,7 @@ function barplot_form(button) {
 							<label class="container cross-tab">Cross Tabulation<input type="checkbox" name="crosstab" value="true"><span class="checkmark"></span></label>
 							<div class="radio grouped">
 								<label class="radio-label">
-									<input class="radio-state" type="radio"  name="grouped" value="false"><div class="radio-button"></div>Stacked
+									<input class="radio-state" type="radio"  name="grouped" value="false" checked><div class="radio-button"></div>Stacked
 								</label> 
 								<label class="radio-label">
 									<input class="radio-state" type="radio"  name="grouped"  value="true"><div class="radio-button"></div>Grouped
@@ -485,7 +511,7 @@ function barplot_form(button) {
 							</div>
 							<div class="radio pie-chart">
 								<label class="radio-label">
-									<input class="radio-state" type="radio"  name="pie" value="false"><div class="radio-button"></div>Bars
+									<input class="radio-state" type="radio"  name="pie" value="false" checked><div class="radio-button"></div>Bars
 								</label>
 								<label class="radio-label">
 									<input class="radio-state" type="radio"  name="pie" value="true"><div class="radio-button"></div>Pie
@@ -823,6 +849,8 @@ function barplot_form(button) {
 	});
 
 	label_length_logic(new_form);
+
+	return new_form;
 }
 
 function map_div() {
@@ -1090,7 +1118,7 @@ function map_form(button) {
 		if (!category_fields.length)
 			return;
 
-		new_form.find('.map-type').append(`<optgroup label="None"><option value>None</option></optgroup>`);
+		new_form.find('.map-type').append(`<optgroup label="None"><option>None</option></optgroup>`);
 		new_form.find('.map-type').append(`<optgroup class="categories" label="Categories"></optgroup>`);
 
 
@@ -1113,6 +1141,8 @@ function map_form(button) {
 		toggle_form(new_form, true);
 			
 	});
+
+	return new_form;
 }
 
 function network_div() {
@@ -1145,6 +1175,7 @@ function network_div() {
 	$('#add_network').click(function() {
 		network_form(this);
 	});
+
 }
 
 function network_form(button) {
@@ -1257,7 +1288,9 @@ function network_form(button) {
 	// Any time the line checkbox is clicked. Update the form
 	new_form.find('.directed').change(function () {
 		update_report(new_form);
-	})
+	});
+
+	return new_form;
 }
 
 function toggle_form(form, enabled) {
@@ -1407,11 +1440,12 @@ function generate_graphs() {
 
 function saveDash(dash_id) {
 	let title = $("#dash_title").val();
+	let is_public = $('#is_public').prop('checked');
 	let min_wait_time = 1;
 	let graph_array = Array.from(report_object, ([name, value]) => value);
 	var start_time = new Date().getTime();
-	$.ajax(ajax_url, {data: {pid: pid, report_id: report_id, live_filters: live_filters, title: title, graphs: graph_array, dash_id: dash_id, is_public: true, method: "save_dash"}, dataType: "json", method: "POST"}).done(function (data) {
-		console.log("heya");
+	$.ajax(ajax_url, {data: {pid: pid, report_id: report_id, live_filters: live_filters, title: title, graphs: graph_array, dash_id: dash_id, is_public: is_public, method: "save_dash"}, dataType: "json", method: "POST"}).done(function (data) {
+		console.log(is_public);
 		console.log(data);
 		
 		if (data == '0') {
@@ -1430,8 +1464,8 @@ function saveDash(dash_id) {
 		var btns =	[{ text: langBtn1, click: function() { //TODO lang
 			if (data['newdash']) {
 				// Reload page with new dash_id
-				// window.location.href = edit_dash_url +'&pid='+pid + '&dash_id='+data['dash_id'];
-				alert("This function is still in development");
+				window.location.href = edit_dash_url +'&pid='+pid + '&dash_id='+data['dash_id'];
+				// alert("This function is still in development");
 			} else {
 				$(this).dialog('close').dialog('destroy');
 			}
@@ -1457,8 +1491,9 @@ function saveDash(dash_id) {
 					if (data['newdash']) {
 						// Reload page with new dash_id
 						showProgress(1);
-						// window.location.href = edit_dash_url+data['dash_id']+'&addedit=1';
-						window.location.href = view_dash_url + "&pid=" + pid + "&dash_id=" + data['dash_id']; //TODO
+						window.location.href = edit_dash_url +'&pid='+pid + '&dash_id='+data['dash_id'];
+						// window.location.href = edit_dash_url+ "&dash_id=" +data['dash_id']+'&addedit=1';
+						// window.location.href = view_dash_url + "&pid=" + pid + "&dash_id=" + data['dash_id']; //TODO
 					} else {
 						$(this).dialog('destroy');
 					}
@@ -1483,8 +1518,8 @@ function openDashboardPublic(hash) {
 
 // Edit a dashboard
 function editDashboard(dash_id) {
-    // window.location.href = edit_dash_url +'&dash_id='+dash_id+'&addedit=1&pid='+pid;
-	alert("This function is still in development");
+    window.location.href = edit_dash_url +'&dash_id='+dash_id+'&addedit=1&pid='+pid;
+	// alert("This function is still in development");
 }
 
 // Copy a dashboard
@@ -1691,4 +1726,89 @@ function resetDashboardOrderNumsInTable() {
     $("table#table-project_dashboard_list tr:not(.nodrag)").each(function(){
         $(this).find('td:eq(1) div').html(i++);
     });
+}
+
+function edit_form(report_array) {
+    // report_array is a global object containing graph objects
+    for (const key in report_array) {
+		load_form(report_array[key]);
+        // let graph = report_array[key];
+		// let graph_params = graph['params'];
+        // switch (graph['type']) {
+        //     case 'likert':
+        //         load_likert(graph_params);
+        //         break;
+        //     case 'scatter':
+        //         load_scatter(graph_params);
+        //         break;
+        //     default:
+        //         console.log(`${graph['type']} not ready yet.`);
+        // }
+    }
+
+}
+
+
+function load_form(graph) {
+	let type = graph['type'];
+	let form_data = graph['params'];
+
+	let form;
+	// Create a new form
+	switch (type) {
+		case 'likert':
+			form = likert_form($(`#add_${type}`));
+			break;
+		case 'scatter':
+			form = scatter_form($(`#add_${type}`));
+			break;
+		case 'barplot':
+			form = barplot_form($(`#add_${type}`));
+			break;
+		case 'map':
+			form = map_form($(`#add_${type}`));
+			break;
+		case 'network':
+			form = network_form($(`#add_${type}`));
+			break;
+	}
+    	
+
+	// Get all of the selection fields
+	form.find("select").each(function() {
+		let parent_name = $(this).attr('name');
+		if (parent_name)
+			$(this).find('option').each(function() {
+				if (parent_name in form_data && form_data[parent_name].includes($(this).val()))
+					$(this).prop('selected', true).change();
+			});
+	});
+
+	// Check all of the checkboxes that are meant to be included
+	form.find("input[type=checkbox]").each(function() {
+		$(this).prop('checked', $(this).attr('name') in form_data && form_data[$(this).attr('name')].includes($(this).val())).change();
+	});
+
+	// Check all of the radios that are meant to be included
+	form.find("input[type=radio]").each(function() {
+		$(this).prop('checked', $(this).attr('name') in form_data && form_data[$(this).attr('name')].includes($(this).val())).change();
+	});
+
+
+
+	// Set all of the text boxes
+	form.find("input[type=text]").each(function() {
+		if ($(this).attr("name") in form_data)
+			$(this).val(form_data[$(this).attr("name")][0]).change();
+	});
+
+	// Set all of the number boxes
+	form.find("input[type=number]").each(function() {
+		if ($(this).attr("name") in form_data)
+			$(this).val(form_data[$(this).attr("name")][0]).change();
+	});
+	
+	
+
+    update_report(form);
 }

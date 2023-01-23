@@ -54,9 +54,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$this->data_dictionary = MetaData::getDataDictionary("array", false, array(), array(), false, false, null, $pid);
 		
 		$this->report_fields = $this->get_accessible_fields($pid, $user_id, $report_id);
-
-		$this->report = $this->get_report($pid, $user_id, $report_id, $live_filters, "array");
-
+		
+		$this->report = $this->get_report($pid, $report_id, $live_filters, $user_id = $user_id, "array");
+		
 		$Proj = new Project($pid);
 
 		$this->instruments = array();
@@ -67,7 +67,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			$this->instruments[] = array('instrument_name'=>$form, 'instrument_label'=>strip_tags(html_entity_decode($attr['menu'], ENT_QUOTES)));
 			$this->instruments_dictionary[$form] = strip_tags(html_entity_decode($attr['menu'], ENT_QUOTES));
 		}
-
+		
 		$this->instruments_dictionary['adv_graph_non_repeating'] = "Non-repeating instruments";
 
 		$this->repeat_instruments = $this->get_repeat_instruments($pid);
@@ -473,23 +473,31 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 	}
 
-	function get_report($pid, $user_id, $report_id, $live_filters, $format="csvraw") {
-		// Get user rights
-		$user_rights_proj_user = UserRights::getPrivileges($pid, $user_id);
-		$user_rights = $user_rights_proj_user[$pid][strtolower($user_id)];
-		unset($user_rights_proj_user);
+	function get_report($pid, $report_id, $live_filters, $user_id=null, $format="csvraw") {
+		$hashRecordID = true;
+		$removeIdentifierFields = true;
+		$removeUnvalidatedTextFields = true;
+		$removeNotesFields = true;
+		$removeDateFields = true;
 		
-		// TODO: should user access even with no rights?
+		if ($user_id) {
+			// Get user rights
+			$user_rights_proj_user = UserRights::getPrivileges($pid, $user_id);
+			$user_rights = $user_rights_proj_user[$pid][strtolower($user_id)];
+			unset($user_rights_proj_user);
+			
+			// TODO: should user access even with no rights?
+			
+			// Does user have De-ID rights?
+			$deidRights = ($user_rights['data_export_tool'] == '2');
 		
-		// Does user have De-ID rights?
-		$deidRights = ($user_rights['data_export_tool'] == '2');
-	
-		// De-Identification settings
-		$hashRecordID = ($deidRights);
-		$removeIdentifierFields = ($user_rights['data_export_tool'] == '3' || $deidRights);
-		$removeUnvalidatedTextFields = ($deidRights);
-		$removeNotesFields = ($deidRights);
-		$removeDateFields = ($deidRights);
+			// De-Identification settings
+			$hashRecordID = ($deidRights);
+			$removeIdentifierFields = ($user_rights['data_export_tool'] == '3' || $deidRights);
+			$removeUnvalidatedTextFields = ($deidRights);
+			$removeNotesFields = ($deidRights);
+			$removeDateFields = ($deidRights);
+		}
 		
 		// Build live filter logic from parameters
 		list ($liveFilterLogic, $liveFilterGroupId, $liveFilterEventId) = self::buildReportDynamicFilterLogicReferrer($report_id, $live_filters);
@@ -506,6 +514,10 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 										
 		return $content;
 	}
+
+	// function get_report_2($report_id, $live_filters, $format="csvraw") {
+
+	// }
 
 	function add_instrument_labels($grouped_fields) {
 		if (!isset($this->instruments_dictionary))
@@ -868,7 +880,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		}
 		$error_msg = '';
 
-		$report_data = self::get_report($pid, $user_id, $report_id, $live_filters, $format="csvraw");
+		$report_data = self::get_report($pid, $report_id, $live_filters, $user_id,$format="csvraw");
+		// $report = self::get_report($pid, $report_id, $live_filters, $user_id,$format="array");
 
 		if (!$report_data)
 			$error_msg .= '<h1 style=\"color:red;\">Failed to export report data</h1>';
@@ -1003,7 +1016,10 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// Report title
 		$title = decode_filter_tags($title);
 		$body = json_encode($graphs);
-		$is_public = "0"; // $is_public ? "1" : "0";
+		$live_filters = json_encode($live_filters);
+
+		$is_public =  $is_public === "true" ? "1" : "0";
+
 		// // User access rights
 		// $user_access_users = $user_access_roles = $user_access_dags = array();
 		// if (isset($_POST['user_access_users'])) {
@@ -1040,7 +1056,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			$new_dash_order = ($new_dash_order == '') ? 1 : $new_dash_order+1;
 			// Insert
 			$sqlr = $sql = "insert into advanced_graphs_dashboards (project_id, report_id, live_filters, title, body, user_access, dash_order, is_public)
-							values (".$pid.", ". intval($report_id) . ", '".db_escape(json_encode($live_filters))."', '".db_escape($title)."', '".db_escape($body)."', '".db_escape($user_access)."', $new_dash_order, $is_public)";
+							values (".$pid.", ". intval($report_id) . ", '".db_escape($live_filters)."', '".db_escape($title)."', '".db_escape($body)."', '".db_escape($user_access)."', $new_dash_order, $is_public)";
 			if (!db_query($sql)) $errors++;
 			// Set new dash_id
 			$dash_id = db_insert_id();
@@ -1294,7 +1310,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				// Public link
                 (!($attr['is_public'] && $GLOBALS['project_dashboard_allow_public'] > 0) ? "" :
 					RCView::div(array('class'=>'float-right text-right', 'style'=>'width:60px;'),
-						RCView::a(array('href'=>($attr['short_url'] == "" ? APP_PATH_WEBROOT_FULL.'surveys/index.php?__dashboard='.$attr['hash'] : $attr['short_url']), 'target'=>'_blank', 'class'=>'text-primary fs12 nowrap mr-2 ml-1'),
+						RCView::a(array('href'=>($attr['short_url'] == "" ? $this->getUrl('view_dash_public.php', true)."&dash_id=$dash_id" : $attr['short_url']), 'target'=>'_blank', 'class'=>'text-primary fs12 nowrap mr-2 ml-1'), //APP_PATH_WEBROOT_FULL.'surveys/index.php?__dashboard='.$attr['hash']
 							'<i class="fas fa-link"></i> ' .$lang['dash_35']
 						)
 					)

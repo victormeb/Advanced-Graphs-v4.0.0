@@ -17,25 +17,25 @@
 		"email": "aciganda@iecs.org.ar",
 		"institution": "IECS"
 	}],
-    "no-auth-pages": [],
-  "links": {
-    "control-center": [
-    ],
-    "project": [
-      {
-        "name": "New Advanced Graphs Dashboard",
-        "icon": "gear",
-        "url": "edit_dash.php",
-		"id": "edit_dash"
-      },
-	  {
-        "name": "Advanced Graphs Dashboards",
-        "icon": "list_red_messaging",
-        "url": "advanced_graphs.php",
-		"id": "advanced_graphs"
-      }
-    ]
-  },
+    "no-auth-pages": ["view_dash_public", "advanced_graphs_ajax_public"],
+	"links": {
+		"control-center": [
+		],
+		"project": [
+		{
+			"name": "New Advanced Graphs Dashboard",
+			"icon": "gear",
+			"url": "edit_dash.php",
+			"id": "edit_dash"
+		},
+		{
+			"name": "Advanced Graphs Dashboards",
+			"icon": "list_red_messaging",
+			"url": "advanced_graphs.php",
+			"id": "advanced_graphs"
+		}
+		]
+	},
 	"permissions": [
 	"redcap_module_save_configuration",
 	"redcap_every_page_before_render",

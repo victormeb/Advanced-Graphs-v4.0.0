@@ -7,9 +7,15 @@ $pid = $_GET['pid'];
 
 $dash_title = $module->getDashboardName($pid, $dash_id);
 
+// Page header
+$objHtmlPage = new HtmlPage();
+$objHtmlPage->setPageTitle(remBr(br2nl($app_title))." | REDCap");
+$objHtmlPage->PrintHeader(false);
+
 // // Header
-include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+// include APP_PATH_DOCROOT . 'ProjectGeneral/print_page.php';
 $module->loadJS("dash-builder.js");
+$module->loadJS("jquery.min.js", "mapdependencies/jquery-1.12.4");
 $module->loadJS("htmlwidgets.js", "mapdependencies/htmlwidgets-1.5.4");
 $module->loadCSS("leaflet.css", "mapdependencies/leaflet-1.3.1");
 $module->loadJS("leaflet.js", "mapdependencies/leaflet-1.3.1");
@@ -25,31 +31,31 @@ $module->loadJS("leaflet.markercluster.freezable.js", "mapdependencies/leaflet-m
 $module->loadJS("leaflet.markercluster.layersupport.js", "mapdependencies/leaflet-markercluster-1.0.5");
 $module->loadCSS("advanced-graphs.css");
 
-echo "<center><h1>$dash_title</h1></center><div id=\"advanced_graphs\"><h2>Loading your dashboard</h1></div>";
 $dashboard = $module->getDashboards($pid, $dash_id);
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+if ($dashboard['is_public'] != "1") {
+    echo "<h1>Advanced Graphs</h1><h2 style='color: red;'>This is not a publicly available dashboard</h2>";
+    exit(0);
+}
+    
+echo "<center><h1>$dash_title</h1></center><div id=\"advanced_graphs\"><h2>Loading your dashboard</h1></div>";
 
 
-$url = $_SERVER["HTTP_REFERER"];
-$parts = parse_url($url, PHP_URL_QUERY);
-parse_str($parts, $query);
+// $url = $_SERVER["HTTP_REFERER"];
+// $parts = parse_url($url, PHP_URL_QUERY);
+// parse_str($parts, $query);
 
-$original_params = json_encode($query);
+// $original_params = json_encode($query);
 
 
 ?>
 <script>
     var report_object = <?php echo $dashboard['body'];?>;
-    var live_filters = <?php echo $dashboard['live_filters'];?>;
+    var live_filters = <?php echo $dashboard['live_filters']?>;
     var pid = <?php echo $pid;?>;
     var report_id = <?php echo $dashboard['report_id'];?>;
-    var refferer_parameters = <?php echo $original_params;?>;
     // Urls to other pages
-    var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax.php");?>" + "&pid=" + pid;
-    var edit_dash_url = "<?php echo  $module->getUrl("edit_dash.php");?>";
-    var dash_list_url = "<?php echo  $module->getUrl("advanced_graphs.php");?>";
-    var view_dash_url = "<?php echo  $module->getUrl("view_dash.php");?>";
+    var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax_public.php");?>" + "&NOAUTH" + "&pid=" + pid ;
     console.log(report_object);
     generate_graphs();
 </script>
