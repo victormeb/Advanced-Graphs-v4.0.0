@@ -1384,7 +1384,7 @@ function label_length_logic(form) {
 
 		update_report(form);
 
-		if (selected === "true") {
+		if (selected.val() === "true") {
 			$(this).find('.trunc-wrap').text('Wrap');
 			return;
 		}

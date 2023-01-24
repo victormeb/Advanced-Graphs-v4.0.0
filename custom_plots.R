@@ -278,7 +278,7 @@ n_spaces_indices_zeros_first <- function(data, n) {
 #   Output:
 #     
 #     A likert plot
-custom_likert <- function(x, title="", wrap_label = FALSE, max_label_length = 30, label_text = 3, legend_text = 35, legend_rows = 1, ...) {
+custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30, label_text = 3, legend_text = 35, legend_rows = 1, ...) {
   wrap_label <- as.logical(unlist(wrap_label))
   max_label_length <- as.numeric(unlist(max_label_length))
   max_label_length <- as.numeric(unlist(max_label_length))
@@ -312,7 +312,7 @@ custom_likert <- function(x, title="", wrap_label = FALSE, max_label_length = 30
                   xlab = "Percent",
                   ylab.right = "")
   
-  if (wrap_label == TRUE && !is.null(max_label_length)) {
+  if (wrap_label = TRUE && !is.null(max_label_length)) {
     x_lab_func <- function(x) str_wrap(x, width = max_label_length)
   } else if (is.numeric(max_label_length) && max_label_length >= 3) {
     x_lab_func <- function(x) str_trunc(x, width = max_label_length)
