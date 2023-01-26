@@ -30,6 +30,8 @@ if ($dash_id != '0') {
 	$dash_title = $module->getDashboardName($pid, $dash_id);
 }
 
+if ($report_id == 0)
+	$report_id = "ALL";
 
 // Header
 include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
@@ -77,11 +79,13 @@ var dashboard_body = <?php echo $dashboard_body;?>;
 var data_dictionary = <?php echo json_encode($module->data_dictionary);?>;
 var pid = <?php echo $pid?>;
 var dash_id = <?php echo $dash_id?>;
-var dash_title = "<?php echo $dash_title?>";
-var report_id = <?php echo $report_id?>;
+var dash_title = "<?php echo addslashes($dash_title)?>";
+var report_id = "<?php echo $report_id?>";
 
 // Used to find categorical fields that uniquely identify locations
 var report = <?php echo json_encode($module->report);?>;
+
+var report_fields = <?php echo json_encode($module->report_fields);?>;
 
 // Urls to other pages
 var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax.php");?>" + "&pid=" + pid;
