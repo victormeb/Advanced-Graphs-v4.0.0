@@ -387,6 +387,18 @@ post_data_dictionary <- function (parameters) {
 #     $field_name2$options_label
 #     [1] "option A", "option B", "option C"
 parse_categories <- function(data) {
+  # replace data dictionary entries where options are yesno or truefalse but the options arent's specified
+  data <- data %>% mutate(
+    select_choices_or_calculations = replace_na(as.character(select_choices_or_calculations), ""),
+    select_choices_or_calculations =
+      case_when(
+        replace_na(as.character(select_choices_or_calculations), "") != "" ~ select_choices_or_calculations,
+        field_type == "yesno" ~ "1, Yes | 0, No",
+        field_type == "truefalse" ~ "1, True | 0, False",
+        TRUE ~ select_choices_or_calculations
+      )
+  )
+  
   # Create a list of categories
   mapply(
     function(field_name, field_label, options) {
