@@ -278,7 +278,7 @@ n_spaces_indices_zeros_first <- function(data, n) {
 #   Output:
 #     
 #     A likert plot
-custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30, label_text = 3, legend_text = 35, legend_rows = 1, ...) {
+custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30, label_text = 3, legend_text = 5, legend_rows = 1, ...) {
   wrap_label <- as.logical(unlist(wrap_label))
   max_label_length <- as.numeric(unlist(max_label_length))
   max_label_length <- as.numeric(unlist(max_label_length))
@@ -351,7 +351,7 @@ custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30,
         #legend.margin = margin(5, 5, 5, 5),
         #legend.box.spacing = unit(1, "cm"),
         legend.title = element_blank(),
-        legend.text = element_text(size = (dev.size("cm")[[1]]*legend_text)/(sum(nchar(levels(x[[1]])))))
+        legend.text = element_text(size = legend_text)
       ) +
       guides(fill = guide_legend(nrow = legend_rows))
       
@@ -514,12 +514,14 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, max_label_length = 20, digits = 2, ...) {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, ...) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
   label2 <- enquo(label2)
   digits <- as.numeric(digits)
+  legend_text <- as.numeric(legend_text)
+  legend_rows <- as.numeric(legend_rows)
   
   margin = 15
   angle_rotation = 45
@@ -609,6 +611,9 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
     # Add viridis colors
     scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
     scale_x_discrete(breaks = bar_breaks, labels = x_lab_func, expand = expansion(c(0.05,0.05))) +
+    ylab(str_wrap(as_label(y), 40)) +
+    xlab(str_wrap(as_label(x), 40)) +
+    guides(fill=guide_legend(nrow = legend_rows)) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
           # Adjust the position of the title to be centered
@@ -631,7 +636,8 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
           # Add a legend ant set its position
          legend.position = "bottom",
          legend.box = "horizontal",
-         legend.title = element_blank()
+         legend.title = element_blank(),
+         legend.text = element_text(size = legend_text)
     )  +
     # Increase the top of the y-axis so labels don't spill off the plot
     scale_y_continuous(expand = expansion(c(0,0.2))) +
@@ -668,11 +674,13 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
 #   Output:
 #     
 #     A pie chart
-custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 15, max_label_length = 20, digits = 2, ...) {
+custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 15, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, ...) {
   # Enquo the x and y variables
   x <- enquo(x)
   y <- enquo(y)
   digits <- as.numeric(digits)
+  legend_text <- as.numeric(legend_text)
+  legend_rows <- as.numeric(legend_rows)
   
   # Get the levels for the bars
   categories <- eval_tidy(x, data %>% arrange(!!x))
@@ -729,13 +737,13 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
     # Convert to pie
     coord_polar(theta = "y", clip = "off") +
     # Add "Turbo" viridis colours
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = categories_kept, labels = x_lab_func) +
+    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", labels = x_lab_func) +
     # Add labels to slices (amounts)
-    
+    xlab(str_wrap(as_label(y), 40)) +
     geom_text(aes(label = replace(round(!!y, digits), !!y == 0, "")),
               position = position_stack(vjust = 0.5),
               color = text_color) +
-    guides(fill=guide_legend(title='')) +
+    guides(fill=guide_legend(title.position= "top", title.hjust = 0.5, nrow = legend_rows)) +
     # Add labels to slices
     #scale_y_continuous(breaks = label_pos$pos, labels = label_pos$label)+
     category_labels + 
@@ -749,7 +757,7 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
       axis.text.x = element_blank(),
       axis.title.y = element_blank(),
       #legend.key.size = unit(0.5, "cm"),
-      #legend.text = element_blank(),
+      legend.text = element_text(size = legend_text),
       #legend.title =element_blank(),
       legend.position = "bottom",
       legend.box = "horizontal",
@@ -797,12 +805,14 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
 #   Output:
 #     
 #     A stacked bar plot
-custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, wrap_labels = FALSE, max_label_length = Inf, digits = 2, sumfunc = "sum", ...) {
+custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, wrap_labels = FALSE, max_label_length = Inf, digits = 2, sumfunc = "sum", legend_text=5, legend_rows=1, ...) {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
   y <- enquo(y)
   fill <- enquo(fill)
   digits <- as.numeric(digits)
+  legend_text <- as.numeric(legend_text)
+  legend_rows <- as.numeric(legend_rows)
   
   # Returns max_bars evenly spaced bar labels
   bar_names <- eval_tidy(x, data = data) %>% unique()
@@ -904,9 +914,11 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     scale_x_discrete(breaks = replace(as.character(bar_names), !(bar_names %in% bar_breaks), ""), labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
     scale_y_continuous(expand = expansion(c(0, 0.25))) +
     # Add a title to the plot
-    ggtitle(title) +
+    #ggtitle(title) +
     # Remove the title from the guide
-    guides(fill=guide_legend(title='')) +
+    guides(fill=guide_legend(title.position= "top", title.hjust = 0.5, nrow = legend_rows)) +
+    ylab(str_wrap(as_label(fill), 40)) +
+    xlab(str_wrap(as_label(x), 40)) +
     theme(
       # Add a border
       panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
@@ -923,7 +935,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
       # Set the size of the y title
       axis.title.y = element_text(size=10),
       # Add a legend
-      legend.text = element_text(size=legend_size),
+      legend.text = element_text(size=legend_text),
       # Position the legend at the bottom
       legend.position = "bottom",
       # Set the legend to display horizontally
@@ -1123,18 +1135,21 @@ custom_sumtab <- function(data, x, y, digits = 0, table_percents = FALSE, ...) {
     htmltools::HTML() 
 }
 
-build_barplot <- function(...) {
+build_barplot <- function(keep_unused = FALSE, ...) {
   args <- lapply(X = list(...), FUN = unlist)
+  keep_unused = as.logical(unlist(keep_unused))
   if (!exists("x", args))
     return("<h1>Must provide and x field</h1>")
+  field_names <- list()
   
   x <- args[['x']]
   x_label <- names_to_labels[x]
+  field_names[['x']] <- args[['x']]
   args[['x']] <- sym(x_label)
   
   grouping_fnc <- . %>%
     mutate(across(all_of(x), function(col) addNA(factor(col, options[[cur_column()]][['options_code']], options[[cur_column()]][['options_label']]), ifany = TRUE), .names = "{names_to_labels[.col]}")) %>%
-    group_by(!!sym(x_label), .drop = FALSE)
+    group_by(!!sym(x_label), .drop = !keep_unused)
   
   summarised_fnc <- . %>%
     summarize(Count = n()) %>%
@@ -1172,6 +1187,7 @@ build_barplot <- function(...) {
     
     y <- args[['y']]
     y_label <- names_to_labels[y]
+    field_names[['x']] <- args[['x']]
     args[['y']] <- sym(y_label)
     
     args[['fill']] <- sym(height_name)
@@ -1180,18 +1196,42 @@ build_barplot <- function(...) {
     
     grouping_fnc <- . %>%
       mutate(across(all_of(c(x, y)), function(col) addNA(factor(col, options[[cur_column()]][['options_code']], options[[cur_column()]][['options_label']]), ifany = TRUE), .names = "{names_to_labels[.col]}")) %>%
-      group_by(!!sym(x_label), !!sym(y_label), .drop = FALSE)
+      group_by(!!sym(x_label), !!sym(y_label), .drop = !keep_unused)
     
     graph_fnc <- custom_stacked
   } else {
     args[['y']] <- sym(height_name)
   }
   
+  checkbox_group_x <- . %>% mutate()
+  checkbox_group_y <- . %>% mutate()
   
+  if (exists('checkbox_fields', args)) {
+    if ('x' %in% args[['checkbox_fields']]) {
+      checkbox_group_x <- . %>% 
+        # (function(data) {print(paste("prob", x));return(data);}) %>%
+        pivot_longer(cols = matches(paste0(x, "___[0-9]+\\b")), names_to = x, values_to = "adv_graph_internal_value") %>%
+        mutate(across(all_of(x), str_extract, pattern="[0-9]+\\b")) %>%
+        # (function(data) {print(data);return(data);}) %>%
+        filter(adv_graph_internal_value == '1') %>%
+        select(!adv_graph_internal_value)
+    }
+    if ('y' %in% args[['checkbox_fields']]) {
+      checkbox_group_y <- . %>% 
+        pivot_longer(cols = matches(paste0(y, "___[0-9]+\\b")), names_to = y, values_to = "adv_graph_internal_value") %>%
+        mutate(across(all_of(y), str_extract, pattern="[0-9]+\\b")) %>%
+        filter(adv_graph_internal_value == '1') %>%
+        select(!adv_graph_internal_value)
+    }
+  }
   
   args[['data']] <- report_data %>%
+    # (function(data) {print(options);return(data);}) %>%
+    checkbox_group_x %>%
+    checkbox_group_y %>%
     grouping_fnc %>%
-    summarised_fnc
+    summarised_fnc #%>%
+    # (function(data) {print(data %>% select(c(last_col(2):last_col())));return(data);})
   
   p <- do.call(graph_fnc, args)
   
@@ -1354,6 +1394,7 @@ build_map <- function(cluster_by, ...) {
   }
   
   args[['data']] <- report_data %>%
+    filter(!if_any(all_of(c(args[["lat"]], args[["lng"]])), is.na)) %>%
     type_fn %>%
     grouping_fn %>%
     summary_fn
