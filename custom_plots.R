@@ -430,14 +430,31 @@ build_likert <- function(...) {
 #   Output:
 #     
 #     A scatter plot
-custom_scatter <- function(data, x, y, line = FALSE) {
+custom_scatter <- function(data, x, y, line = FALSE, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
   # Enquo the x and y columns
   x <- enquo(x)
   y <- enquo(y)
   
+  x_label = ''
+  y_label = ''
+  
+  if (x_axis_logic == 'wrap')
+    x_label = str_wrap(as_label(x), 40)
+  
+  if (y_axis_logic == 'wrap')
+    y_label = str_wrap(as_label(y), 40)
+  
+  if (x_axis_logic == 'trunc')
+    x_label = str_trunc(as_label(x), 40)
+  
+  if (y_axis_logic == 'trunc')
+    y_label = str_trunc(as_label(y), 40)
+  
   # Pass the data to ggplot
   data %>%
     ggplot(aes(x = !!x, y = !!y)) +
+    xlab(x_label) +
+    ylab(y_label) +
       if (line == TRUE)
         # If line is true add a line
         geom_line(colour = "blue")
@@ -514,7 +531,7 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, ...) {
+custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -522,6 +539,21 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
   digits <- as.numeric(digits)
   legend_text <- as.numeric(legend_text)
   legend_rows <- as.numeric(legend_rows)
+  
+  x_label = ''
+  y_label = ''
+  
+  if (x_axis_logic == 'wrap')
+    x_label = str_wrap(as_label(x), 40)
+  
+  if (y_axis_logic == 'wrap')
+    y_label = str_wrap(as_label(y), 40)
+  
+  if (x_axis_logic == 'trunc')
+    x_label = str_trunc(as_label(x), 40)
+  
+  if (y_axis_logic == 'trunc')
+    y_label = str_trunc(as_label(y), 40)
   
   margin = 15
   angle_rotation = 45
@@ -611,8 +643,8 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
     # Add viridis colors
     scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
     scale_x_discrete(breaks = bar_breaks, labels = x_lab_func, expand = expansion(c(0.05,0.05))) +
-    ylab(str_wrap(as_label(y), 40)) +
-    xlab(str_wrap(as_label(x), 40)) +
+    ylab(y_label) +
+    xlab(x_label) +
     guides(fill=guide_legend(nrow = legend_rows)) +
     # Add a border
     theme(panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),
@@ -674,13 +706,28 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
 #   Output:
 #     
 #     A pie chart
-custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 15, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, ...) {
+custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 15, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
   # Enquo the x and y variables
   x <- enquo(x)
   y <- enquo(y)
   digits <- as.numeric(digits)
   legend_text <- as.numeric(legend_text)
   legend_rows <- as.numeric(legend_rows)
+  
+  x_label = ''
+  y_label = ''
+  
+  if (x_axis_logic == 'wrap')
+    x_label = str_wrap(as_label(x), 40)
+  
+  if (y_axis_logic == 'wrap')
+    y_label = str_wrap(as_label(y), 40)
+  
+  if (x_axis_logic == 'trunc')
+    x_label = str_trunc(as_label(x), 40)
+  
+  if (y_axis_logic == 'trunc')
+    y_label = str_trunc(as_label(y), 40)
   
   # Get the levels for the bars
   categories <- eval_tidy(x, data %>% arrange(!!x))
@@ -739,7 +786,7 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
     # Add "Turbo" viridis colours
     scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", labels = x_lab_func) +
     # Add labels to slices (amounts)
-    xlab(str_wrap(as_label(y), 40)) +
+    xlab(str_wrap(y_label, 40)) +
     geom_text(aes(label = replace(round(!!y, digits), !!y == 0, "")),
               position = position_stack(vjust = 0.5),
               color = text_color) +
@@ -805,7 +852,7 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
 #   Output:
 #     
 #     A stacked bar plot
-custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, wrap_labels = FALSE, max_label_length = Inf, digits = 2, sumfunc = "sum", legend_text=5, legend_rows=1, ...) {
+custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, wrap_labels = FALSE, max_label_length = Inf, digits = 2, sumfunc = "sum", legend_text=5, legend_rows=1, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -813,6 +860,21 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   digits <- as.numeric(digits)
   legend_text <- as.numeric(legend_text)
   legend_rows <- as.numeric(legend_rows)
+  
+  x_label = ''
+  y_label = ''
+  
+  if (x_axis_logic == 'wrap')
+    x_label = str_wrap(as_label(x), 40)
+  
+  if (y_axis_logic == 'wrap')
+    y_label = str_wrap(as_label(fill), 40)
+  
+  if (x_axis_logic == 'trunc')
+    x_label = str_trunc(as_label(x), 40)
+  
+  if (y_axis_logic == 'trunc')
+    y_label = str_trunc(as_label(fill), 40)
   
   # Returns max_bars evenly spaced bar labels
   bar_names <- eval_tidy(x, data = data) %>% unique()
@@ -917,8 +979,8 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     #ggtitle(title) +
     # Remove the title from the guide
     guides(fill=guide_legend(title.position= "top", title.hjust = 0.5, nrow = legend_rows)) +
-    ylab(str_wrap(as_label(fill), 40)) +
-    xlab(str_wrap(as_label(x), 40)) +
+    ylab(y_label) +
+    xlab(x_label) +
     theme(
       # Add a border
       panel.border = element_rect(linetype = "blank", size= 0.9, fill = NA),

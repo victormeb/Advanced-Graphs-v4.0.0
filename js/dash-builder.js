@@ -581,12 +581,22 @@ function barplot_form(button) {
 			<hr>
 			<div class="radio label-length">
 				<label>Bar Label Digits <input type="number" step="1" name="digits" value="2"></label>
-				<hr><h3>How should labels be handeled?</h3>
+				<hr><h3>How should option labels be handeled?</h3>
 				<label class="radio-label"><input class="radio-state" name="wrap_label" type="radio" value="true" checked><div class="radio-button"></div>Wrap</label>
 				<label class="radio-label"><input class="radio-state" name="wrap_label" type="radio" value="false"><div class="radio-button"></div>Truncate</label>
 				<label class="radio-label"><input class="radio-state label-as-is" name="wrap_label" type="radio" value="false"><div class="radio-button"></div>As-is</label>
 				<br><label class="label-length-label"><span class="trunc-wrap">Wrap</span> after <input type="number" class="max_label_length" step="1" name="max_label_length" value="30"></input> characters</label>
 		  	</div>
+			<div class="radio axis-logic">
+				<hr><h3>How should x-axis be handeled?</h3>
+				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+				<label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+				<hr><h3>How should y-axis be handeled?</h3>
+				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+				<label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+			</div>
 			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="7"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="close-options" type="button">Close</button>`;
@@ -1264,7 +1274,7 @@ function network_form(button) {
 			<label>Arrow Width<input type="number" step="0.1" name="arrow_width" value = "0.5"></input></label><br>
 			<label>Arrow Size<input type="number" step="0.1" name="arrow_width" value = "0.5"></input></label><br>
 			<label>Vertex Size<input type="number" step="0.1" name="vertex_size" value = "5"></input></label><br>
-			<label>Vertex Label Size<input type="number" step="0.1" name="vertex_label_size" value = "0.4"></input></label><br>
+			<label>Vertex Label Size<input type="number" step="0.1" name="vertex_label_size" value = "1.2"></input></label><br>
 			<button class="close-options" type="button">Close</button>`;
 
 	// Create a new form with default buttons
