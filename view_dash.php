@@ -43,7 +43,7 @@ $original_params = json_encode($query);
     var report_object = <?php echo $dashboard['body'];?>;
     var live_filters = <?php echo $dashboard['live_filters'];?>;
     var pid = <?php echo $pid;?>;
-    var report_id = <?php echo $dashboard['report_id'];?>;
+    var report_id = "<?php echo $dashboard['report_id'];?>";
     var refferer_parameters = <?php echo $original_params;?>;
     // Urls to other pages
     var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax.php");?>" + "&pid=" + pid;

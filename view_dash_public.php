@@ -14,6 +14,13 @@ $objHtmlPage->PrintHeader(false);
 
 // // Header
 // include APP_PATH_DOCROOT . 'ProjectGeneral/print_page.php';
+$dashboard = $module->getDashboards($pid, $dash_id);
+
+if ($dashboard['is_public'] != "1") {
+    echo "<h1>Advanced Graphs</h1><h2 style='color: red;'>This is not a publicly available dashboard</h2>";
+    exit(0);
+}
+
 $module->loadJS("dash-builder.js");
 $module->loadJS("jquery.min.js", "mapdependencies/jquery-1.12.4");
 $module->loadJS("htmlwidgets.js", "mapdependencies/htmlwidgets-1.5.4");
@@ -30,13 +37,6 @@ $module->loadJS("leaflet.markercluster.js", "mapdependencies/leaflet-markerclust
 $module->loadJS("leaflet.markercluster.freezable.js", "mapdependencies/leaflet-markercluster-1.0.5");
 $module->loadJS("leaflet.markercluster.layersupport.js", "mapdependencies/leaflet-markercluster-1.0.5");
 $module->loadCSS("advanced-graphs.css");
-
-$dashboard = $module->getDashboards($pid, $dash_id);
-
-if ($dashboard['is_public'] != "1") {
-    echo "<h1>Advanced Graphs</h1><h2 style='color: red;'>This is not a publicly available dashboard</h2>";
-    exit(0);
-}
     
 echo "<center><h1>$dash_title</h1></center><div id=\"advanced_graphs\"><h2>Loading your dashboard</h1></div>";
 
@@ -53,7 +53,7 @@ echo "<center><h1>$dash_title</h1></center><div id=\"advanced_graphs\"><h2>Loadi
     var report_object = <?php echo $dashboard['body'];?>;
     var live_filters = <?php echo $dashboard['live_filters']?>;
     var pid = <?php echo $pid;?>;
-    var report_id = <?php echo $dashboard['report_id'];?>;
+    var report_id = "<?php echo $dashboard['report_id'];?>";
     // Urls to other pages
     var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax_public.php");?>" + "&NOAUTH" + "&pid=" + pid ;
     console.log(report_object);
