@@ -179,6 +179,11 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				return(null);
 		}
 
+		// if ($link['id'] == "advanced_graphs_config") {
+		// 	if (!$this->getUser()->isSuperUser())
+		// 		return(null);
+		// }
+
 		return($link);
 
 
@@ -345,9 +350,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			foreach ($eventForms as $dkey=>$row){
 				$event_name = Event::getEventNameById($Proj->project_id,$dkey);
 				$sql = "select form_name, custom_repeat_form_label from redcap_events_repeat where event_id = " . db_escape($dkey) . "";
-				$q = db_query($sql);
+				$q = $this->query($sql);
 				if(db_num_rows($q) > 0){
-					while ($row = db_fetch_assoc($q)){
+					while ($row = $q->fetch_assoc()){
 						$form_name = ($row['form_name'] ? $row['form_name'] : '');
 						$form_label = ($row['custom_repeat_form_label'] ? $row['custom_repeat_form_label'] : '');
 						$results[] = array('event_name'=>$event_name, 'form_name'=>$form_name, 'custom_form_label'=>$form_label);
@@ -479,6 +484,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$removeUnvalidatedTextFields = true;
 		$removeNotesFields = true;
 		$removeDateFields = true;
+
+		if ($report_id == 0)
+			$report_id = "ALL";
 		
 		if ($user_id) {
 			// Get user rights
@@ -515,9 +523,296 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		return $content;
 	}
 
-	// function get_report_2($report_id, $live_filters, $format="csvraw") {
+	function getReport($pid, $report_id) {
+		global $lang, $user_rights;
+		$report = array();
+		$Proj = $this->getProject($pid);
 
-	// }
+		if ($report_id === 0 || $report_id == 'ALL' || $report_id == 'SELECTED') {
+			// Add to reports array
+			$report = getTableColumns('redcap_reports');
+			// Pre-fill empty slots for limiters and fields
+			$report['fields'] = array();
+			$report['limiter_fields'] = array();
+			$report['limiter_dags'] = array();
+			$report['limiter_events'] = array();
+			$report['limiter_logic'] = "";
+			$report['user_access_users'] = array();
+			$report['user_access_roles'] = array();
+			$report['user_access_dags'] = array();
+			$report['user_edit_access_users'] = array();
+			$report['user_edit_access_roles'] = array();
+			$report['user_edit_access_dags'] = array();
+			$report['output_dags'] = 0;
+			$report['output_survey_fields'] = 0;
+			$report['output_missing_data_codes'] = 0;
+			$report['remove_line_breaks_in_values'] = 1;
+			$report['filter_type'] = 'RECORD';
+			$report['dynamic_filter1'] = $Proj->table_pk;
+			if ($Proj->longitudinal) {
+				$report['dynamic_filter2'] = '__EVENTS__';
+			}
+			if ($Proj->hasGroups() && isset($user_rights['group_id']) && $user_rights['group_id'] == '') {
+				$report[($Proj->longitudinal ? 'dynamic_filter3' : 'dynamic_filter2')] = '__DATA_ACCESS_GROUPS__';
+			}
+			// Set additional settings for pre-defined reports
+			if ($report_id === 'ALL') {
+				// All data
+				$report['title'] = $lang['report_builder_80']." ".$lang['report_builder_84'];
+				$report['fields'] = array_keys($Proj->metadata);
+			}  
+			// DDE: If user is DDE person 1 or 2, then limit to ONLY their records
+			if ($double_data_entry && is_array($user_rights) && $user_rights['double_data'] != 0) {
+				if ($report['limiter_logic'] == '') {
+					$report['limiter_logic'] = "ends_with([{$Proj->table_pk}], \"--{$user_rights['double_data']}\")";
+				} else {
+					$report['limiter_logic'] = "({$report['limiter_logic']}) and ends_with([{$Proj->table_pk}], \"--{$user_rights['double_data']}\")";
+				}
+			}
+			// Return array
+			return $report;
+		}
+
+		// Get main attributes
+		$sql = "select * from redcap_reports where project_id = $pid and report_id = $report_id";
+		$q = $this->query($sql);
+
+		
+		if ($row =  $q->fetch_assoc()) {
+			// Add to reports array
+			$report = $row;
+			// Pre-fill empty slots for limiters and fields
+			$report['fields'] = array();
+			$report['limiter_fields'] = array();
+			$report['limiter_dags'] = array();
+			$report['limiter_events'] = array();
+			$report['limiter_logic'] = "";
+			$report['user_access_users'] = array();
+			$report['user_access_roles'] = array();
+			$report['user_access_dags'] = array();
+			$report['user_edit_access_users'] = array();
+			$report['user_edit_access_roles'] = array();
+			$report['user_edit_access_dags'] = array();
+		}
+
+		// If no reports, then return empty array
+		if (empty($report)) return array();
+
+		// Get list of fields in report
+		$sql = "select * from redcap_reports_fields where report_id = $report_id
+				order by field_order";
+		$q = $this->query($sql);
+		while ($row =  $q->fetch_assoc()) {
+			// If field does not (or no longer) exists in project, then skip it
+			if (!isset($Proj->metadata[$row['field_name']])) continue;
+			// It is limiter if has limiter_operator
+			if ($row['limiter_operator'] != '') {
+				// Just in case checkbox limiters that got grandfathered in from pre-6.0 have E or NE, convert to CHECKED or UNCHECKED.
+				if ($Proj->isCheckbox($row['field_name']) && in_array($row['limiter_operator'], array('E', 'NE'))) {
+					$row['limiter_operator'] = ($row['limiter_operator'] == 'E') ? 'CHECKED' : 'UNCHECKED';
+				}
+				// If field is a date/time field, then make sure the date/time is in correct format and not missing leading zeroes
+				$thisValType = $Proj->metadata[$row['field_name']]['element_validation_type'];
+				if ($thisValType != '' && $row['limiter_value'] != '' && isset($valTypes[$thisValType]) && in_array($valTypes[$thisValType]['data_type'], array('date', 'datetime', 'datetime_seconds'))) {
+					// Separate value into date/time components
+					list ($thisDate, $thisTime) = explode(" ", $row['limiter_value'], 2);
+					// Fix date
+					if (strlen($thisDate) < 10) {
+						list ($y, $m, $d) = explode("-", $thisDate, 3);
+						$thisDate = sprintf("%04d-%02d-%02d", $y, $m, $d);
+					}
+					// Fix time
+					if ($thisTime != '') {
+						if (substr_count($thisTime, ":") == 2) {
+							// H:M:S
+							list ($h, $m, $s) = explode(":", $thisTime, 3);
+							$thisTime = sprintf("%02d:%02d:%02d", $h, $m, $s);
+						} else {
+							// H:M
+							list ($h, $m) = explode(":", $thisTime, 2);
+							$thisTime = sprintf("%02d:%02d", $h, $m);
+						}
+					}
+					// Re-combine components
+					$row['limiter_value'] = trim("$thisDate $thisTime");
+				}
+				// Limiter field
+				$report['limiter_fields'][] = array(
+						'field_name'=>$row['field_name'],
+						'limiter_group_operator'=>$row['limiter_group_operator'],
+						'limiter_event_id'=>$row['limiter_event_id'],
+						'limiter_operator'=>$row['limiter_operator'],
+						'limiter_value'=>$row['limiter_value']);
+			} else {
+				// Report field
+				$report['fields'][] = $row['field_name'];
+			}
+		}
+		// Get event filters
+		$sql = "select * from redcap_reports_filter_events where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['limiter_events'][] = $row['event_id'];
+		}
+
+		// Get DAG filters
+		$sql = "select * from redcap_reports_filter_dags where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['limiter_dags'][] = $row['group_id'];
+		}
+		// Get user access - users
+		$sql = "select * from redcap_reports_access_users where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['user_access_users'][] = $row['username'];
+		}
+		// Get user access - roles
+		$sql = "select * from redcap_reports_access_roles where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['user_access_roles'][] = $row['role_id'];
+		}
+		// Get user access - DAGs
+		$sql = "select * from redcap_reports_access_dags where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['user_access_dags'][] = $row['group_id'];
+		}
+		// Get user edit access - users
+		$sql = "select * from redcap_reports_edit_access_users where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['user_edit_access_users'][] = $row['username'];
+		}
+		// Get user edit access - roles
+		$sql = "select * from redcap_reports_edit_access_roles where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['user_edit_access_roles'][] = $row['role_id'];
+		}
+		// Get user edit access - DAGs
+		$sql = "select * from redcap_reports_edit_access_dags where report_id in (" . prep_implode(array_keys($reports)) . ")";
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
+			$report['user_edit_access_dags'][] = $row['group_id'];
+		}
+		// Loop through all reports and build the filter logic into a single string
+		foreach ($reports as $this_report_id=>$rattr)
+		{
+			// Advanced logic
+			if ($rattr['advanced_logic'] != '') {
+				$report['limiter_logic'] = $rattr['advanced_logic'];
+			}
+			// Simple logic
+			elseif (!empty($rattr['limiter_fields'])) {
+				foreach ($rattr['limiter_fields'] as $i=>$attr) {
+					// Translate the limiter item into logic
+					$report['limiter_logic'] .= ($attr['limiter_group_operator'] == 'AND' ? ($i == 0 ? "(" : ") AND (") : " OR ") .
+																  self::translateLimiterItem($attr);
+				}
+				// Finish with ending parenthesis
+				$report['limiter_logic'] .= ")";
+			}
+
+			// DDE: If user is DDE person 1 or 2, then limit to ONLY their records by appending ends_with() onto limiter_logic
+			if ($double_data_entry && is_array($user_rights) && $user_rights['double_data'] != 0) {
+				if ($report['limiter_logic'] == '') {
+					$report['limiter_logic'] = "ends_with([{$Proj->table_pk}], \"--{$user_rights['double_data']}\")";
+				} else {
+					$report['limiter_logic'] = "({$report['limiter_logic']}) and ends_with([{$Proj->table_pk}], \"--{$user_rights['double_data']}\")";
+				}
+			}
+
+			// Double check to make sure that it truly has SELECTED user access
+			if ($rattr['user_access'] == 'SELECTED' && empty($rattr['user_access_users']) && empty($rattr['user_access_roles']) && empty($rattr['user_access_dags'])) {
+				$report['user_access'] = 'ALL';
+			}
+			if ($rattr['user_edit_access'] == 'SELECTED' && empty($rattr['user_edit_access_users']) && empty($rattr['user_edit_access_roles']) && empty($rattr['user_edit_access_dags'])) {
+				$report['user_edit_access'] = 'ALL';
+			}
+
+			// Make sure that Order By fields are NOT checkboxes (because that doesn't make sense)
+			if ($Proj->isCheckbox($report['orderby_field3'])) {
+				$report['orderby_field3'] = $report['orderby_sort3'] = '';
+			}
+			if ($Proj->isCheckbox($report['orderby_field2'])) {
+				$report['orderby_field2'] = $report['orderby_field3'];
+				$report['orderby_sort2'] = $report['orderby_sort3'];
+				$report['orderby_field3'] = $report['orderby_sort3'] = '';
+			}
+			if ($Proj->isCheckbox($report['orderby_field1'])) {
+				$report['orderby_field1'] = $report['orderby_field2'];
+				$report['orderby_sort1'] = $report['orderby_sort2'];
+				$report['orderby_field2'] = $report['orderby_field3'];
+				$report['orderby_sort2'] = $report['orderby_sort3'];
+				$report['orderby_field3'] = $report['orderby_sort3'] = '';
+			}
+		}
+		// Return array of report(s) attributes
+		return $report;
+	}
+
+	function doReport($pid, $report_id, $format, $live_filters) {
+		
+
+		
+
+		$report_fields = array();
+
+		$sql = "select * from redcap_reports_fields where project_id = $pid and report_id = $report_id";
+		$q = $this->query($sql);
+		while ($row =  $q->fetch_assoc()) {
+			$report_fields[] = $row['field_name'];
+		}
+
+				// If a live filter is being used, then append it to our existing limiter logic from the report's attributes
+				if ($liveFilterLogic != "") {
+					if ($report['limiter_logic'] != '') {
+						$report['limiter_logic'] = "({$report['limiter_logic']}) and ";
+					}
+					$report['limiter_logic'] .= $liveFilterLogic;
+				}
+
+		$data_content = $this->getData($pid, $format, array(), $report_fields);
+
+	}
+
+	// Translate a single limiter item's attributes into its appropriate logic
+	public static function translateLimiterItem($attr)
+	{
+		global $Proj;
+		// If longitudinal, then get unique event name to prepend to field in logic
+		$event_name = ($Proj->longitudinal && is_numeric($attr['limiter_event_id'])) ? "[".$Proj->getUniqueEventNames($attr['limiter_event_id'])."]" : "";
+		// If is "contains", "not contain", "starts_with", or "ends_with"
+		if (in_array($attr['limiter_operator'], array('CONTAINS', 'NOT_CONTAIN', 'STARTS_WITH', 'ENDS_WITH'))) {
+			return strtolower($attr['limiter_operator'])."({$event_name}[{$attr['field_name']}], \"" . str_replace('"', "\\\"", $attr['limiter_value']) . "\")";
+		}
+		// If is "checked" or "unchecked"
+		elseif ($attr['limiter_operator'] == 'CHECKED' || $attr['limiter_operator'] == 'UNCHECKED') {
+			$checkVal = ($attr['limiter_operator'] == 'CHECKED') ? "1" : "0";
+			return "{$event_name}[{$attr['field_name']}({$attr['limiter_value']})] = \"$checkVal\"";
+		}
+		// All mathematical operators
+		else {
+			// If value is numerical and using >, >=, <, or <=, then don't surround in double quotes
+			$quotes = (is_numeric($attr['limiter_value']) && $attr['limiter_operator'] != 'E' && $attr['limiter_operator'] != 'NE') ? '' : '"';
+			return "{$event_name}[{$attr['field_name']}] " . self::translateLimiterOperator($attr['limiter_operator']) .
+						" $quotes" . str_replace('"', "\\\"", $attr['limiter_value']) . $quotes;
+		}
+	}
+
+
+	// Translate backend limiter operator (LT, GTE, E) into mathematical operator (<, >=, =)
+	public static function translateLimiterOperator($backend_value)
+	{
+		$all_options = array('E'=>'=', 'NE'=>'!=', 'LT'=>'<', 'LTE'=>'<=', 'GT'=>'>', 'GTE'=>'>=');
+		return (isset($all_options[$backend_value]) ? $all_options[$backend_value] : 'E');
+	}
+
+	function get_report_2() { //$report_id, $live_filters, $format="csvraw"
+		return query("select * from redcap_reports_fields")->fetch_assoc();
+	}
 
 	function add_instrument_labels($grouped_fields) {
 		if (!isset($this->instruments_dictionary))
@@ -712,12 +1007,47 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				$categorical_fields['adv_graph_non_repeating']['fields'][] = $field_name;
 			}
 		}
-			// If by instrument is empty return an empty array
-			if (!$categorical_fields)
-				return array();
-	
-			// Return the fields grouped by instrument
-			return self::add_instrument_labels($categorical_fields);
+
+		// If by instrument is empty return an empty array
+		if (!$categorical_fields)
+			return array();
+
+		// Return the fields grouped by instrument
+		return self::add_instrument_labels($categorical_fields);
+	}
+
+	function checkbox_groups() {
+		if (!isset($this->data_dictionary) || !isset($this->report_fields) || !isset($this->repeats_dictionary))
+			return false;
+
+		// Create an array that groups fields by repeating instruments
+		$checkbox_fields = array();
+
+		// For each field
+		foreach($this->report_fields as $field_name) {
+			$field = $this->data_dictionary[$field_name];
+
+			$type_is_checkbox = $field['field_type'] == 'checkbox';
+
+			// If the field is checkbox add it to the corresponding instrument
+			if ($type_is_checkbox) {
+				// Match it to the appopriate instrument.
+				if (in_array($field['form_name'], array_keys($this->repeats_dictionary))) {
+					$checkbox_fields[$field['form_name']]['fields'][] = $field_name;
+					continue;
+				} 
+
+				// If it does not belong to a repeat instrument map it to the non-repeating instrument category
+				$checkbox_fields['adv_graph_non_repeating']['fields'][] = $field_name;
+			}
+		}
+
+		// If by instrument is empty return an empty array
+		if (!$checkbox_fields)
+			return array();
+
+		// Return the fields grouped by instrument
+		return self::add_instrument_labels($checkbox_fields);
 	}
 	
 	function barplot_groups() {
@@ -739,6 +1069,14 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			foreach($categorical_grouped as $instrument => $barplot_field) {
 				foreach ($barplot_field['fields'] as $field) {
 					$barplot_grouped[$instrument]['fields']['Categorical'][] = $field;
+				}
+			}
+
+			$checkbox_grouped = self::checkbox_groups();
+
+			foreach($checkbox_grouped as $instrument => $barplot_field) {
+				foreach ($barplot_field['fields'] as $field) {
+					$barplot_grouped[$instrument]['fields']['Checkbox'][] = $field;
 				}
 			}
 
@@ -1000,6 +1338,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// Save dashboard
 	public function saveDash($pid, $report_id, $live_filters, $dash_id, $title, $graphs, $is_public)
 	{
+		if ($report_id == "ALL")
+			$report_id = 0;
 
 		// extract($GLOBALS);
 		// echo json_encode($report_id);
@@ -1147,8 +1487,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$sql = "select * from advanced_graphs_dashboards where project_id = ".$project_id;
 		if (is_numeric($dash_id)) $sql .= " and dash_id = $dash_id";
 		$sql .= " order by dash_order";
-		$q = db_query($sql);
-		while ($row = db_fetch_assoc($q)) {
+		$q = $this->query($sql);
+		while ($row = $q->fetch_assoc()) {
 			// Add to reports array
 			$dashboards[$row['dash_id']] = $row;
 			$dashboards[$row['dash_id']]['user_access_users'] = array();
@@ -1168,20 +1508,20 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// TODO USER ACCESS???
 	// 	// Get user access - users
 	// 	$sql = "select * from redcap_project_dashboards_access_users where dash_id in (" . prep_implode(array_keys($dashboards)) . ")";
-	// 	$q = db_query($sql);
-	// 	while ($row = db_fetch_assoc($q)) {
+	// 	$q = $this->query($sql);
+	// 	while ($row = $q->fetch_assoc()) {
 	// 		$dashboards[$row['dash_id']]['user_access_users'][] = $row['username'];
 	// 	}
 	// 	// Get user access - roles
 	// 	$sql = "select * from redcap_project_dashboards_access_roles where dash_id in (" . prep_implode(array_keys($dashboards)) . ")";
-	// 	$q = db_query($sql);
-	// 	while ($row = db_fetch_assoc($q)) {
+	// 	$q = $this->query($sql);
+	// 	while ($row = $q->fetch_assoc()) {
 	// 		$dashboards[$row['dash_id']]['user_access_roles'][] = $row['role_id'];
 	// 	}
 	// 	// Get user access - DAGs
 	// 	$sql = "select * from redcap_project_dashboards_access_dags where dash_id in (" . prep_implode(array_keys($dashboards)) . ")";
-	// 	$q = db_query($sql);
-	// 	while ($row = db_fetch_assoc($q)) {
+	// 	$q = $this->query($sql);
+	// 	while ($row = $q->fetch_assoc()) {
 	// 		$dashboards[$row['dash_id']]['user_access_dags'][] = $row['group_id'];
 	// 	}
 	// 	// Return array of report(s) attributes
@@ -1198,7 +1538,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	{
 		// Delete report
 		$sql = "select title from advanced_graphs_dashboards where project_id = ".$pid." and dash_id = $dash_id";
-		$q = db_query($sql);
+		$q = $this->query($sql);
 		$title = strip_tags(label_decode(db_result($q, 0)));
 		return $title;
 	}
@@ -1223,7 +1563,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	public function renderSetupPage()
 	{
 		// die(json_encode($this->query("select * from advanced_graphs_dashboards")->fetch_all()));
-		echo $this->renderDashboardList();
+		print "<div id='dashboard_list_parent_div' class='mt-3'>".$this->renderDashboardList()."</div>";
 	}
 
 	// // Checks for errors in the dashboard order of all dashboards (in case their numbering gets off)
@@ -1234,8 +1574,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// 	$sql = "select sum(dash_order) as actual, round(count(1)*(count(1)+1)/2) as ideal,
 	// 			min(dash_order) as min, max(dash_order) as max, count(1) as dash_count
 	// 			from redcap_project_dashboards where project_id = " . PROJECT_ID;
-	// 	$q = db_query($sql);
-	// 	$row = db_fetch_assoc($q);
+	// 	$q = $this->query($sql);
+	// 	$row = $q->fetch_assoc();
 	// 	db_free_result($q);
 	// 	if ( ($row['actual'] != $row['ideal']) || ($row['min'] != '1') || ($row['max'] != $row['dash_count']) )
 	// 	{
@@ -1248,7 +1588,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// {
 	// 	// Set all dash_orders to null
 	// 	$sql = "select @n := 0";
-	// 	db_query($sql);
+	// 	$this->query($sql);
 	// 	// Reset field_order of all fields, beginning with "1"
 	// 	$sql = "update redcap_project_dashboards
 	// 			set dash_order = @n := @n + 1 where project_id = ".PROJECT_ID."
@@ -1259,21 +1599,21 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// 		$sql = "select dash_id from redcap_project_dashboards
     //                 where project_id = ".PROJECT_ID."
     //                 order by dash_order, dash_id";
-	// 		$q = db_query($sql);
+	// 		$q = $this->query($sql);
 	// 		$dash_order = 1;
 	// 		$dash_orders = array();
-	// 		while ($row = db_fetch_assoc($q)) {
+	// 		while ($row = $q->fetch_assoc()) {
 	// 			$dash_orders[$row['dash_id']] = $dash_order++;
 	// 		}
 	// 		// Reset all orders to null
 	// 		$sql = "update redcap_project_dashboards set dash_order = null where project_id = ".PROJECT_ID;
-	// 		db_query($sql);
+	// 		$this->query($sql);
 	// 		foreach ($dash_orders as $dash_id=>$dash_order) {
 	// 		    // Set order of each individually
 	// 			$sql = "update redcap_project_dashboards
     //                     set dash_order = $dash_order 
     //                     where dash_id = $dash_id";
-	// 			db_query($sql);
+	// 			$this->query($sql);
 	// 		}
 	// 	}
 	// 	// Return boolean on success
@@ -1361,9 +1701,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		if (isinteger($dash_id) && $dash_id > 0) {
 			$sql .= " and dash_id = $dash_id";
 		}
-		$q = db_query($sql);
+		$q = $this->query($sql);
 		$dash_ids = [];
-		while ($row = db_fetch_assoc($q)) {
+		while ($row = $q->fetch_assoc()) {
 			$dash_ids[] = $row['dash_id'];
 		}
 		// Loop through each dashboard
@@ -1375,7 +1715,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				$unique_name = generateRandomHash(11, false, true);
 				// Update the table
 				$sql = "update advanced_graphs_dashboards set hash = '".db_escape($unique_name)."' where dash_id = $dash_id";
-				$success = db_query($sql);
+				$success = $this->query($sql);
 			}
 		}
 	}
@@ -1386,7 +1726,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$title = $this->getDashboardName($pid, $dash_id);
 		// Delete report
 		$sql = "delete from advanced_graphs_dashboards where project_id = ".$pid." and dash_id = $dash_id";
-		$q = db_query($sql);
+		$q = $this->query($sql);
 		if (!$q) return false;
 		// Fix ordering of reports (if needed) now that this report has been removed
 		$this->checkDashOrder();
@@ -1394,6 +1734,68 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		Logging::logEvent($sql, "advanced_graphs_dashboards", "MANAGE", $dash_id, "dash_id = $dash_id", "Delete project dashboard" . " - \"$title\"");
 		// Return success
 		return true;
+	}
+
+	// Copy the report and return the new dash_id
+	public function copyDash($pid, $dash_id)
+	{
+		// Set up all actions as a transaction to ensure everything is done here
+		db_query("SET AUTOCOMMIT=0");
+		db_query("BEGIN");
+		$errors = 0;
+		// List of all db tables relating to reports, excluding redcap_project_dashboards
+		// $tables = array('redcap_project_dashboards_access_dags', 'redcap_project_dashboards_access_roles', 'redcap_project_dashboards_access_users');
+		// First, add row to redcap_project_dashboards and get new report id
+		$table = getTableColumns('advanced_graphs_dashboards');
+		// Get report attributes
+		$dash = $this->getDashboards($pid, $dash_id);
+		// Remove dash_id from arrays to prevent query issues
+		unset($dash['dash_id'], $table['dash_id'], $dash['hash'], $table['hash'], $dash['short_url'], $table['short_url']);
+		// Append "(copy)" to title to differeniate it from original
+		$dash['title'] .= " (copy)";
+		// Increment the report order so we can add new report directly after original
+		$dash['dash_order']++;
+		// Move all report orders up one to make room for new one
+		$sql = "update advanced_graphs_dashboards set dash_order = dash_order + 1 where project_id = ".$pid."
+				and dash_order >= ".$dash['dash_order']." order by dash_order desc";
+		if (!db_query($sql)) $errors++;
+
+		// Loop through report attributes and add to $table to input into query
+		foreach ($dash as $key=>$val) {
+			if (!array_key_exists($key, $table)) continue;
+			$table[$key] = $val;
+		}
+		// set the dashboard as not public
+		$table['is_public'] = '0';
+		$table['user_access'] = "''";
+		// Insert into dashboards table
+		$sqlr = "insert into advanced_graphs_dashboards (".implode(', ', array_keys($table)).") values (".prep_implode($table, true, true).")";
+		$q = db_query($sqlr);
+		if (!$q) return db_error();
+		$new_dash_id = db_insert_id();
+		// Now loop through all other report tables and add
+
+		// Convert columns to comma-delimited string to input into query
+		// $table_cols = implode(', ', array_keys($table));
+		// // Insert into table
+		// $sql = "insert into advanced_graphs_dashboards select $new_dash_id, $table_cols from advanced_graphs_dashboards where dash_id = $dash_id";
+		// if (!db_query($sql)) $errors++;
+		// If errors, do not commit
+		$commit = ($errors > 0) ? "ROLLBACK" : "COMMIT";
+		db_query($commit);
+
+		// Set back to initial value
+		db_query("SET AUTOCOMMIT=1");
+		
+		if ($errors == 0) {
+			// Just in case, make sure that all report orders are correct
+			$this->checkDashOrder();
+			// return "erros tes";
+			// Logging
+			// Logging::logEvent($sqlr, "advanced_graphs_dashboards", "MANAGE", $new_dash_id, "dash_id = $new_dash_id\nCopied from dash_id = $dash_id", "Copy project dashboard" . " - \"".$this->getDashboardName($dash_id)."\"");
+		}
+		// Return dash_id of new report, else FALSE if errors occurred
+		return ($errors == 0) ? array('new_dash_id'=>$new_dash_id, 'html'=>$this->renderDashboardList()) : false;
 	}
 
 	// Checks for errors in the dashboard order of all dashboards (in case their numbering gets off)
@@ -1404,8 +1806,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$sql = "select sum(dash_order) as actual, round(count(1)*(count(1)+1)/2) as ideal,
 				min(dash_order) as min, max(dash_order) as max, count(1) as dash_count
 				from advanced_graphs_dashboards where project_id = " . PROJECT_ID;
-		$q = db_query($sql);
-		$row = db_fetch_assoc($q);
+		$q = $this->query($sql);
+		$row = $q->fetch_assoc();
 		db_free_result($q);
 		if ( ($row['actual'] != $row['ideal']) || ($row['min'] != '1') || ($row['max'] != $row['dash_count']) )
 		{
@@ -1418,7 +1820,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	{
 		// Set all dash_orders to null
 		$sql = "select @n := 0";
-		db_query($sql);
+		$this->query($sql);
 		// Reset field_order of all fields, beginning with "1"
 		$sql = "update advanced_graphs_dashboards
 				set dash_order = @n := @n + 1 where project_id = ".PROJECT_ID."
@@ -1429,21 +1831,21 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			$sql = "select dash_id from advanced_graphs_dashboards
 					where project_id = ".PROJECT_ID."
 					order by dash_order, dash_id";
-			$q = db_query($sql);
+			$q = $this->query($sql);
 			$dash_order = 1;
 			$dash_orders = array();
-			while ($row = db_fetch_assoc($q)) {
+			while ($row = $q->fetch_assoc()) {
 				$dash_orders[$row['dash_id']] = $dash_order++;
 			}
 			// Reset all orders to null
 			$sql = "update advanced_graphs_dashboards set dash_order = null where project_id = ".PROJECT_ID;
-			db_query($sql);
+			$this->query($sql);
 			foreach ($dash_orders as $dash_id=>$dash_order) {
 				// Set order of each individually
 				$sql = "update advanced_graphs_dashboards
 						set dash_order = $dash_order 
 						where dash_id = $dash_id";
-				db_query($sql);
+				$this->query($sql);
 			}
 		}
 		// Return boolean on success
