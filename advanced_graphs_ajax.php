@@ -29,6 +29,9 @@ switch($_POST["method"]) {
 		// return;
 		echo json_encode($module->deleteDash($_POST['pid'], $_POST['dash_id']) ? '1' : '0');
 		break;
+	case "copy_dash":
+		echo json_encode($module->copyDash($_POST['pid'], $_POST['dash_id']));
+		break;
 	default:
 		echo json_encode($_POST["method"]." is not a valid method.");
 		// echo nothing_to_show();
