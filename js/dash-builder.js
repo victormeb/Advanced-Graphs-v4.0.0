@@ -32,7 +32,7 @@ function dashboard_title(dash_title) {
 		<tr>
 		<td class="labelrc create_rprt_hdr nowrap fs14 align-top px-2" style="background-color:#e6e6e6;height:50px;color:#0450a5;width:160px;padding-top:12px">Dashboard title:</td>
 			<td class="labelrc " style="height:50px;padding:5px 10px;">
-				<input id="dash_title" name="dash_title" value="${dash_title}" class="x-form-text x-form-field" onkeydown="if(event.keyCode == 13) return false;" style="height:32px;padding: 4px 6px 3px;font-size:16px;width:99%;" type="text" autocomplete="new-password">
+				<input id="dash_title" name="dash_title" value="${escapeHtml(dash_title)}" class="x-form-text x-form-field" onkeydown="if(event.keyCode == 13) return false;" style="height:32px;padding: 4px 6px 3px;font-size:16px;width:99%;" type="text" autocomplete="new-password">
 			</td>
 		</tr>
 		<tr>
@@ -97,6 +97,10 @@ function create_new_form(button, main_options, other_options) {
 		update_report(new_form);
 	});
 
+	// new_form.change();
+
+	// wrap_selects(new_form);
+
 	return new_form;
 
 	// Each graph function must:
@@ -151,8 +155,8 @@ function likert_form(button) {
 
 	let main_options = `<div class="form-left">
 							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
-							<label>Instrument<select class="instrument-selector" name="instrument">${instruments}</select></label><br>
-							<label>Option group<select class="options-selector" name="options"></select></label>
+							<br><label>Instrument<span class="required">*</span><select class="instrument-selector" name="instrument">${instruments}</select></label><br>
+							<label>Option group<span class="required">*</span><select class="options-selector" name="options"></select></label>
 							<div class="include-na">
 								<label class="container">Include NAs<input type="checkbox" name="include_na" value="true"><span class="checkmark"></span></label>
 								<p class="small-warning">Warning: the center of the responses will be shifted</p>
@@ -164,7 +168,7 @@ function likert_form(button) {
 	let other_options = 
 			`
 			<label>Description<input type="text" name="description"></label>
-			<br><label>Size of field labels<input type="number" step="1" name="label_text" value="10"></input> characters</label>
+			<br><label>Size of field labels<input type="number" step="1" name="label_text" value="10"></input></label>
 			<div class="radio label-length">
 				<label>Bar Label Digits <input type="number" step="1" name="digits" value="2"></label>
 				<hr><h3>How should labels be handeled?</h3>
@@ -173,7 +177,7 @@ function likert_form(button) {
 				<label class="radio-label"><input class="radio-state label-as-is" name="wrap_label" type="radio" value="true"><div class="radio-button"></div>As-is</label>
 				<br><label class="label-length-label"><span class="trunc-wrap">Wrap</span> after <input type="number" class="max_label_length" step="1" name="max_label_length" value="30"></input> characters</label>
 		  	</div>
-			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="30"></input></label>
+			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="7"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="close-options" type="button">Close</button>`;
 	
@@ -337,9 +341,9 @@ function scatter_form(button) {
 
 	let main_options = `<div class="form-left">
 							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
-							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
-							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
-							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
+							<br><label>Instrument<span class="required">*</span><select class="instrument-selector  name="instrument">${instruments}</select></label><br>
+							<label>"X" field<span class="required">*</span><select class="x-field field-selector" name="x"></select></label>
+							<label>"Y" field<span class="required">*</span><select class="y-field field-selector" name="y"></select></label>
 							<label class="container line">Line?<input type="checkbox" name="line" value="true"><span class="checkmark"></span></label>
 						</div>
 						<div class="form-right"></div>`;
@@ -499,7 +503,7 @@ function barplot_form(button) {
 
 	let main_options = `<div class="form-child">
 							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
-							<label>Instrument<select class="instrument-selector  name="instrument">${instruments}</select></label><br>
+							<br><label>Instrument<span class="required">*</span><select class="instrument-selector  name="instrument">${instruments}</select></label><br>
 							<label class="container cross-tab">Cross Tabulation<input type="checkbox" name="crosstab" value="true"><span class="checkmark"></span></label>
 							<div class="radio grouped">
 								<label class="radio-label">
@@ -517,11 +521,11 @@ function barplot_form(button) {
 									<input class="radio-state" type="radio"  name="pie" value="true"><div class="radio-button"></div>Pie
 								</label> 
 							</div>
-							<label>Category "X"<select class="x-field field-selector" name="x"></select></label><br>
-							<label>Category "Y"<select class="y-field field-selector" name="y"></select></label>
+							<label>Category "X"<span class="required">*</span><select class="x-field field-selector" name="x"></select></label><br>
+							<label>Category "Y"<span class="required">*</span><select class="y-field field-selector" name="y"></select></label>
 						</div>
 						<div class="form-child">
-							<label>Bar Heights<select class="bar-height field-selector" name="height"></select></label><br>
+							<label>Bar Heights<span class="required">*</span><select class="bar-height field-selector" name="height"></select></label><br>
 							<label>Summary Function
 								<select class="sum-func field-selector" name="sumfunc">
 									<option value="sum">Sum</option>
@@ -530,6 +534,7 @@ function barplot_form(button) {
 									<option value="max">Max</option>
 								</select>
 							</label>
+							<br><label class="container keep-unused">Keep Unused Options/Option pairs <input type="checkbox" name="keep_unused" value="true" checked><span class="checkmark"></span></label>
 							<div class="table-options">
 								<br><label class="container include-table">Include Table <input class="include-table" type="checkbox" name="table" value="true"><span class="checkmark"></span></label>
 								<div class="table-options-extra">
@@ -566,6 +571,8 @@ function barplot_form(button) {
 							</div>
 						</div>
 						<input class="is-count" type="checkbox" name="count" value="true" hidden></input>
+						<input class="x-checked" type="checkbox" name="checkbox_fields" value="x" hidden></input>
+						<input class="y-checked" type="checkbox" name="checkbox_fields" value="y" hidden></input>
 						</div>`;
 
 	let other_options = 
@@ -580,6 +587,8 @@ function barplot_form(button) {
 				<label class="radio-label"><input class="radio-state label-as-is" name="wrap_label" type="radio" value="false"><div class="radio-button"></div>As-is</label>
 				<br><label class="label-length-label"><span class="trunc-wrap">Wrap</span> after <input type="number" class="max_label_length" step="1" name="max_label_length" value="30"></input> characters</label>
 		  	</div>
+			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="7"></input></label>
+			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="close-options" type="button">Close</button>`;
 
 	// Create a new form with default buttons
@@ -599,7 +608,16 @@ function barplot_form(button) {
 		new_form.find('.sum-func').parent().hide();
 	
 		// If there are at least two categorical fields
-		if (barplot_fields[selected_instrument]['fields']['Categorical'] && barplot_fields[selected_instrument]['fields']['Categorical'].length >= 2) {
+		let categorical_fields = 0;
+
+		if (barplot_fields[selected_instrument]['fields']['Categorical'])
+			categorical_fields += barplot_fields[selected_instrument]['fields']['Categorical'].length
+		
+		if (barplot_fields[selected_instrument]['fields']['Checkbox'])
+			categorical_fields += barplot_fields[selected_instrument]['fields']['Checkbox'].length
+
+
+		if (categorical_fields >= 2) {
 			// Show the cross-tab toggle
 			new_form.find('.cross-tab').show();
 	
@@ -645,6 +663,11 @@ function barplot_form(button) {
 		// Show pie toggle
 		new_form.find('.pie-chart').show();
 		new_form.find('.pie-chart').prop('checked', false);
+
+		// Show include table option
+		new_form.find('.table-options').show();
+
+		new_form.find('.keep-unused').show();
 	}
 
 	function hide_all_fields() {
@@ -667,6 +690,8 @@ function barplot_form(button) {
 		new_form.find('.sum-func').parent().hide();
 
 		new_form.find('.table-options').hide();
+
+		new_form.find('.keep-unused').hide();
 	}
 
 	function instrument_update() {
@@ -689,6 +714,42 @@ function barplot_form(button) {
 		$.each(barplot_fields[selected_instrument]['fields']['Categorical'], function (key, value) {
 			new_form.find('.x-field').append(`<option value='${escapeHtml(value)}'>${data_dictionary[value]['field_label']}</option>`);
 			new_form.find('.y-field').append(`<option value='${escapeHtml(value)}'>${data_dictionary[value]['field_label']}</option>`);
+		});
+
+		// Add the checkbox fields if there are any
+		if (barplot_fields[selected_instrument]['fields']['Checkbox'] && barplot_fields[selected_instrument]['fields']['Checkbox'].length) {
+			new_form.find('.x-field').append(`<optgroup class="checkbox-group" label="Checkbox"></optgroup>`);
+			new_form.find('.y-field').append(`<optgroup class="checkbox-group" label="Checkbox"></optgroup>`);
+
+			// Add the Numeric Fields to heights selector
+			$.each(barplot_fields[selected_instrument]['fields']['Checkbox'], function (key, value) {
+				new_form.find('.checkbox-group').each(function() {
+					$(this).append(`<option value='${escapeHtml(value)}'>${data_dictionary[value]['field_label']}</option>`);
+				});
+			});
+		}	
+
+		// When the field is checkbox update the input appropriately
+		new_form.find('.x-field').change(function() {
+			if ($(this).find(':selected').parent().attr('label') === "Checkbox") {
+				// Set the x-checked parameter to true
+				new_form.find('.x-checked').prop('checked', true);
+				return;
+			}
+
+			// Set the x-checked parameter to false
+			new_form.find('.x-checked').prop('checked', false);
+		});
+
+		new_form.find('.y-field').change(function() {
+			if ($(this).find(':selected').parent().attr('label') === "Checkbox") {
+				// Set the y-checked parameter to true
+				new_form.find('.y-checked').prop('checked', true);
+				return;
+			}
+
+			// Set the y-checked parameter to false
+			new_form.find('.y-checked').prop('checked', false);
 		});
 
 		new_form.find('.bar-height').append(`<option disabled selected>-- Choose how bar heights are calculated --</option>`);
@@ -813,15 +874,13 @@ function barplot_form(button) {
 
 	});
 
-	// new_form.find('.percents-both input').change(function() {
-	// 	let checked = $(this).prop("checked")
-	// 	new_form.find('.cross-tab-table-percent-margins input').not(this).each(function () {
-	// 		$(this).prop("checked", checked)});
-	// });
+	new_form.find('.cross-tab input').change(function () {
+		if (!$(this).prop('checked'))
+			// Set the y-checked parameter to false
+			return new_form.find('.y-checked').prop('checked', false);
 
-	// new_form.find('.cross-tab-table-percent-margins input').not('.percents-both input').change(function () {
-	// 	new_form.find('.cross-tab-table-percent-margins input').not(this).prop('checked', false);
-	// });
+		new_form.find('.y-field').change();
+	}); 
 
 	new_form.change(function () {
 		// If either the x-field or the height is not selected, we cannont preview
@@ -911,10 +970,10 @@ function map_form(button) {
 
 	let main_options = `<div class="form-child">
 							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
-							<label>Instrument<select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
+							<br><label>Instrument<span class="required">*</span><select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
 							<div class="field-selector">
-								<label>Longitude<select class="longitude-field" name="lng"></select></label><br>
-								<label>Latitude<select class="latitude-field" name="lat"></select></label>
+								<label>Longitude<span class="required">*</span><select class="longitude-field" name="lng"></select></label><br>
+								<label>Latitude<span class="required">*</span><select class="latitude-field" name="lat"></select></label>
 							</div>
 						</div>
 						<div class="form-right">
@@ -982,7 +1041,7 @@ function map_form(button) {
 
 		// Add the count option to the heights bar
 		new_form.find('.map-count').append(`<optgroup label="Count"><option value>Count</option></optgroup>`);
-		console.log(map_fields[selected_instrument]['fields']['Numeric']);
+
 		// Add the numeric fields if there are any
 		if (map_fields[selected_instrument]['fields']['Numeric'] && map_fields[selected_instrument]['fields']['Numeric'].length) {
 			new_form.find('.map-count').append(`<optgroup class="numeric-group" label="Numeric"></optgroup>`);
@@ -1191,9 +1250,9 @@ function network_form(button) {
 
 	let main_options = `<div class="form-left">
 							<label>Title<br><input type="text" name="title" placeholder="Default"></label>
-							<label>Instrument<select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
-							<label>"X" field<select class="x-field field-selector" name="x"></select></label>
-							<label>"Y" field<select class="y-field field-selector" name="y"></select></label>
+							<br><label>Instrument<span class="required">*</span><select class="instrument-selector"  name="instrument">${instruments}</select></label><br>
+							<label>"X" field<span class="required">*</span><select class="x-field field-selector" name="x"></select></label>
+							<label>"Y" field<span class="required">*</span><select class="y-field field-selector" name="y"></select></label>
 							<label class="container directed">Directed?<input type="checkbox" name="directed" value="true" checked><span class="checkmark"></span></label>
 						</div>
 						<div class="form-right"></div>`;
@@ -1225,7 +1284,6 @@ function network_form(button) {
 
 		// For each option group
 		$.each(network_fields[selected_instrument]['fields'], function (key, value) {
-			console.log(value);
 			// Add the option group
 			new_form.find('.x-field').append(`<option value='${escapeHtml(value)}'>${data_dictionary[value]['field_label']}</option>`);
 			new_form.find('.y-field').append(`<option value='${escapeHtml(value)}'>${data_dictionary[value]['field_label']}</option>`);
@@ -1426,7 +1484,6 @@ function generate_graph(form) {
 
 function generate_graphs() {
 	$.ajax(ajax_url, {data: {pid: pid, report_id: report_id, live_filters: live_filters, graphs: report_object, method: "build_graphs"}, dataType: "json", method: "POST"}).done(function(data) { //, dataType: "html"
-		console.log("hey");
 		console.log(data);
 		if (!data["status"]) {
 			$("#advanced_graphs").html("<h2 style=\"color: red;\">There was an error loading your graphs</h2>");
@@ -1445,7 +1502,6 @@ function saveDash(dash_id) {
 	let graph_array = Array.from(report_object, ([name, value]) => value);
 	var start_time = new Date().getTime();
 	$.ajax(ajax_url, {data: {pid: pid, report_id: report_id, live_filters: live_filters, title: title, graphs: graph_array, dash_id: dash_id, is_public: is_public, method: "save_dash"}, dataType: "json", method: "POST"}).done(function (data) {
-		console.log(is_public);
 		console.log(data);
 		
 		if (data == '0') {
@@ -1524,10 +1580,9 @@ function editDashboard(dash_id) {
 
 // Copy a dashboard
 function copyDashboard(dash_id, confirmCopy) {
-	alert("This function is still in development");
-/*     if (confirmCopy == null) confirmCopy = true;
+     if (confirmCopy == null) confirmCopy = true;
     // Get dashboard title from table
-    var row_id = $('#repcopyid_'+dash_id).parents('tr:first').attr('id');
+    var row = $('#repcopyid_'+dash_id).parents('tr:first');
     var dash_title = trim($('#repcopyid_'+dash_id).parents('tr:first').find('td:eq(2)').find('.dash-title').text());
     if (confirmCopy) {
         // Prompt user to confirm copy
@@ -1541,6 +1596,7 @@ function copyDashboard(dash_id, confirmCopy) {
                 alert("Dashboard copy may have failed (no data returned from ajax)");
                 return;
             }
+			console.log(data);
 			// Replace current report list on page
 			$('#dashboard_list_parent_div').html(data['html']);
 
@@ -1554,7 +1610,7 @@ function copyDashboard(dash_id, confirmCopy) {
 				if (i++ != 1) $(this).effect('highlight',{},2000);
 			});
 		});
-    } */
+    } 
 }
 
 // Delete a dashboard
@@ -1812,3 +1868,86 @@ function load_form(graph) {
 
     update_report(form);
 }
+
+// function wrap_selects(form) {
+// 	var mYbrowser = detectBrows();
+// 	// console.log(mYbrowser[0]);
+// 	form.find('select').each(function(index,ele){
+		
+// 		//get current style and fixed width:
+// 		var renderWidth = $(ele).outerWidth();
+// 		var renderWidthFixed = renderWidth;
+// 		var borderstyle = $(ele).css("border-bottom-style");
+// 		var bordercolor = $(ele).css("border-bottom-color");
+// 		var borderwidth = $(ele).css("border-bottom-width");
+// 		var font = $(ele).css("font");
+// 		var defaultValue = $(ele).find(':selected').first().text();
+// 		console.log(defaultValue);
+// 		console.log($(ele));
+// 		console.log($(ele).find('option'));
+// 		if (borderwidth == "0px") { borderwidth = "1px"; /*FF*/ }
+// 		$(ele).css({ cursor:"pointer" });
+		
+// 		// set by browser (different buttons):
+// 		var borderRightParsed = borderwidth +" " + borderstyle + " " + bordercolor;
+// 		var topParsed = Math.round(parseInt(borderwidth.replace(/[^0-9\.]+/g,"")));
+// 		switch(mYbrowser[0]) {
+// 				case "MSIE": renderWidthFixed = renderWidth-28; break;
+// 				case "I": renderWidthFixed = renderWidth-28; break;                 
+// 				case "Chrome": renderWidthFixed = renderWidth-30; break;
+// 				case "Firefox": 
+// 								renderWidthFixed = renderWidth-27; 
+// 								borderRightParsed= "0"; 
+// 								if (index > 0) topParsed++;
+// 								break; 
+// 		}
+// 		//wrap + add a overlapping layer that will hide content and calculate the correct height:
+// 		$(ele).wrap($('<div />').css({width:renderWidth, margin:0, padding:0, position:"relative"}));
+// 		$(ele).after($("<div>" + defaultValue + "</div>")
+// 					   .css({
+// 						   minHeight:20,
+// 						   padding:"5px 0px 5px 8px",
+// 						   width:renderWidthFixed,
+// 						   backgroundColor:"white",
+// 						   whiteSpace:"pre-wrap",
+// 						   position:"absolute",
+// 						   borderRight:borderRightParsed,
+// 						   top:topParsed,
+// 						   cursor:"default",
+// 						   left:borderwidth,
+// 						   font:font
+// 					   })
+// 					);
+// 		//set select box new height:
+// 		setHeight(ele);
+		
+// 		//append change behavior:
+// 		$(ele).change(function(){
+// 			$(ele).next('div').text($(ele).val());
+// 			setHeight(ele);
+// 		});
+		
+// 	});
+	
+// 	function setHeight(ele) {
+// 		var newHeight = $(ele).next('div').outerHeight();
+// 		$(ele).height(newHeight);
+		
+// 	}
+	
+// 	function detectBrows(){
+// 		var ua= navigator.userAgent, tem, 
+// 			M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+// 			if(/trident/i.test(M[1])){
+// 				tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+// 				return 'IE '+(tem[1] || '');
+// 			}
+// 			if(M[1]=== 'Chrome'){
+// 				tem= ua.match(/\bOPR\/(\d+)/)
+// 				if(tem!= null) return 'Opera '+tem[1];
+// 			}
+// 			M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+// 			if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+// 			return M;        
+// 	}
+// }
