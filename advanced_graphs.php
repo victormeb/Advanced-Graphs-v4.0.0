@@ -3,6 +3,7 @@
 	use ExternalModules\ExternalModules;
 	include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 	$module->loadJS("dash-builder.js");
+	$module->loadJS("jquery_tablednd.js", "dragNdrop");
 	$module->renderSetupPage();
 ?>
 
