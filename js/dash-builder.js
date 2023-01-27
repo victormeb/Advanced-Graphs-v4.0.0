@@ -56,7 +56,7 @@ function dashboard_title(dash_title) {
 function save_button(dash_id) {
 	let save_button = `<div style=\"text-align:center;margin:30px 0 50px;\">
 <button class=\"btn btn-primaryrc\" style=\"font-size:15px !important;\" onclick=\"saveDash(${dash_id});\">Save Dashboard</button>
-<a href=\"javascript:;\" style=\"text-decoration:underline;margin-left:20px;font-size:13px;\" onclick=\"window.location.href=app_path_webroot+'index.php?pid='+pid+'&amp;route=ProjectDashController:index'\">Cancel</a>
+<a href=\"javascript:;\" style=\"text-decoration:underline;margin-left:20px;font-size:13px;\" onclick=\"window.location.href=dash_list_url\">Cancel</a>
 </div>`;
 
 	$('#advanced_graphs').append(save_button);
