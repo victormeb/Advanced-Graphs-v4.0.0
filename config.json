@@ -20,6 +20,12 @@
     "no-auth-pages": ["view_dash_public", "advanced_graphs_ajax_public"],
 	"links": {
 		"control-center": [
+			{
+				"name": "Advanced Graphs Configuration",
+				"icon": "gear",
+				"url": "advanced_graphs_config.php",
+				"id": "advanced_graphs_config"
+			}
 		],
 		"project": [
 		{
@@ -72,6 +78,13 @@
 					 "repeatable": false
 				}
 			]
+		},
+		{
+			"key": "graph_types",
+			"name": "Graph Types: The name of the folder containing the information needed to create a graph form.",
+			"required": true,
+			"type": "text",
+			"repeatable": true
 		},
 		{
 			 "key": "projects-api-tokens-note",

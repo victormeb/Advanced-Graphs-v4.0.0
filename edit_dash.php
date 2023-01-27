@@ -2,8 +2,9 @@
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
 
-// echo json_encode($module->query("describe advanced_graphs_dashboards")->fetch_all());
-
+include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+$module->renderDashEditor();
+require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 $pid = $_GET['pid'];
 $dash_id = $_GET['dash_id'];
 
@@ -71,9 +72,71 @@ $graph_groups = json_encode(
 			"network_groups" => $module->network_groups()
 		)
 	);
-
+$module->initializeJavascriptModuleObject();
 ?>
 <script>
+<?php
+$graph_types = array_combine($module->getSystemSetting("graph_folder"), $module->getSystemSetting("graph_function"));
+foreach ($graph_types as $folder => $function) {
+	echo "import $function from ./graph_forms/$folder;\n";
+}
+?>
+
+$(function() {
+		// Initialize the module object
+        const module = <?=$module->getJavascriptModuleObjectName()?>;
+
+		// Get the graph folders and corresponding graph functions
+		const graph_folders = <?=json_encode($module->getSystemSetting("graph_folder"))?>;
+		const graph_functions = <?=json_encode($module->getSystemSetting("graph_function"))?>;
+
+		let graph_data = {};
+
+		for (const key in graph_folders) {
+			graph_data[graph_folders[key]] = 
+		}
+		// Try to get the form template
+		let empty_form;
+		$.get(module.getUrl('graph_forms/form_template.html'), function (data) {
+			empty_form = data;
+		});
+		
+		// If there is an error return
+		if (!empty_form) {
+			$('#advanced_graphs').html("<h1 style='color: red;'>There has been an error loading the Advanced Graphs Editor</h1>");
+			console.log("Couldn't load the empty form template");
+			return;
+		}
+
+		// Load the page skeleton from a file
+		$('#advanced_graphs').load(module.getUrl('graph_forms/edit_page.html'), function() {
+			// When the new graph button is clicked 
+			$(this).find('#new_graph').click(function() {
+				// Add an empty form.
+				$(this).before(empty_form);
+
+				let new_form = $(this).prev();
+				
+				new_form.find('.graph-type').change(function() {
+					new_form.find('.parameters')
+				});
+			});
+		});
+        module.log('Hello from JavaScript!').then(function(logId) {
+            // Do stuff with the logId
+        }).catch(function(err) {
+            // Report error
+        });
+
+        const data = {
+            greeting: "Hello Action"
+        };
+        module.ajax('MyAction', data).then(function(response) {
+            // Do stuff with response
+        }).catch(function(err) {
+            // Report error
+        });
+});
 var dashboard_public = <?php echo $is_public?>;
 var dashboard_body = <?php echo $dashboard_body;?>;
 var data_dictionary = <?php echo json_encode($module->data_dictionary);?>;

@@ -100,6 +100,24 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		} catch (\Throwable $e) {
 			$this->log("Failed $this->PREFIX to create table advanced_graphs_dashboards with error:\n".$e->getMessage());
 		}
+		
+		$default_graphs = array("likert" => "likert", 
+								"scatter" => "scatter", 
+								"barplot" => "barplot", 
+								"map" => "map", 
+								"network" => "network");
+
+		$current_graphs = $this->getSystemSetting("graph_types");
+
+		foreach ($current_graphs as $key => $graph_type) {
+			$default_graphs[$key] = $graph_type;
+		}
+
+		$this->setSystemSetting("graph_types", array_values($default_graphs));
+		// $this->setSystemSetting("graph_folder", array_keys($default_graphs));
+		// $this->setSystemSetting("graph_function", array_values($default_graphs));
+
+		// $this->log(json_encode($this->getSystemSetting("graph_types")));
 	}
 
 	// function redcap_module_system_disable($version) {
@@ -165,10 +183,12 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
     {		
 		$current_page_is_this_module = strpos($_SERVER["PHP_SELF"],"/ExternalModules/") > -1 && strpos($_SERVER["QUERY_STRING"],"prefix=" . $this->PREFIX) > -1;
 		$current_page_is_this_page = strpos($_SERVER["PHP_SELF"],"/ExternalModules/") > -1 && strpos($_SERVER["QUERY_STRING"],"page=edit_dash") > -1;
-		$current_page_is_export_report = strpos($_SERVER["PHP_SELF"],"/DataExport/") > -1 && strpos($_SERVER["QUERY_STRING"],"&report_id=") > -1;
+		$current_page_is_export_report = strpos($_SERVER["PHP_SELF"],"/DataExport/") > -1 && strpos($_SERVER["QUERY_STRING"],"&report_id=") > -1 && strpos($_SERVER["QUERY_STRING"],"&addedit") <= -1;
+
+		$report_id = $_GET['report_id'];
 
 		if ($link['id'] == "edit_dash") {
-			$link['url'] .= "&dash_id=0";
+			$link['url'] .= "&dash_id=0&report_id=$report_id";
 			if ($current_page_is_export_report)
 				return($link);
 
@@ -369,6 +389,62 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		return ($format == "array") ? $results : $csv;
 	}
 
+	function renderDashEditor() {
+		// Return an error if PID is not set
+		if (!isset($_GET['pid'])) {
+			echo "<h1 style='color: red;'>Unable to obtain project ID</h1>";
+			return;
+		}
+
+		// Get PID and dash_id from url
+		$pid = $_GET['pid'];
+		$dash_id = $_GET['dash_id'];
+
+		// Parse live filters from referer
+		// $live_filters = $this->getLiveFiltersFromReferer();
+		parse_str(parse_url($_SERVER["HTTP_REFERER"], PHP_URL_QUERY), $live_filters);
+
+		// Get the active dashboard if there dash id is not null or 0
+		if (isset($_GET['dash_id']) && $_GET['dash_id'] != '0') {
+			$dashboard = $module->getDashboards($pid, $dash_id);
+			$report_id = $dashboard['report_id'];
+			$live_filters = $dashboard['live_filters'];
+		}
+
+		// If the report_id is not set get it from the url
+		if (!isset($report_id))
+			$report_id = $_GET['report_id'];
+			
+		// If the report_id is still not set return an error
+		if (!isset($report_id)) {
+			echo "<h1 style='color: red;'>New Dashboards must be created from the context of a report</h1>";
+			return;
+		}
+
+		// If the report_id is 0 change it to all
+		if ($report_id == 0)
+			$report_id = "ALL";
+
+		// Load the code needed to build forms
+		$this->loadJS("dash-builder.js");
+		$this->loadCSS("advanced-graphs.css");
+
+		// Load the js and css needed to display maps
+		$this->loadAllJS('mapdependencies/js');
+		$this->loadAllCSS('mapdependencies/css');
+
+		echo "<script>var AdvancedGraphsInteractive = {};
+		AdvancedGraphsInteractive.graph_types = {};</script>";
+
+		$graph_types = $this->getSystemSetting("graph_types");
+
+		foreach($graph_types as $graph_type) {
+			$this->loadJS("interactions.js", "graph_forms/$graph_type");
+		}
+
+
+	}
+
 	// Obtain any dynamic filters selected from query string live_filters
 	function buildReportDynamicFilterLogicReferrer($report_id, $live_filters)
 	{
@@ -530,7 +606,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 		if ($report_id === 0 || $report_id == 'ALL' || $report_id == 'SELECTED') {
 			// Add to reports array
-			$report = getTableColumns('redcap_reports');
+			$report = $this->getTableColumns('redcap_reports');
 			// Pre-fill empty slots for limiters and fields
 			$report['fields'] = array();
 			$report['limiter_fields'] = array();
@@ -1379,8 +1455,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 		// Set up all actions as a transaction to ensure everything is done here
 
-		db_query("SET AUTOCOMMIT=0");
-		db_query("BEGIN");
+		$this->query("SET AUTOCOMMIT=0");
+		$this->query("BEGIN");
 
 		// Save report in reports table
 		if ($dash_id != 0) {
@@ -1388,16 +1464,16 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			$sqlr = $sql = "update advanced_graphs_dashboards 
 							set live_filters = '".db_escape($live_filters)."', title = '".db_escape($title)."', body = '".db_escape($body)."', user_access = '".db_escape($user_access)."', is_public = $is_public
 							where project_id = ".$pid." and dash_id = $dash_id and report_id = $report_id";
-			if (!db_query($sql)) $errors++;
+			if (!$this->query($sql)) $errors++;
 		} else {
 			// Get next dash_order number
-			$q = db_query("select max(dash_order) from advanced_graphs_dashboards where project_id = ".$pid);
+			$q = $this->query("select max(dash_order) from advanced_graphs_dashboards where project_id = ".$pid);
 			$new_dash_order = db_result($q, 0);
 			$new_dash_order = ($new_dash_order == '') ? 1 : $new_dash_order+1;
 			// Insert
 			$sqlr = $sql = "insert into advanced_graphs_dashboards (project_id, report_id, live_filters, title, body, user_access, dash_order, is_public)
 							values (".$pid.", ". intval($report_id) . ", '".db_escape($live_filters)."', '".db_escape($title)."', '".db_escape($body)."', '".db_escape($user_access)."', $new_dash_order, $is_public)";
-			if (!db_query($sql)) $errors++;
+			if (!$this->query($sql)) $errors++;
 			// Set new dash_id
 			$dash_id = db_insert_id();
 		}
@@ -1429,7 +1505,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		if ($errors > 0) {
 			// Errors occurred, so undo any changes made
 			echo json_encode(db_error());
-			db_query("ROLLBACK");
+			$this->query("ROLLBACK");
 			// Return '0' for error
 			return;
 			exit('0');
@@ -1448,7 +1524,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				$this->resetCache($pid, $dash_id, false);
 			}
 			// Commit changes
-			db_query("COMMIT");
+			$this->query("COMMIT");
 			// Response
 			$dialog_title = 	RCView::img(array('src'=>'tick.png', 'style'=>'vertical-align:middle')) .
 				RCView::span(array('style'=>'color:green;vertical-align:middle'), "Your dashboard has been saved"); //TODO lang
@@ -1474,7 +1550,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// If dash_id is 0 (report doesn't exist), then return field defaults from tables
 		if ($dash_id === 0) {
 			// Add to reports array
-			$dashboards[$dash_id] = getTableColumns('advanced_graphs_dashboards');
+			$dashboards[$dash_id] = $this->getTableColumns('advanced_graphs_dashboards');
 			// Pre-fill empty slots for limiters and fields
 			$dashboards[$dash_id]['user_access_users'] = array();
 			$dashboards[$dash_id]['user_access_roles'] = array();
@@ -1548,7 +1624,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$dash_id = (int)$dash_id;
 		$sql = "update advanced_graphs_dashboards set cache_time = null, cache_content = null
                 where dash_id = $dash_id and project_id = ".$pid;
-		if (db_query($sql)) {
+		if ($this->query($sql)) {
 			// Logging
 			if ($doLogging) {
 			    Logging::logEvent($sql, "advanced_graphs_dashboards", "MANAGE", $dash_id, "dash_id = $dash_id", "Reset cached snapshot for advanced graph dashboard" . " - \"".$this->getDashboardName($dash_id)."\"");
@@ -1740,13 +1816,13 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	public function copyDash($pid, $dash_id)
 	{
 		// Set up all actions as a transaction to ensure everything is done here
-		db_query("SET AUTOCOMMIT=0");
-		db_query("BEGIN");
+		$this->query("SET AUTOCOMMIT=0");
+		$this->query("BEGIN");
 		$errors = 0;
 		// List of all db tables relating to reports, excluding redcap_project_dashboards
 		// $tables = array('redcap_project_dashboards_access_dags', 'redcap_project_dashboards_access_roles', 'redcap_project_dashboards_access_users');
 		// First, add row to redcap_project_dashboards and get new report id
-		$table = getTableColumns('advanced_graphs_dashboards');
+		$table = $this->getTableColumns('advanced_graphs_dashboards');
 		// Get report attributes
 		$dash = $this->getDashboards($pid, $dash_id);
 		// Remove dash_id from arrays to prevent query issues
@@ -1758,7 +1834,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// Move all report orders up one to make room for new one
 		$sql = "update advanced_graphs_dashboards set dash_order = dash_order + 1 where project_id = ".$pid."
 				and dash_order >= ".$dash['dash_order']." order by dash_order desc";
-		if (!db_query($sql)) $errors++;
+		if (!$this->query($sql)) $errors++;
 
 		// Loop through report attributes and add to $table to input into query
 		foreach ($dash as $key=>$val) {
@@ -1770,7 +1846,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$table['user_access'] = "''";
 		// Insert into dashboards table
 		$sqlr = "insert into advanced_graphs_dashboards (".implode(', ', array_keys($table)).") values (".prep_implode($table, true, true).")";
-		$q = db_query($sqlr);
+		$q = $this->query($sqlr);
 		if (!$q) return db_error();
 		$new_dash_id = db_insert_id();
 		// Now loop through all other report tables and add
@@ -1782,10 +1858,10 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// if (!db_query($sql)) $errors++;
 		// If errors, do not commit
 		$commit = ($errors > 0) ? "ROLLBACK" : "COMMIT";
-		db_query($commit);
+		$this->query($commit);
 
 		// Set back to initial value
-		db_query("SET AUTOCOMMIT=1");
+		$this->query("SET AUTOCOMMIT=1");
 		
 		if ($errors == 0) {
 			// Just in case, make sure that all report orders are correct
@@ -1825,7 +1901,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$sql = "update advanced_graphs_dashboards
 				set dash_order = @n := @n + 1 where project_id = ".PROJECT_ID."
 				order by dash_order, dash_id";
-		if (!db_query($sql))
+		if (!$this->query($sql))
 		{
 			// If unique key prevented easy fix, then do manually via looping
 			$sql = "select dash_id from advanced_graphs_dashboards
@@ -1850,5 +1926,19 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		}
 		// Return boolean on success
 		return true;
+	}
+
+	// Obtain array of column names and their default value from specified database table.
+	// Column name will be array key and default value will be corresponding array value.
+	function getTableColumns($table)
+	{
+		$sql = "describe `$table`";
+		$q = $this->query($sql);
+		if (!$q) return false;
+		$cols = array();
+		while ($row = $q->fetch_assoc()) {
+			$cols[$row['Field']] = $row['Default'];
+		}
+		return $cols;
 	}
 }
