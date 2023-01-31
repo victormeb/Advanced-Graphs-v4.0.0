@@ -1,6 +1,7 @@
 options(warn = -1)
 
 library(jsonlite) # TODO: add dependency
+library(XML) # TODO: add dependency
 
 # Get information for which graphs to build, 
 # where to get data and where to store the files from input file
@@ -61,6 +62,16 @@ repeat_instruments_path <- input_data$inputs$repeat_instruments
 report_data <- read.csv(report_data_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 data_dictionary <- read.csv(data_dictionary_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 repeat_instruments <- read.csv(repeat_instruments_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+
+# Remove HTML if there is any  
+html_labels <- data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] %>%
+  lapply(function(x) htmlParse(x,  asText = TRUE) %>% xpathApply("//body//text()[not(ancestor::script)][not(ancestor::style)][not(ancestor::noscript)]", xmlValue) %>% paste0(collapse = "")) %>% unlist()
+
+# # Remove any entries created which hold only whitespace
+# html_labels <- html_labels[which(nchar(trimws(html_labels, whitespace = "[ \t\r\n\xA0\f]")) != 0)]
+
+# Fix duplicate label names
+data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] <- vctrs::vec_as_names(html_labels, repair = "unique", quiet = TRUE)
 
 # Create a list of options to map factors
 options <- parse_categories(data_dictionary)
