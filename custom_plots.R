@@ -307,17 +307,17 @@ custom_likert <- function(x,
   x_label = ''
   y_label = ''
   
-  if (x_axis_logic == 'wrap')
-    x_label = str_wrap(as_label(x), max(c(x_title_length, 1)))
+  # if (x_axis_logic == 'wrap')
+  #   x_label = str_wrap(as_label(x), max(c(x_title_length, 1)))
   
-  if (y_axis_logic == 'wrap')
-    y_label = str_wrap(as_label(y), max(c(y_title_length, 1)))
+  # if (y_axis_logic == 'wrap')
+  #   y_label = str_wrap(as_label(y), max(c(y_title_length, 1)))
   
-  if (x_axis_logic == 'trunc')
-    x_label = str_trunc(as_label(x), max(c(x_title_length, 3)))
+  # if (x_axis_logic == 'trunc')
+  #   x_label = str_trunc(as_label(x), max(c(x_title_length, 3)))
   
-  if (y_axis_logic == 'trunc')
-    y_label = str_trunc(as_label(y), max(c(y_title_length, 3)))
+  # if (y_axis_logic == 'trunc')
+  #   y_label = str_trunc(as_label(y), max(c(y_title_length, 3)))
   
   percent_data <- x %>% 
     pivot_longer(cols = everything(), names_to = "Item", values_to = "variable") %>%
@@ -367,7 +367,7 @@ custom_likert <- function(x,
     # that were already set by likert.
     p <- suppressMessages(p + ggrepel::geom_text_repel(data = label_data, aes(label = scales::percent(percent, accuracy = 1), y = position, x = Item),
                   direction = "x",
-                  size = 3,
+                  size = 6,
                   max.overlaps = Inf,
                   show.legend = FALSE,
                   box.padding = 0,
