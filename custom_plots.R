@@ -343,7 +343,8 @@ custom_likert <- function(x,
                   xTickLabelsPositive=TRUE,
                   reverse=FALSE,
                   xlab = "Percent",
-                  ylab.right = "")
+                  ylab.right = "",
+                  text.size = 6)
   
   if (wrap_label == TRUE && !is.null(max_label_length)) {
     x_lab_func <- function(x) str_wrap(x, width = max_label_length)
