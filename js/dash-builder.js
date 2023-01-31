@@ -178,13 +178,13 @@ function likert_form(button) {
 		  	</div>
 			<div class="radio axis-logic">
 			  <hr><h3>How should x-axis be handeled?</h3>
-			  <label>x-axis text size <input type="number" name="x_title_size" value="30" step="1"></label><br>
+			  <label>x-axis title size <input type="number" name="x_title_size" value="30" step="1"></label><br>
 			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
 			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
 			  <label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
 			  <br><label class="x_title_length">Max x-axis characters<input type="number" step="1" name="x_title_length" value="80"></label>
 			  <hr><h3>How should y-axis be handeled?</h3>
-			  <label>y-axis text size <input type="number" name="y_title_size" value="30" step="1"></label><br>
+			  <label>y-axis title size <input type="number" name="y_title_size" value="30" step="1"></label><br>
 			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
 			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
 			  <label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
@@ -368,13 +368,13 @@ function scatter_form(button) {
 			<label>Description<input type="text" name="description"></label>
 			<div class="radio axis-logic">
 				<hr><h3>How should x-axis be handeled?</h3>
-				<label>x-axis text size <input type="number" name="x_title_size" value="30" step="1"></label><br>
+				<label>x-axis title size <input type="number" name="x_title_size" value="30" step="1"></label><br>
 				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
 				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
 				<label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
 				<br><label class="x_title_length">Max x-axis characters<input type="number" step="1" name="x_title_length" value="80"></label>
 				<hr><h3>How should y-axis be handeled?</h3>
-				<label>y-axis text size <input type="number" name="y_title_size" value="30" step="1"></label><br>
+				<label>y-axis title size <input type="number" name="y_title_size" value="30" step="1"></label><br>
 				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
 				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
 				<label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
@@ -620,13 +620,13 @@ function barplot_form(button) {
 		  	</div>
 			<div class="radio axis-logic">
 			  <hr><h3>How should x-axis be handeled?</h3>
-			  <label>x-axis text size <input type="number" name="x_title_size" value="30" step="1"></label><br>
+			  <label>x-axis title size <input type="number" name="x_title_size" value="30" step="1"></label><br>
 			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
 			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
 			  <label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
 			  <br><label class="x_title_length">Max x-axis characters<input type="number" step="1" name="x_title_length" value="80"></label>
 			  <hr><h3>How should y-axis be handeled?</h3>
-			  <label>y-axis text size <input type="number" name="y_title_size" value="30" step="1"></label><br>
+			  <label>y-axis title size <input type="number" name="y_title_size" value="30" step="1"></label><br>
 			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
 			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
 			  <label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
