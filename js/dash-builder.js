@@ -800,12 +800,14 @@ function barplot_form(button) {
 		new_form.find('.bar-height').append(`<option disabled>-- Choose how bar heights are calculated --</option>`);
 
 		// Add the count option to the heights bar
-		new_form.find('.bar-height').append(`<optgroup label="Count"><option value="sum" selected>Count</option></optgroup>`);
+		new_form.find('.bar-height').append(`<optgroup label="Count"><option selected>Count</option></optgroup>`);
+		new_form.find('.is-count').prop('checked', true);
 
 		// Add the numeric fields if there are any
 		if (barplot_fields[selected_instrument]['fields']['Numeric'] && barplot_fields[selected_instrument]['fields']['Numeric'].length) {
 			// If there are numerical fields set the 'choose bar heights' disabled option to be the default selected
 			new_form.find('.bar-height option:selected').prop('selected', false);
+			new_form.find('.is-count').prop('checked', false);
 			new_form.find('.bar-height option:disabled').prop('selected', true);
 			new_form.find('.bar-height').append(`<optgroup class="numeric-group" label="Numeric"></optgroup>`);
 

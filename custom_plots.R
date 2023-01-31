@@ -1368,6 +1368,10 @@ build_barplot <- function(keep_unused = FALSE, ...) {
   args <- lapply(X = list(...), FUN = unlist)
   # print(args)
   keep_unused = as.logical(unlist(keep_unused))
+  
+  if (!exists("height", args))
+    args[["count"]] <- TRUE
+  
   if (!exists("x", args))
     return("<h1>Must provide and x field</h1>")
   field_names <- list()
