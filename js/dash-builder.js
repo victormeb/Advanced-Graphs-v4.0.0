@@ -170,14 +170,27 @@ function likert_form(button) {
 			<label>Description<input type="text" name="description"></label>
 			<br><label>Size of field labels<input type="number" step="1" name="label_text" value="10"></input></label>
 			<div class="radio label-length">
-				<label>Bar Label Digits <input type="number" step="1" name="digits" value="2"></label>
 				<hr><h3>How should labels be handeled?</h3>
 				<label class="radio-label"><input class="radio-state" name="wrap_label" type="radio" value="true" checked><div class="radio-button"></div>Wrap</label>
 				<label class="radio-label"><input class="radio-state" name="wrap_label" type="radio" value="false"><div class="radio-button"></div>Truncate</label>
 				<label class="radio-label"><input class="radio-state label-as-is" name="wrap_label" type="radio" value="true"><div class="radio-button"></div>As-is</label>
 				<br><label class="label-length-label"><span class="trunc-wrap">Wrap</span> after <input type="number" class="max_label_length" step="1" name="max_label_length" value="30"></input> characters</label>
 		  	</div>
-			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="7"></input></label>
+			<div class="radio axis-logic">
+			  <hr><h3>How should x-axis be handeled?</h3>
+			  <label>x-axis text size <input type="number" name="x_title_size" value="30" step="1"></label><br>
+			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+			  <label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+			  <br><label class="x_title_length">Max x-axis characters<input type="number" step="1" name="x_title_length" value="80"></label>
+			  <hr><h3>How should y-axis be handeled?</h3>
+			  <label>y-axis text size <input type="number" name="y_title_size" value="30" step="1"></label><br>
+			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+			  <label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+			  <br><label class="y_title_length">Max y-axis characters<input type="number" step="1" name="y_title_length" value="80"></label>
+		  	</div>
+			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="14"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="close-options" type="button">Close</button>`;
 	
@@ -294,6 +307,8 @@ function likert_form(button) {
 	
 	label_length_logic(new_form);
 
+	axis_logic(new_form);
+
 	return new_form;
 }
 
@@ -351,6 +366,20 @@ function scatter_form(button) {
 	let other_options = 
 			`
 			<label>Description<input type="text" name="description"></label>
+			<div class="radio axis-logic">
+				<hr><h3>How should x-axis be handeled?</h3>
+				<label>x-axis text size <input type="number" name="x_title_size" value="30" step="1"></label><br>
+				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+				<label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+				<br><label class="x_title_length">Max x-axis characters<input type="number" step="1" name="x_title_length" value="80"></label>
+				<hr><h3>How should y-axis be handeled?</h3>
+				<label>y-axis text size <input type="number" name="y_title_size" value="30" step="1"></label><br>
+				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+				<label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+				<br><label class="y_title_length">Max y-axis characters<input type="number" step="1" name="y_title_length" value="80"></label>
+			</div>
 			<button class="close-options" type="button">Close</button>`;
 
 	// Create a new form with default buttons
@@ -444,6 +473,8 @@ function scatter_form(button) {
 		update_report(new_form);
 	});
 
+	axis_logic(new_form);
+
 	return new_form;
 
 }
@@ -534,7 +565,7 @@ function barplot_form(button) {
 									<option value="max">Max</option>
 								</select>
 							</label>
-							<br><label class="container keep-unused">Keep Unused Options/Option pairs <input type="checkbox" name="keep_unused" value="true" checked><span class="checkmark"></span></label>
+							<br><label class="container keep-unused">Keep Unused Options (option pairs for crosstabs) <input type="checkbox" name="keep_unused" value="true" checked><span class="checkmark"></span></label>
 							<div class="table-options">
 								<br><label class="container include-table">Include Table <input class="include-table" type="checkbox" name="table" value="true"><span class="checkmark"></span></label>
 								<div class="table-options-extra">
@@ -588,16 +619,20 @@ function barplot_form(button) {
 				<br><label class="label-length-label"><span class="trunc-wrap">Wrap</span> after <input type="number" class="max_label_length" step="1" name="max_label_length" value="30"></input> characters</label>
 		  	</div>
 			<div class="radio axis-logic">
-				<hr><h3>How should x-axis be handeled?</h3>
-				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
-				<label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
-				<label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
-				<hr><h3>How should y-axis be handeled?</h3>
-				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
-				<label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
-				<label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
-			</div>
-			<br><label>Legend text size<input type="number" step="0.01" name="legend_text" value="7"></input></label>
+			  <hr><h3>How should x-axis be handeled?</h3>
+			  <label>x-axis text size <input type="number" name="x_title_size" value="30" step="1"></label><br>
+			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+			  <label class="radio-label"><input class="radio-state" name="x_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+			  <label class="radio-label"><input class="radio-state label-as-is" name="x_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+			  <br><label class="x_title_length">Max x-axis characters<input type="number" step="1" name="x_title_length" value="80"></label>
+			  <hr><h3>How should y-axis be handeled?</h3>
+			  <label>y-axis text size <input type="number" name="y_title_size" value="30" step="1"></label><br>
+			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="wrap" checked><div class="radio-button"></div>Wrap</label>
+			  <label class="radio-label"><input class="radio-state" name="y_axis_logic" type="radio" value="trunc"><div class="radio-button"></div>Truncate</label>
+			  <label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
+			  <br><label class="y_title_length">Max y-axis characters<input type="number" step="1" name="y_title_length" value="80"></label>
+		  	</div>
+			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="14"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="close-options" type="button">Close</button>`;
 
@@ -762,13 +797,16 @@ function barplot_form(button) {
 			new_form.find('.y-checked').prop('checked', false);
 		});
 
-		new_form.find('.bar-height').append(`<option disabled selected>-- Choose how bar heights are calculated --</option>`);
+		new_form.find('.bar-height').append(`<option disabled>-- Choose how bar heights are calculated --</option>`);
 
 		// Add the count option to the heights bar
-		new_form.find('.bar-height').append(`<optgroup label="Count"><option value="sum">Count</option></optgroup>`);
+		new_form.find('.bar-height').append(`<optgroup label="Count"><option value="sum" selected>Count</option></optgroup>`);
 
 		// Add the numeric fields if there are any
 		if (barplot_fields[selected_instrument]['fields']['Numeric'] && barplot_fields[selected_instrument]['fields']['Numeric'].length) {
+			// If there are numerical fields set the 'choose bar heights' disabled option to be the default selected
+			new_form.find('.bar-height option:selected').prop('selected', false);
+			new_form.find('.bar-height option:disabled').prop('selected', true);
 			new_form.find('.bar-height').append(`<optgroup class="numeric-group" label="Numeric"></optgroup>`);
 
 			// Add the Numeric Fields to heights selector
@@ -918,6 +956,8 @@ function barplot_form(button) {
 	});
 
 	label_length_logic(new_form);
+
+	axis_logic(new_form);
 
 	return new_form;
 }
@@ -1461,6 +1501,24 @@ function label_length_logic(form) {
 
 	});
 	
+}
+
+function axis_logic(form) {
+	form.find('.axis-logic').change(function() {
+		// Get the current selected radio button's value
+		let x_selected = $(this).find("input[name='x_axis_logic']:checked");
+		let y_selected = $(this).find("input[name='y_axis_logic']:checked");
+
+
+	$(this).find('.x_title_length').show();
+	$(this).find('.y_title_length').show();
+
+	if (x_selected.val() == "none")
+		$(this).find('.x_title_length').hide();
+
+	if (y_selected.val() == "none")
+		$(this).find('.y_title_length').hide();
+	});
 }
 
 function generate_graph(form) {
