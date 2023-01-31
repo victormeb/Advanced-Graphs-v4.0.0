@@ -976,7 +976,17 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			}
 		}
 		
+		foreach ($scatter_groups as $instrument => $fields) {
+			$field_count = 0;
+			if (isset($fields['fields']['Date']))
+				$field_count += count($fields['fields']['Date']); 
 
+			if (isset($fields['fields']['Numeric']))
+				$field_count += count($fields['fields']['Numeric']);
+
+			if ($field_count < 2)
+				unset($scatter_groups[$instrument]);
+		}
 		return self::add_instrument_labels($scatter_groups);
 	}
 
@@ -1078,6 +1088,18 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				foreach ($barplot_field['fields'] as $field) {
 					$barplot_grouped[$instrument]['fields']['Checkbox'][] = $field;
 				}
+			}
+
+			foreach ($barplot_grouped as $instrument => $fields) {
+				$field_count = 0;
+				if (isset($fields['fields']['Categorical']))
+					$field_count += count($fields['fields']['Categorical']); 
+	
+				if (isset($fields['fields']['Checkbox']))
+					$field_count += count($fields['fields']['Checkbox']);
+	
+				if ($field_count < 1)
+					unset($barplot_grouped[$instrument]);
 			}
 
 			return self::add_instrument_labels($barplot_grouped);
