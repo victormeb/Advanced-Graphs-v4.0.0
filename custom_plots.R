@@ -641,6 +641,9 @@ custom_bars <- function(data,
   
   x_title_size <- as.numeric(x_title_size)
   y_title_size <- as.numeric(y_title_size)
+  
+  x_title_length <- as.numeric(x_title_length)
+  y_title_length <- as.numeric(y_title_length)
 
   x_label = ''
   y_label = ''
@@ -841,6 +844,9 @@ custom_pie <- function(data,
   x_title_size <- as.numeric(x_title_size)
   y_title_size <- as.numeric(y_title_size)
   
+  x_title_length <- as.numeric(x_title_length)
+  y_title_length <- as.numeric(y_title_length)
+  
   x_label = ''
   y_label = ''
   
@@ -1018,6 +1024,9 @@ custom_stacked <- function(data,
   
   x_title_size <- as.numeric(x_title_size)
   y_title_size <- as.numeric(y_title_size)
+  
+  x_title_length <- as.numeric(x_title_length)
+  y_title_length <- as.numeric(y_title_length)
   
   x_label = ''
   y_label = ''
@@ -1372,6 +1381,10 @@ build_barplot <- function(keep_unused = FALSE, include = "graph", ...) {
   args <- lapply(X = list(...), FUN = unlist)
   
   keep_unused = as.logical(unlist(keep_unused))
+  
+  if (!exists("height", args))
+    args[["count"]] <- TRUE
+  
   if (!exists("x", args))
     return("<h1>Must provide and x field</h1>")
   field_names <- list()
