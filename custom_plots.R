@@ -1572,7 +1572,7 @@ custom_map <- function(data,
   
   data %>%
     leaflet(width = 800, height = 800) %>%
-    addTiles() %>%
+    addTiles(urlTemplate = "https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png") %>%
     addCircleMarkers(
       # Use the given longitude and latitude columns
       lng = data[[lng]],
