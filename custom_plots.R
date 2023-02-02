@@ -278,13 +278,47 @@ n_spaces_indices_zeros_first <- function(data, n) {
 #   Output:
 #     
 #     A likert plot
-custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30, label_text = 3, legend_text = 5, legend_rows = 1, ...) {
+custom_likert <- function(x, 
+                          title="", 
+                          wrap_label = TRUE, 
+                          max_label_length = 30, 
+                          label_text = 3, 
+                          legend_text = 5, 
+                          legend_rows = 1, 
+                          x_axis_logic = "wrap",
+                          y_axis_logic = "wrap", 
+                          x_title_size = 10, 
+                          y_title_size = 10, 
+                          x_title_length = 40, 
+                          y_title_length = 40,
+                          x_axis_text_size = 20,
+                          y_axis_text_size = 20,
+                          palette = viridis(10),
+                          ...) {
   wrap_label <- as.logical(unlist(wrap_label))
   max_label_length <- as.numeric(unlist(max_label_length))
   max_label_length <- as.numeric(unlist(max_label_length))
   legend_text <- as.numeric(unlist(legend_text))
   legend_rows <- as.numeric(unlist(legend_rows))
   label_text <- as.numeric(unlist(label_text))
+  
+  x_title_size <- as.numeric(x_title_size)
+  y_title_size <- as.numeric(y_title_size)
+  
+  x_label = ''
+  y_label = ''
+  
+  # if (x_axis_logic == 'wrap')
+  #   x_label = str_wrap(as_label(x), max(c(x_title_length, 1)))
+  
+  # if (y_axis_logic == 'wrap')
+  #   y_label = str_wrap(as_label(y), max(c(y_title_length, 1)))
+  
+  # if (x_axis_logic == 'trunc')
+  #   x_label = str_trunc(as_label(x), max(c(x_title_length, 3)))
+  
+  # if (y_axis_logic == 'trunc')
+  #   y_label = str_trunc(as_label(y), max(c(y_title_length, 3)))
   
   percent_data <- x %>% 
     pivot_longer(cols = everything(), names_to = "Item", values_to = "variable") %>%
@@ -297,7 +331,7 @@ custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30,
 
   p <- likert.bar.plot(likert(x),
                   as.percent = TRUE,
-                  colors = if (!any(is.na(levels(x[[1]])))) colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]]))) else c(colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]])) - 1), "grey"),
+                  colors = if (!any(is.na(levels(x[[1]])))) colorRampPalette(palette)(length(levels(x[[1]]))) else c(colorRampPalette(palette)(length(levels(x[[1]])) - 1), "grey"),
                   # low.color="forestgreen",
                   # high.color = "red3",
                   # neutral.color = "lightgoldenrod",
@@ -310,7 +344,8 @@ custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30,
                   xTickLabelsPositive=TRUE,
                   reverse=FALSE,
                   xlab = "Percent",
-                  ylab.right = "")
+                  ylab.right = "",
+                  text.size = 6)
   
   if (wrap_label == TRUE && !is.null(max_label_length)) {
     x_lab_func <- function(x) str_wrap(x, width = max_label_length)
@@ -334,7 +369,7 @@ custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30,
     # that were already set by likert.
     p <- suppressMessages(p + ggrepel::geom_text_repel(data = label_data, aes(label = scales::percent(percent, accuracy = 1), y = position, x = Item),
                   direction = "x",
-                  size = 3,
+                  size = 6,
                   max.overlaps = Inf,
                   show.legend = FALSE,
                   box.padding = 0,
@@ -344,8 +379,13 @@ custom_likert <- function(x, title="", wrap_label = TRUE, max_label_length = 30,
                   min.segment.length = 0,
                   max.time=1) +
       scale_x_discrete(labels = x_lab_func) +
+      xlab(x_label) +
+      ylab(y_label) +
       theme(
-        axis.text.y = element_text(size=label_text),
+        axis.title.x = element_text(size=x_title_size),
+        axis.title.y = element_text(size=y_title_size),
+        axis.text.x = element_text(size=x_axis_text_size),
+        axis.text.y = element_text(size=y_axis_text_size),
         legend.justification = c(1, 0),
         legend.direction = "horizontal",
         #legend.margin = margin(5, 5, 5, 5),
@@ -414,7 +454,7 @@ build_likert <- function(...) {
     # Pass this dataframe to the custom likert
     do.call(custom_likert, args) %>%
     # Create an html object from it.
-    plotTag(unlist(args[["title"]]))
+    plotTag(unlist(args[["title"]]), width = 800, height = 800)
 }
 
 # custom_scatter
@@ -430,29 +470,58 @@ build_likert <- function(...) {
 #   Output:
 #     
 #     A scatter plot
-custom_scatter <- function(data, x, y, line = FALSE, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
+custom_scatter <- function(data, 
+                           x, 
+                           y, 
+                           line = FALSE, 
+                           x_axis_logic = "wrap", 
+                           y_axis_logic = "wrap", 
+                           x_title_size = 10, 
+                           y_title_size = 10, 
+                           x_title_length = 40, 
+                           y_title_length = 40,
+                           x_axis_text_size = 20,
+                           y_axis_text_size = 20,
+                           dot_size = 6,
+                           ...) {
   # Enquo the x and y columns
   x <- enquo(x)
   y <- enquo(y)
+  
+  line <- as.logical(line)
+  
+  x_title_size <- as.numeric(x_title_size)
+  y_title_size <- as.numeric(y_title_size)
+  
+  x_title_length <- as.numeric(x_title_length)
+  y_title_length <- as.numeric(y_title_length)
+  
+  dot_size = as.numeric(dot_size)
   
   x_label = ''
   y_label = ''
   
   if (x_axis_logic == 'wrap')
-    x_label = str_wrap(as_label(x), 40)
+    x_label = str_wrap(as_label(x), max(c(x_title_length, 1)))
   
   if (y_axis_logic == 'wrap')
-    y_label = str_wrap(as_label(y), 40)
+    y_label = str_wrap(as_label(y), max(c(y_title_length, 1)))
   
   if (x_axis_logic == 'trunc')
-    x_label = str_trunc(as_label(x), 40)
+    x_label = str_trunc(as_label(x), max(c(x_title_length, 3)))
   
   if (y_axis_logic == 'trunc')
-    y_label = str_trunc(as_label(y), 40)
+    y_label = str_trunc(as_label(y), max(c(y_title_length, 3)))
   
   # Pass the data to ggplot
   data %>%
     ggplot(aes(x = !!x, y = !!y)) +
+    theme(
+      axis.title.x = element_text(size=x_title_size),
+      axis.title.y = element_text(size=y_title_size),
+      axis.text.x = element_text(size=x_axis_text_size),
+      axis.text.y = element_text(size=y_axis_text_size)
+    ) +
     xlab(x_label) +
     ylab(y_label) +
       if (line == TRUE)
@@ -460,20 +529,27 @@ custom_scatter <- function(data, x, y, line = FALSE, x_axis_logic = "wrap", y_ax
         geom_line(colour = "blue")
       else
         # Otherwise add points
-        geom_point(colour = "blue", shape = 19)
+        geom_point(colour = "blue", shape = 19, size = dot_size)
 }
 
-build_scatter <- function(x, y, title="", line=FALSE, ...) {
+build_scatter <- function(x, y, title="", ...) {
+  args <- lapply(X = list(...), FUN = unlist)
+  
   x <- unlist(x)
   y <- unlist(y)
   title <- unlist(title)
   line <- unlist(line)
   
-  x_label <- names_to_labels[x]
-  y_label <- names_to_labels[y]
+  x_label <- names_to_labels[[x]]
+  y_label <- names_to_labels[[y]]
   
-  if (line)
-    line <- TRUE
+  print(x_label)
+  
+  args[['x']] <- sym(x_label)
+  args[['y']] <- sym(y_label)
+  
+  print(y_label)
+
   # print(report_data)
   # Get date fields
   date_fields <- data_dictionary %>%
@@ -492,7 +568,7 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
                                      text_validation_type_or_show_slider_number == "datetime_seconds_dmy"~ "%Y-%m-%d %H:%M:%S",
                                      text_validation_type_or_show_slider_number == "datetime_seconds_mdy"~ "%Y-%m-%d %H:%M:%S",
                                      text_validation_type_or_show_slider_number == "datetime_seconds_ymd"~ "%Y-%m-%d %H:%M:%S"))
-  report_data %>%
+  args[['data']] <- report_data %>%
     mutate(
       # Select all the date fields
       across(all_of(date_fields$field_name), 
@@ -502,9 +578,10 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
              .names = "{.col}")
     ) %>%
     transmute(across(all_of(c(x, y)), .names = "{names_to_labels[.col]}")) %>%
-    na.omit() %>%
-    custom_scatter(!!sym(x_label), !!sym(y_label), line) %>%
-    plotTag(unlist(title))
+    na.omit()
+  
+    do.call(custom_scatter, args = args) %>%
+    plotTag(unlist(title), width = 800, height = 800)
   }
 
 # custom_bars
@@ -531,7 +608,27 @@ build_scatter <- function(x, y, title="", line=FALSE, ...) {
 #   Output:
 #     
 #     A bar plot
-custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 30, wrap_label = FALSE, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
+custom_bars <- function(data, 
+                        x, 
+                        y, 
+                        label2 = NULL, 
+                        percent = FALSE, 
+                        max_bars = 30, 
+                        wrap_label = FALSE, 
+                        max_label_length = 20, 
+                        digits = 2, 
+                        legend_text=5, 
+                        legend_rows=1, 
+                        x_axis_logic = "wrap", 
+                        y_axis_logic = "wrap",  
+                        x_title_size = 10, 
+                        y_title_size = 10,  
+                        x_title_length = 40, 
+                        y_title_length = 40,
+                        x_axis_text_size = 20,
+                        y_axis_text_size = 20,
+                        palette = viridis(10),
+                        ...) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -539,26 +636,34 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
   digits <- as.numeric(digits)
   legend_text <- as.numeric(legend_text)
   legend_rows <- as.numeric(legend_rows)
+  wrap_label <- as.logical(wrap_label)
+  max_label_length <- as.numeric(max_label_length)
   
+  x_title_size <- as.numeric(x_title_size)
+  y_title_size <- as.numeric(y_title_size)
+  
+  x_title_length <- as.numeric(x_title_length)
+  y_title_length <- as.numeric(y_title_length)
+
   x_label = ''
   y_label = ''
   
   if (x_axis_logic == 'wrap')
-    x_label = str_wrap(as_label(x), 40)
+    x_label = str_wrap(as_label(x), max(c(x_title_length, 1)))
   
   if (y_axis_logic == 'wrap')
-    y_label = str_wrap(as_label(y), 40)
+    y_label = str_wrap(as_label(y), max(c(y_title_length, 1)))
   
   if (x_axis_logic == 'trunc')
-    x_label = str_trunc(as_label(x), 40)
+    x_label = str_trunc(as_label(x), max(c(x_title_length, 3)))
   
   if (y_axis_logic == 'trunc')
-    y_label = str_trunc(as_label(y), 40)
+    y_label = str_trunc(as_label(y), max(c(y_title_length, 3)))
   
   margin = 15
   angle_rotation = 45
   v_just = 0.5
-  x_title_size = 8
+  # x_title_size = 8
   
   # Get list of categories
   categories <- eval_tidy(x, data = data %>% arrange(!!x))
@@ -570,7 +675,7 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
   n_bars <- nrow(data)
   
   # Set the size of the label text based on the number of bars
-  label_size <- if (n_bars > 7) 3 else 5
+  label_size <- if (n_bars > 10) 6 else 10
   
   # If label2 isn't passed or there are more than max_bars
   if (rlang::quo_is_null(label2))
@@ -641,7 +746,8 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
     # Create bars
     geom_bar(stat = "identity") +
     # Add viridis colors
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
+    # scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
+      scale_fill_manual(palette = colorRampPalette(palette), drop = FALSE, na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
     scale_x_discrete(breaks = bar_breaks, labels = x_lab_func, expand = expansion(c(0.05,0.05))) +
     ylab(y_label) +
     xlab(x_label) +
@@ -657,14 +763,14 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
             # Set the angle of the category labels based on bar count
             angle = angle_rotation,
             vjust = v_just,
+            size = x_axis_text_size,
             # Set the colour of the text to black
             colour = "black"
           ),
-          # Set the parameters for the y title
-          axis.title.y = element_text(
-            size=10,
-            colour = "black"
-          ),
+          # Set the parameters for the x and y titles
+          axis.title.x = element_text(size=x_title_size),
+          axis.title.y = element_text(size=y_title_size),
+          axis.text.y = element_text(size=y_axis_text_size),
           # Add a legend ant set its position
          legend.position = "bottom",
          legend.box = "horizontal",
@@ -706,31 +812,61 @@ custom_bars <- function(data, x, y, label2 = NULL, percent = FALSE, max_bars = 3
 #   Output:
 #     
 #     A pie chart
-custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 15, max_label_length = 20, digits = 2, legend_text=5, legend_rows=1, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
+custom_pie <- function(data, 
+                       x, 
+                       y, 
+                       title = "", 
+                       wrap_label = FALSE, 
+                       max_labels = 15, 
+                       max_label_length = 20, 
+                       digits = 2, 
+                       legend_text=5, 
+                       legend_rows=1, 
+                       x_axis_logic = "wrap", 
+                       y_axis_logic = "wrap",  
+                       x_title_size = 10, 
+                       y_title_size = 10,  
+                       x_title_length = 40, 
+                       y_title_length = 40,
+                       x_axis_text_size = 20,
+                       y_axis_text_size = 20,
+                       palette = viridis(10),
+                       ...) {
   # Enquo the x and y variables
   x <- enquo(x)
   y <- enquo(y)
   digits <- as.numeric(digits)
   legend_text <- as.numeric(legend_text)
   legend_rows <- as.numeric(legend_rows)
+  wrap_label <- as.logical(wrap_label)
+  max_label_length <- as.numeric(max_label_length)
+  
+  x_title_size <- as.numeric(x_title_size)
+  y_title_size <- as.numeric(y_title_size)
+  
+  x_title_length <- as.numeric(x_title_length)
+  y_title_length <- as.numeric(y_title_length)
   
   x_label = ''
   y_label = ''
   
   if (x_axis_logic == 'wrap')
-    x_label = str_wrap(as_label(x), 40)
+    x_label = str_wrap(as_label(x), max(c(x_title_length, 1)))
   
   if (y_axis_logic == 'wrap')
-    y_label = str_wrap(as_label(y), 40)
+    y_label = str_wrap(as_label(y), max(c(y_title_length, 1)))
   
   if (x_axis_logic == 'trunc')
-    x_label = str_trunc(as_label(x), 40)
+    x_label = str_trunc(as_label(x), max(c(x_title_length, 3)))
   
   if (y_axis_logic == 'trunc')
-    y_label = str_trunc(as_label(y), 40)
+    y_label = str_trunc(as_label(y), max(c(y_title_length, 3)))
   
   # Get the levels for the bars
   categories <- eval_tidy(x, data %>% arrange(!!x))
+  
+  #Get the unique categories
+  unique_categories <- unique(categories)
   
   # Compute the label colours
   label_color <- if (any(is.na(categories))) c(viridis(length(categories)-1), "grey") else viridis(length(categories))
@@ -768,6 +904,7 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
   category_labels <- if (nrow(label_pos) > 0)
     ggrepel::geom_label_repel(data = label_pos, aes(label = label, y = pos),
                               nudge_x = 1,
+                              size = x_axis_text_size/2,
                               color = label_pos$text_color,
                               max.overlaps = Inf,
                               show.legend = FALSE,
@@ -784,12 +921,15 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
     # Convert to pie
     coord_polar(theta = "y", clip = "off") +
     # Add "Turbo" viridis colours
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", labels = x_lab_func) +
+      scale_fill_manual(values = colorRampPalette(palette)(length(unique(categories))), drop = TRUE, na.value = "grey") +
+    # scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", labels = x_lab_func) +
     # Add labels to slices (amounts)
-    xlab(str_wrap(y_label, 40)) +
+    xlab(y_label) +
+    ylab('') +
     geom_text(aes(label = replace(round(!!y, digits), !!y == 0, "")),
               position = position_stack(vjust = 0.5),
-              color = text_color) +
+              color = text_color,
+              size = x_axis_text_size/2) +
     guides(fill=guide_legend(title.position= "top", title.hjust = 0.5, nrow = legend_rows)) +
     # Add labels to slices
     #scale_y_continuous(breaks = label_pos$pos, labels = label_pos$label)+
@@ -799,13 +939,11 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
     theme(
       # Remove ticks
       axis.ticks = element_blank(),
-      # Set label size
-      axis.text.y = element_text(size = 15),
-      axis.text.x = element_blank(),
-      axis.title.y = element_blank(),
+      axis.text = element_blank(),
+      axis.title.y = element_text(size=y_title_size),
       #legend.key.size = unit(0.5, "cm"),
       legend.text = element_text(size = legend_text),
-      #legend.title =element_blank(),
+      legend.title = element_text(size = x_title_size),
       legend.position = "bottom",
       legend.box = "horizontal",
       # Set title size and position
@@ -852,7 +990,30 @@ custom_pie <- function(data, x, y, title = "", wrap_label = FALSE, max_labels = 
 #   Output:
 #     
 #     A stacked bar plot
-custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max_bars = 20, max_colors = 20, wrap_labels = FALSE, max_label_length = Inf, digits = 2, sumfunc = "sum", legend_text=5, legend_rows=1, x_axis_logic = "wrap", y_axis_logic = "wrap", ...) {
+custom_stacked <- function(data, 
+                           x, 
+                           y, 
+                           fill, 
+                           title = "", 
+                           position = "stack", 
+                           max_bars = 20, 
+                           max_colors = 20, 
+                           wrap_labels = FALSE, 
+                           max_label_length = Inf, 
+                           digits = 2, 
+                           sumfunc = "sum", 
+                           legend_text=5, 
+                           legend_rows=1, 
+                           x_axis_logic = "wrap", 
+                           y_axis_logic = "wrap", 
+                           x_title_size = 10, 
+                           y_title_size = 10, 
+                           x_title_length = 40, 
+                           y_title_length = 40,
+                           x_axis_text_size = 20,
+                           y_axis_text_size = 20,
+                           palette = viridis(10),
+                           ...) {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
   y <- enquo(y)
@@ -861,20 +1022,28 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
   legend_text <- as.numeric(legend_text)
   legend_rows <- as.numeric(legend_rows)
   
+  x_title_size <- as.numeric(x_title_size)
+  y_title_size <- as.numeric(y_title_size)
+  
+  x_title_length <- as.numeric(x_title_length)
+  y_title_length <- as.numeric(y_title_length)
+  
   x_label = ''
   y_label = ''
   
   if (x_axis_logic == 'wrap')
-    x_label = str_wrap(as_label(x), 40)
+    x_label = str_wrap(as_label(x), max(c(x_title_length, 1)))
   
   if (y_axis_logic == 'wrap')
-    y_label = str_wrap(as_label(fill), 40)
+    y_label = str_wrap(as_label(fill), max(c(y_title_length, 1)))
   
   if (x_axis_logic == 'trunc')
-    x_label = str_trunc(as_label(x), 40)
+    x_label = str_trunc(as_label(x), max(c(x_title_length, 3)))
   
   if (y_axis_logic == 'trunc')
-    y_label = str_trunc(as_label(fill), 40)
+    y_label = str_trunc(as_label(fill), max(c(y_title_length, 3)))
+  
+  print(list(...))
   
   # Returns max_bars evenly spaced bar labels
   bar_names <- eval_tidy(x, data = data) %>% unique()
@@ -908,7 +1077,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     bar_text <-  max(1, 8 -7*x_bars*y_bars/(50))
     # Create a geom for the bar labels
     bar_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(round(!!fill, digits), !!fill == 0, "")),
-                            position = (position_dodge(width = 0.9)), size = bar_text, vjust = -0.2)
+                            position = (position_dodge(width = 0.9)), size = bar_text*2, vjust = -0.2)
     # Make the stack_labels blank
     stack_labels <- geom_blank()
   # Otherwise if they are stacked bar plots
@@ -924,7 +1093,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
                   !!fill := sum(!!fill)
                 ) %>%
                 mutate(label = ifelse(is.na(label) | is.infinite(label), 0, label)),
-                size = bar_text, vjust = -0.2)
+                size = bar_text*2, vjust = -0.2)
     
     # Stack text colors
     stack_colors <- if (any(is.na(color_names))) c(turbo(length(color_names) - 1), "grey") else turbo(length(color_names))
@@ -940,7 +1109,7 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     stack_text <- 1 + (bar_text-1)*stack_size/max(stack_size)
       # Create a geom of labels
     stack_labels <- geom_text(aes(x = !!x, y = !!fill, label = replace(round(!!fill, digits), !!fill == 0, "")),
-              position = (position_stack(vjust = 0.5)), color = stack_colors[["stack_text_colors"]], size = stack_text)
+              position = (position_stack(vjust = 0.5)), color = stack_colors[["stack_text_colors"]], size = stack_text*2)
   }
   
   # If there are more than max_bars bars (or groups)
@@ -967,11 +1136,12 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
     else 
       geom_bar(position = position, color="darkblue", stat = "identity")) +
     # Use a viridis colour scaling
-    scale_fill_viridis(discrete = T, option = "H", 
-                       na.value = "grey",
-                       # Only include max_colour colours in the legend
-                       breaks = color_breaks, 
-                       labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
+    # scale_fill_viridis(discrete = T, option = "H", 
+    #                    na.value = "grey",
+    #                    # Only include max_colour colours in the legend
+    #                    breaks = color_breaks, 
+    #                    labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
+      scale_fill_manual(values = colorRampPalette(palette)(y_bars), drop = TRUE, na.value = "grey") +
     # Only include labels for max_bars bars
     scale_x_discrete(breaks = replace(as.character(bar_names), !(bar_names %in% bar_breaks), ""), labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
     scale_y_continuous(expand = expansion(c(0, 0.25))) +
@@ -988,16 +1158,17 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
       plot.title = element_text(hjust = 0.5),
       # Specify the margin
       plot.margin = margin(0.15,0.15,0.15,0.15),
-      # Set the size of the x title
-      axis.title.x = element_text(size=x_size),
+      # Set the size of the x and y titles
+      axis.title.x = element_text(size=x_title_size),
+      axis.title.y = element_text(size=y_title_size),
       # Set the size, rotation and position of the x labels
-      axis.text.x = element_text(size=x_size,
+      axis.text.x = element_text(size=x_axis_text_size,
                                  angle = angle_rotation,
                                  vjust = v_just),
-      # Set the size of the y title
-      axis.title.y = element_text(size=10),
+      axis.text.y = element_text(size=y_axis_text_size),
       # Add a legend
       legend.text = element_text(size=legend_text),
+      legend.title = element_text(size=x_title_size),
       # Position the legend at the bottom
       legend.position = "bottom",
       # Set the legend to display horizontally
@@ -1050,7 +1221,15 @@ custom_stacked <- function(data, x, y, fill, title = "", position = "stack", max
 #   Output:
 #     
 #     A contingency table
-custom_crosstab <- function(data, x, y, fill, title = "", table_percents = FALSE, percent_margin = NULL, margin = NULL, ...) {
+custom_crosstab <- function(data, 
+                            x, 
+                            y, 
+                            fill, 
+                            title = "", 
+                            table_percents = FALSE, 
+                            percent_margin = NULL, 
+                            margin = NULL, 
+                            ...) {
   x <- as_label(enquo(x))
   y <- as_label(enquo(y))
   fill <- as_label(enquo(fill))
@@ -1058,6 +1237,7 @@ custom_crosstab <- function(data, x, y, fill, title = "", table_percents = FALSE
   margin <- as.numeric(margin)
   percent_margin <- as.numeric(percent_margin)
   table_percents <- as.logical(table_percents)
+  
   
 
   table <- xtabs(paste0("\`", fill, "\`~\`", x,"\`+\`",y, "\`"), data = data)
@@ -1197,12 +1377,20 @@ custom_sumtab <- function(data, x, y, digits = 0, table_percents = FALSE, ...) {
     htmltools::HTML() 
 }
 
-build_barplot <- function(keep_unused = FALSE, ...) {
+build_barplot <- function(keep_unused = FALSE, include = "graph", ...) {
   args <- lapply(X = list(...), FUN = unlist)
+  
   keep_unused = as.logical(unlist(keep_unused))
+  
+  if (!exists("height", args))
+    args[["count"]] <- TRUE
+  
   if (!exists("x", args))
     return("<h1>Must provide and x field</h1>")
   field_names <- list()
+  
+  include_graph <- (include == "graph" || include == "both")
+  include_table <- (include == "table" || include == "both")
   
   x <- args[['x']]
   x_label <- names_to_labels[x]
@@ -1295,15 +1483,19 @@ build_barplot <- function(keep_unused = FALSE, ...) {
     summarised_fnc #%>%
     # (function(data) {print(data %>% select(c(last_col(2):last_col())));return(data);})
   
+
   p <- do.call(graph_fnc, args)
   
   if (is.list(plot))
-    p <- paste0(plotTag(p[[1]], ""), plot[[2]])
+    p <- paste0(plotTag(p[[1]], "", width = 800, height = 800), plot[[2]])
   else
-    p <- plotTag(p, "")
+    p <- plotTag(p, "", width = 800, height = 800)
   
-  # If the table argument is present
-  if (exists("table", args)) {
+  if (!include_graph)
+    p <- ""
+  
+  # If the table argument is present NOTE: "table" arg is deprecated.
+  if (include_table || exists("table", args)) {
     
     if (exists("crosstab", args)) {
       args[["table"]] <- do.call(custom_crosstab, args)
@@ -1342,14 +1534,23 @@ build_barplot <- function(keep_unused = FALSE, ...) {
 #   Output:
 #     
 #     A map
-custom_map <- function(data, lat, lng, type = NULL, weight = NULL, title = "", dot_size = 5, digits = 1, ...) {
-  color = "#03F"
+custom_map <- function(data, 
+                       lat, 
+                       lng, 
+                       type = NULL, 
+                       weight = NULL, 
+                       title = "", 
+                       dot_size = 5, 
+                       digits = 1,
+                       palette = viridis(10), 
+                       ...) {
+  color = colorRampPalette(palette)(1)
   dot_size = as.numeric(dot_size)
   label = NULL
   labelOptions = NULL
   
   if (!is.null(type)) {
-    pal = colorFactor(turbo(length(unique(data[[type]]))), domain = unique(data[[type]]))
+    pal = colorFactor(palette, domain = unique(data[[type]]))
     color = pal(data[[type]])
   }
   
