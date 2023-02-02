@@ -583,10 +583,10 @@ function barplot_form(button) {
 								<div class="radio">
 									<h2>Include...</h2>
 									<label class="radio-label">
-										<input class="radio-state" type="radio"  name="include" value="graph" checked><div class="radio-button" checked></div>Only Graph
+										<input class="radio-state" type="radio"  name="include" value="graph" checked><div class="radio-button" checked></div>Graph
 									</label> 
 									<label class="radio-label cross-tab-table-percent">
-										<input class="radio-state" type="radio"  name="include"  value="table"><div class="radio-button"></div>Only Table
+										<input class="radio-state" type="radio"  name="include"  value="table"><div class="radio-button"></div>Table
 									</label>
 									<label class="radio-label cross-tab-table-percent">
 										<input class="radio-state" type="radio"  name="include"  value="both"><div class="radio-button"></div>Graph and Table
@@ -656,7 +656,7 @@ function barplot_form(button) {
 			  <label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
 			  <br><label class="y_title_length">Max y-axis characters<input type="number" step="1" name="y_title_length" value="80"></label>
 		  	</div>
-			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="14"></input></label>
+			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="25"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="open-color-picker" type="button">Choose Palette</button>
 			<div class="color-picker-modal">
