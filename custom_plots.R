@@ -293,6 +293,7 @@ custom_likert <- function(x,
                           y_title_length = 40,
                           x_axis_text_size = 20,
                           y_axis_text_size = 20,
+                          palette = viridis(10),
                           ...) {
   wrap_label <- as.logical(unlist(wrap_label))
   max_label_length <- as.numeric(unlist(max_label_length))
@@ -330,7 +331,7 @@ custom_likert <- function(x,
 
   p <- likert.bar.plot(likert(x),
                   as.percent = TRUE,
-                  colors = if (!any(is.na(levels(x[[1]])))) colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]]))) else c(colorRampPalette(c("forestgreen", "lightgoldenrod", "red3"))(length(levels(x[[1]])) - 1), "grey"),
+                  colors = if (!any(is.na(levels(x[[1]])))) colorRampPalette(palette)(length(levels(x[[1]]))) else c(colorRampPalette(palette)(length(levels(x[[1]])) - 1), "grey"),
                   # low.color="forestgreen",
                   # high.color = "red3",
                   # neutral.color = "lightgoldenrod",
@@ -481,6 +482,7 @@ custom_scatter <- function(data,
                            y_title_length = 40,
                            x_axis_text_size = 20,
                            y_axis_text_size = 20,
+                           dot_size = 6,
                            ...) {
   # Enquo the x and y columns
   x <- enquo(x)
@@ -493,6 +495,8 @@ custom_scatter <- function(data,
   
   x_title_length <- as.numeric(x_title_length)
   y_title_length <- as.numeric(y_title_length)
+  
+  dot_size = as.numeric(dot_size)
   
   x_label = ''
   y_label = ''
@@ -525,7 +529,7 @@ custom_scatter <- function(data,
         geom_line(colour = "blue")
       else
         # Otherwise add points
-        geom_point(colour = "blue", shape = 19)
+        geom_point(colour = "blue", shape = 19, size = dot_size)
 }
 
 build_scatter <- function(x, y, title="", ...) {
@@ -623,6 +627,7 @@ custom_bars <- function(data,
                         y_title_length = 40,
                         x_axis_text_size = 20,
                         y_axis_text_size = 20,
+                        palette = viridis(10),
                         ...) {
   # enquo the passed parameters to be used in aes
   x <- enquo(x)
@@ -738,7 +743,8 @@ custom_bars <- function(data,
     # Create bars
     geom_bar(stat = "identity") +
     # Add viridis colors
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
+    # scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
+      scale_fill_manual(palette = colorRampPalette(palette), drop = FALSE, na.value = "grey", breaks = bar_breaks, labels = x_lab_func) + 
     scale_x_discrete(breaks = bar_breaks, labels = x_lab_func, expand = expansion(c(0.05,0.05))) +
     ylab(y_label) +
     xlab(x_label) +
@@ -821,6 +827,7 @@ custom_pie <- function(data,
                        y_title_length = 40,
                        x_axis_text_size = 20,
                        y_axis_text_size = 20,
+                       palette = viridis(10),
                        ...) {
   # Enquo the x and y variables
   x <- enquo(x)
@@ -851,6 +858,9 @@ custom_pie <- function(data,
   
   # Get the levels for the bars
   categories <- eval_tidy(x, data %>% arrange(!!x))
+  
+  #Get the unique categories
+  unique_categories <- unique(categories)
   
   # Compute the label colours
   label_color <- if (any(is.na(categories))) c(viridis(length(categories)-1), "grey") else viridis(length(categories))
@@ -905,7 +915,8 @@ custom_pie <- function(data,
     # Convert to pie
     coord_polar(theta = "y", clip = "off") +
     # Add "Turbo" viridis colours
-    scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", labels = x_lab_func) +
+      scale_fill_manual(values = colorRampPalette(palette)(length(unique(categories))), drop = TRUE, na.value = "grey") +
+    # scale_fill_viridis(discrete = TRUE, option = "D", na.value = "grey", labels = x_lab_func) +
     # Add labels to slices (amounts)
     xlab(y_label) +
     ylab('') +
@@ -995,6 +1006,7 @@ custom_stacked <- function(data,
                            y_title_length = 40,
                            x_axis_text_size = 20,
                            y_axis_text_size = 20,
+                           palette = viridis(10),
                            ...) {
   # Enquo our passed parameters so they can be used in aes
   x <- enquo(x)
@@ -1115,11 +1127,12 @@ custom_stacked <- function(data,
     else 
       geom_bar(position = position, color="darkblue", stat = "identity")) +
     # Use a viridis colour scaling
-    scale_fill_viridis(discrete = T, option = "H", 
-                       na.value = "grey",
-                       # Only include max_colour colours in the legend
-                       breaks = color_breaks, 
-                       labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
+    # scale_fill_viridis(discrete = T, option = "H", 
+    #                    na.value = "grey",
+    #                    # Only include max_colour colours in the legend
+    #                    breaks = color_breaks, 
+    #                    labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
+      scale_fill_manual(values = colorRampPalette(palette)(y_bars), drop = TRUE, na.value = "grey") +
     # Only include labels for max_bars bars
     scale_x_discrete(breaks = replace(as.character(bar_names), !(bar_names %in% bar_breaks), ""), labels = function(x) suppressWarnings(label_func(x, width = max_label_length))) +
     scale_y_continuous(expand = expansion(c(0, 0.25))) +
@@ -1355,13 +1368,16 @@ custom_sumtab <- function(data, x, y, digits = 0, table_percents = FALSE, ...) {
     htmltools::HTML() 
 }
 
-build_barplot <- function(keep_unused = FALSE, ...) {
+build_barplot <- function(keep_unused = FALSE, include = "graph", ...) {
   args <- lapply(X = list(...), FUN = unlist)
-  # print(args)
+  
   keep_unused = as.logical(unlist(keep_unused))
   if (!exists("x", args))
     return("<h1>Must provide and x field</h1>")
   field_names <- list()
+  
+  include_graph <- (include == "graph" || include == "both")
+  include_table <- (include == "table" || include == "both")
   
   x <- args[['x']]
   x_label <- names_to_labels[x]
@@ -1454,6 +1470,7 @@ build_barplot <- function(keep_unused = FALSE, ...) {
     summarised_fnc #%>%
     # (function(data) {print(data %>% select(c(last_col(2):last_col())));return(data);})
   
+
   p <- do.call(graph_fnc, args)
   
   if (is.list(plot))
@@ -1461,8 +1478,11 @@ build_barplot <- function(keep_unused = FALSE, ...) {
   else
     p <- plotTag(p, "", width = 800, height = 800)
   
-  # If the table argument is present
-  if (exists("table", args)) {
+  if (!include_graph)
+    p <- ""
+  
+  # If the table argument is present NOTE: "table" arg is deprecated.
+  if (include_table || exists("table", args)) {
     
     if (exists("crosstab", args)) {
       args[["table"]] <- do.call(custom_crosstab, args)
@@ -1501,14 +1521,23 @@ build_barplot <- function(keep_unused = FALSE, ...) {
 #   Output:
 #     
 #     A map
-custom_map <- function(data, lat, lng, type = NULL, weight = NULL, title = "", dot_size = 5, digits = 1, ...) {
-  color = "#03F"
+custom_map <- function(data, 
+                       lat, 
+                       lng, 
+                       type = NULL, 
+                       weight = NULL, 
+                       title = "", 
+                       dot_size = 5, 
+                       digits = 1,
+                       palette = viridis(10), 
+                       ...) {
+  color = colorRampPalette(palette)(1)
   dot_size = as.numeric(dot_size)
   label = NULL
   labelOptions = NULL
   
   if (!is.null(type)) {
-    pal = colorFactor(turbo(length(unique(data[[type]]))), domain = unique(data[[type]]))
+    pal = colorFactor(palette, domain = unique(data[[type]]))
     color = pal(data[[type]])
   }
   

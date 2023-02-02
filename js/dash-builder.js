@@ -192,6 +192,16 @@ function likert_form(button) {
 		  	</div>
 			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="14"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
+			<button class="open-color-picker" type="button">Choose Palette</button>
+			<div class="color-picker-modal">
+				<div class="color-picker-window">
+					<p>The colors for the bars will be interpolated between the colors you select</p>
+					<div class="color-picker"></div>
+					<a class="default-colors">Reset to default</a>
+					<button class="close-color-picker" type="button">Close</button>
+					<br>
+				</div>
+			</div>
 			<button class="close-options" type="button">Close</button>`;
 	
 	// Create a new form with default buttons
@@ -309,6 +319,8 @@ function likert_form(button) {
 
 	axis_logic(new_form);
 
+	add_color_picker(new_form, ["#228B22", "#EEDD82", "#CD0000"]);
+
 	return new_form;
 }
 
@@ -366,6 +378,7 @@ function scatter_form(button) {
 	let other_options = 
 			`
 			<label>Description<input type="text" name="description"></label>
+			<br><label>Dot size<input type="number" name="dot_size" value="6" step="1"></label>
 			<div class="radio axis-logic">
 				<hr><h3>How should x-axis be handeled?</h3>
 				<label>x-axis title size <input type="number" name="x_title_size" value="30" step="1"></label><br>
@@ -567,7 +580,18 @@ function barplot_form(button) {
 							</label>
 							<br><label class="container keep-unused">Keep Unused Options (option pairs for crosstabs) <input type="checkbox" name="keep_unused" value="true" checked><span class="checkmark"></span></label>
 							<div class="table-options">
-								<br><label class="container include-table">Include Table <input class="include-table" type="checkbox" name="table" value="true"><span class="checkmark"></span></label>
+								<div class="radio">
+									<h2>Include...</h2>
+									<label class="radio-label">
+										<input class="radio-state" type="radio"  name="include" value="graph" checked><div class="radio-button" checked></div>Only Graph
+									</label> 
+									<label class="radio-label cross-tab-table-percent">
+										<input class="radio-state" type="radio"  name="include"  value="table"><div class="radio-button"></div>Only Table
+									</label>
+									<label class="radio-label cross-tab-table-percent">
+										<input class="radio-state" type="radio"  name="include"  value="both"><div class="radio-button"></div>Graph and Table
+									</label>
+								</div>
 								<div class="table-options-extra">
 									<div class="radio cross-tab-table-margins">
 										<h2>Show totals by...</h2>
@@ -634,6 +658,16 @@ function barplot_form(button) {
 		  	</div>
 			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="14"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
+			<button class="open-color-picker" type="button">Choose Palette</button>
+			<div class="color-picker-modal">
+				<div class="color-picker-window">
+					<p>The colors for the bars will be interpolated between the colors you select</p>
+					<div class="color-picker"></div>
+					<a class="default-colors">Reset to default</a>
+					<button class="close-color-picker" type="button">Close</button>
+					<br>
+				</div>
+			</div>
 			<button class="close-options" type="button">Close</button>`;
 
 	// Create a new form with default buttons
@@ -959,6 +993,8 @@ function barplot_form(button) {
 
 	axis_logic(new_form);
 
+	add_color_picker(new_form);
+
 	return new_form;
 }
 
@@ -1052,6 +1088,16 @@ function map_form(button) {
 			<label>Description<input type="text" name="description"></label>
 			<hr>
 			<label>Mean dot size<input type="number" step="1" name="dot_size" value="10"></label>
+			<button class="open-color-picker" type="button">Choose Palette</button>
+			<div class="color-picker-modal">			
+				<div class="color-picker-window">
+					<p>The colors for the locations will be interpolated between the colors you select</p>
+					<div class="color-picker"></div>
+						<a class="default-colors">Reset to default</a>
+						<button class="close-color-picker" type="button">Close</button>
+						<br>
+				</div>
+			</div>
 			<button class="close-options" type="button">Close</button>`;
 
 
@@ -1251,6 +1297,8 @@ function map_form(button) {
 			
 	});
 
+	add_color_picker(new_form);
+
 	return new_form;
 }
 
@@ -1284,6 +1332,7 @@ function network_div() {
 	$('#add_network').click(function() {
 		network_form(this);
 	});
+
 
 }
 
@@ -1519,6 +1568,70 @@ function axis_logic(form) {
 	if (y_selected.val() == "none")
 		$(this).find('.y_title_length').hide();
 	});
+}
+
+function add_color_picker(form, defaultColors = ["#440154", "#482878", "#3E4A89", "#31688E", "#26828E", "#1F9E89", "#35B779", "#6DCD59","#B4DE2C", "#FDE725"]) {
+	// Open color picker when button is clicked
+	form.find('.open-color-picker').click(function () {
+		form.find('.color-picker-modal').css('display', 'block');
+	});
+
+	// Close color picker when close button is clicked
+	form.find('.close-color-picker').click(function () {
+		form.find('.color-picker-modal').css('display', 'none');
+		form.change();
+	});
+
+	form.find('.default-colors').click(function () {
+		form.find('.color-picker').empty();
+
+		form.find('.color-picker').append(color_button());
+
+		// Close modal button closes modal
+		$.each(defaultColors, function(key, color) {
+			form.find('.color-picker').append(add_color(color));
+			form.find('.color-picker').append(color_button());
+		});
+	});
+
+
+	form.find('.color-picker').append(color_button());
+
+	// Close modal button closes modal
+	$.each(defaultColors, function(key, color) {
+		form.find('.color-picker').append(add_color(color));
+		form.find('.color-picker').append(color_button());
+	});
+
+	form.change();
+}
+
+function color_button() {
+	let new_button = $(`<input type="button" value="+" class="color-button">`);
+
+	new_button.click(function () {
+		$(this).before(color_button());
+		$(this).after(color_button());
+		$(this).replaceWith(add_color());
+	});
+
+	return(new_button);
+}
+
+function add_color(color = "#FFFFFF") {
+	let color_selector = 
+	$(`<div class="color-selector">
+		<input type="color" class="palette-selector" name="palette" value="${color}">
+		<button class="remove-color" type="button"><i class="fa fa-x" aria-hidden="true"></i></button>
+	</div>`);
+
+	color_selector.find('.remove-color').click(function () {
+		$(this).parent().prev().remove();
+		$(this).parent().next().remove();
+		$(this).parent().replaceWith(color_button());
+	});
+
+	return(color_selector);
 }
 
 function generate_graph(form) {
@@ -1910,15 +2023,15 @@ function load_form(graph) {
 
 	// Check all of the checkboxes that are meant to be included
 	form.find("input[type=checkbox]").each(function() {
-		$(this).prop('checked', $(this).attr('name') in form_data && form_data[$(this).attr('name')].includes($(this).val())).change();
+		if ($(this).attr('name') in form_data)
+			$(this).prop('checked', form_data[$(this).attr('name')].includes($(this).val())).change();
 	});
 
 	// Check all of the radios that are meant to be included
 	form.find("input[type=radio]").each(function() {
-		$(this).prop('checked', $(this).attr('name') in form_data && form_data[$(this).attr('name')].includes($(this).val())).change();
+		if ($(this).attr('name') in form_data)
+			$(this).prop('checked', form_data[$(this).attr('name')].includes($(this).val())).change();
 	});
-
-
 
 	// Set all of the text boxes
 	form.find("input[type=text]").each(function() {
@@ -1932,6 +2045,19 @@ function load_form(graph) {
 			$(this).val(form_data[$(this).attr("name")][0]).change();
 	});
 	
+	// If palette is in form_data update the palette to match saved values.
+	if ("palette" in form_data) {
+		form.find('.color-picker').empty();
+
+		form.find('.color-picker').append(color_button());
+
+		// Close modal button closes modal
+		$.each(form_data['palette'], function(key, color) {
+			form.find('.color-picker').append(add_color(color));
+			form.find('.color-picker').append(color_button());
+		});
+	}
+
 	
 
     update_report(form);
