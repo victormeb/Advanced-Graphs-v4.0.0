@@ -63,9 +63,10 @@ report_data <- read.csv(report_data_path, header = TRUE, sep = ",", stringsAsFac
 data_dictionary <- read.csv(data_dictionary_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 repeat_instruments <- read.csv(repeat_instruments_path, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
+
 # Remove HTML if there is any  
 html_labels <- data_dictionary[data_dictionary$field_name %in% names(report_data), "field_label"] %>%
-  lapply(function(x) htmlParse(x,  asText = TRUE) %>% xpathApply("//body//text()[not(ancestor::script)][not(ancestor::style)][not(ancestor::noscript)]", xmlValue) %>% paste0(collapse = "")) %>% unlist()
+  lapply(function(x) tryCatch(htmlParse(x, asText = TRUE) %>% xpathApply("//body//text()[not(ancestor::script)][not(ancestor::style)][not(ancestor::noscript)]", xmlValue) %>% paste0(collapse = ""),  error = function(e) "",silent =  T) ) %>% unlist()
 
 # # Remove any entries created which hold only whitespace
 # html_labels <- html_labels[which(nchar(trimws(html_labels, whitespace = "[ \t\r\n\xA0\f]")) != 0)]
