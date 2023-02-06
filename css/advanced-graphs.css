@@ -117,7 +117,7 @@
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: 50% !important;
+    width: 70% !important;
     height: 50% !important;
   }
 
@@ -127,7 +127,7 @@
   }
 
 
-  .plot-div h1 {
+  .plot-div h2 {
     text-align: center;
   }
 

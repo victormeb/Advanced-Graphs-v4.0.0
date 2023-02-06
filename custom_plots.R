@@ -282,7 +282,8 @@ custom_likert <- function(x,
                           title="", 
                           wrap_label = TRUE, 
                           max_label_length = 30, 
-                          label_text = 3, 
+                          label_text = 3,
+                          show_legend = "bottom",
                           legend_text = 5, 
                           legend_rows = 1, 
                           x_axis_logic = "wrap",
@@ -298,6 +299,7 @@ custom_likert <- function(x,
   wrap_label <- as.logical(unlist(wrap_label))
   max_label_length <- as.numeric(unlist(max_label_length))
   max_label_length <- as.numeric(unlist(max_label_length))
+  
   legend_text <- as.numeric(unlist(legend_text))
   legend_rows <- as.numeric(unlist(legend_rows))
   label_text <- as.numeric(unlist(label_text))
@@ -388,6 +390,7 @@ custom_likert <- function(x,
         axis.text.y = element_text(size=y_axis_text_size),
         legend.justification = c(1, 0),
         legend.direction = "horizontal",
+        legend.position = show_legend,
         #legend.margin = margin(5, 5, 5, 5),
         #legend.box.spacing = unit(1, "cm"),
         legend.title = element_blank(),
@@ -617,6 +620,7 @@ custom_bars <- function(data,
                         wrap_label = FALSE, 
                         max_label_length = 20, 
                         digits = 2, 
+                        show_legend = "bottom",
                         legend_text=5, 
                         legend_rows=1, 
                         x_axis_logic = "wrap", 
@@ -772,7 +776,7 @@ custom_bars <- function(data,
           axis.title.y = element_text(size=y_title_size),
           axis.text.y = element_text(size=y_axis_text_size),
           # Add a legend ant set its position
-         legend.position = "bottom",
+         legend.position = show_legend,
          legend.box = "horizontal",
          legend.title = element_blank(),
          legend.text = element_text(size = legend_text)
@@ -820,6 +824,7 @@ custom_pie <- function(data,
                        max_labels = 15, 
                        max_label_length = 20, 
                        digits = 2, 
+                       show_legend = "bottom",
                        legend_text=5, 
                        legend_rows=1, 
                        x_axis_logic = "wrap", 
@@ -944,7 +949,7 @@ custom_pie <- function(data,
       #legend.key.size = unit(0.5, "cm"),
       legend.text = element_text(size = legend_text),
       legend.title = element_text(size = x_title_size),
-      legend.position = "bottom",
+      legend.position = show_legend,
       legend.box = "horizontal",
       # Set title size and position
       plot.title = element_text(hjust = 0.5, size=5)
@@ -1003,6 +1008,7 @@ custom_stacked <- function(data,
                            digits = 2, 
                            sumfunc = "sum", 
                            legend_text=5, 
+                           show_legend = "bottom",
                            legend_rows=1, 
                            x_axis_logic = "wrap", 
                            y_axis_logic = "wrap", 
@@ -1170,7 +1176,7 @@ custom_stacked <- function(data,
       legend.text = element_text(size=legend_text),
       legend.title = element_text(size=x_title_size),
       # Position the legend at the bottom
-      legend.position = "bottom",
+      legend.position = show_legend,
       # Set the legend to display horizontally
       legend.box = "horizontal"
     ) +
@@ -1537,6 +1543,7 @@ build_barplot <- function(keep_unused = FALSE, include = "graph", ...) {
 custom_map <- function(data, 
                        lat, 
                        lng, 
+                       show_legend = "bottom",
                        type = NULL, 
                        weight = NULL, 
                        title = "", 
@@ -1594,7 +1601,7 @@ custom_map <- function(data,
     ) %>%
     (
       function(map) {
-        if (!is.null(type))
+        if (!is.null(type) && show_legend != "none")
           addLegend(map, "bottomright", pal = pal, opacity = 1, values = data[[type]], title = type)
         else
           map
@@ -1732,9 +1739,9 @@ build_network <- function(...) {
 
 advanced_graph_div <- function(plot, title, description) {
   paste0(
-    "<div class=\"plot-div\"><h1>",
+    "<div class=\"plot-div\"><h2>",
     title,
-    "</h1>",
+    "</h2>",
     plot,
     "<p>",
     description,

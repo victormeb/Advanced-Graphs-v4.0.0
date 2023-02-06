@@ -190,6 +190,7 @@ function likert_form(button) {
 			  <label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
 			  <br><label class="y_title_length">Max y-axis characters<input type="number" step="1" name="y_title_length" value="80"></label>
 		  	</div>
+			<br><label class="container" style="display: inline;">Hide legend<input type="checkbox"  name="show_legend" value="none"><span class="checkmark"></span></label>
 			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="14"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="open-color-picker" type="button">Choose Palette</button>
@@ -656,6 +657,7 @@ function barplot_form(button) {
 			  <label class="radio-label"><input class="radio-state label-as-is" name="y_axis_logic" type="radio" value="none"><div class="radio-button"></div>None</label>
 			  <br><label class="y_title_length">Max y-axis characters<input type="number" step="1" name="y_title_length" value="80"></label>
 		  	</div>
+			<br><label class="container" style="display: inline;">Hide legend<input type="checkbox"  name="show_legend" value="none"><span class="checkmark"></span></label>
 			<br><label>Legend text size<input type="number" step="1" name="legend_text" value="25"></input></label>
 			<br><label>How many rows in the legend <input type="number" step="1" name="legend_rows" value="1"></input>(in case legend spills off image)</label>
 			<button class="open-color-picker" type="button">Choose Palette</button>
@@ -1090,6 +1092,7 @@ function map_form(button) {
 			<label>Description<input type="text" name="description"></label>
 			<hr>
 			<label>Mean dot size<input type="number" step="1" name="dot_size" value="10"></label>
+			<br><label class="container" style="display: inline;">Hide legend<input type="checkbox"  name="show_legend" value="none"><span class="checkmark"></span></label>
 			<button class="open-color-picker" type="button">Choose Palette</button>
 			<div class="color-picker-modal">			
 				<div class="color-picker-window">
