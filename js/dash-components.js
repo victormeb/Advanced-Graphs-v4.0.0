@@ -12,7 +12,7 @@ AdvancedGraphsInteractiveComponents.css.add_button =
 AdvancedGraphsInteractiveComponents.css.graph_form = 
 ``;
 
-AdvancedGraphsInteractiveComponents.css.dropdown_container = 
+AdvancedGraphsInteractiveComponents.css.graph_selector = 
 ``;
 
 
@@ -36,7 +36,7 @@ AdvancedGraphsInteractiveComponents.main_page = function(title = "Advanced Graph
     // Add a function to our button.
     add_button.onclick = function() {
         // Create a new graph before this button.
-        main_page.insertBefore(this.new_graph(), add_button);
+        main_page.insertBefore(this.newGraph(), add_button);
     }
 
 
@@ -44,49 +44,65 @@ AdvancedGraphsInteractiveComponents.main_page = function(title = "Advanced Graph
     main_page.append(add_button);
 }
 
-AdvancedGraphsInteractiveComponents.new_graph() = function() {
-    // ----------------------
-    // type dropdown   instrument dropdown     /\  <- dropdown_container
-    // ----------------------                      
-    // graph options                               <- graph_options
-    // ----------------------
-    // preview       delete                    \/  <- buttons
-    let new_graph = document.createElement("div");
-    new_graph.setAttribute("style", AdvancedGraphsInteractiveComponents.css.graph_form);
+AdvancedGraphsInteractiveComponents.createGraphSelector = function () {
+    let graph_type_selector = document.createElement("div");
+    graph_type_selector.setAttribute("style", AdvancedGraphsInteractiveComponents.css.graph_selector);
 
-    let dropdown_container = document.createElement("div");
-    new_graph.setAttribute("style", AdvancedGraphsInteractiveComponents.css.dropdown_container);
-
-    let graph_options = document.createElement("div");
-
-    // let buttons = 
-
-    let type_dropdown = this.dropdown("type", this.language.tt_type, true);
-    type_dropdown.name = "type";
-
-    let savedGraphs = {};
+    let saved_graphs = {};
     let graph_types = this.graph_types;
 
     for (const graph_type of this.graph_types) {
         let option = document.createElement("option");
         option.value = graph_type.type;
         option.text = graph_type.name;
-        savedGraphs[graph_type.type] = {};
+        saved_graphs[graph_type.type] = {};
     }
 
     type_dropdown.onfocus = function() {
+        if (this.value)
         this.oldValue = this.value;
     }
+}
+
+AdvancedGraphsInteractiveComponents.newGraph = function() {
+    // ----------------------
+    // type dropdown   instrument dropdown     /\  <- graph_type_selector
+    // ----------------------                      
+    // graph options                               <- graph_options
+    // ----------------------
+    // preview       delete                    \/  <- buttons
+    
+    // Create the container for the new graph
+    let new_graph = document.createElement("div");
+    new_graph.setAttribute("style", AdvancedGraphsInteractiveComponents.css.graph_form);
+
+    // Create the container for the graph and instrument selector
+    let graph_type_selector = this.createGraphSelector();
+
+    // Create an empty div that will hold the graph options
+    let graph_options = document.createElement("div");
+
+    // Create a 
+    let preview_buttons = this.createPreviewButtons();
+
+    // Append each of these elements to the new_graph container
+    new_graph.append([dropdown_container, graph_options, preview_buttons]);
+
+
+
 
     type_dropdown.onchange = function() {
         if (this.oldValue)
             savedGraphs[this.oldValue] = new FormData(new_graph.querySelector('.graph-options'));
     
+        let new_graph_options = {};
+
         if (this.value in savedGraphs) {
-            let graph_options = graph_types[this.value].build(savedGraphs[this.value]);
-            
+            new_graph_options = graph_types[this.value].build(savedGraphs[this.value]);
             return;
         }
+
+
     }
 
     let changeFunction = function() {
