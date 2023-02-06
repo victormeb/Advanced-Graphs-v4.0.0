@@ -589,6 +589,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$as_array = ($format == "array") ?  $this->report_fields : array();
 	
 		// Retrieve report from redcap
+		// $content = REDCap::getReport($report_id, $format, false, false);
+		
 		$content = DataExport::doReport($report_id, 'export', $format, false, false,
 										false, false, $removeIdentifierFields, $hashRecordID, $removeUnvalidatedTextFields,
 										$removeNotesFields, $removeDateFields, false, false, array(), 
@@ -603,10 +605,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		global $lang, $user_rights;
 		$report = array();
 		$Proj = $this->getProject($pid);
-
 		if ($report_id === 0 || $report_id == 'ALL' || $report_id == 'SELECTED') {
 			// Add to reports array
-			$report = $this->getTableColumns('redcap_reports');
+			$report = getTableColumns('redcap_reports');
 			// Pre-fill empty slots for limiters and fields
 			$report['fields'] = array();
 			$report['limiter_fields'] = array();

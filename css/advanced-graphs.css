@@ -117,12 +117,17 @@
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: 50% !important;
+    width: 70% !important;
     height: 50% !important;
   }
 
+  .plot-div .leaflet img {
+    width: unset !important;
+    height: unset !important;
+  }
 
-  .plot-div h1 {
+
+  .plot-div h2 {
     text-align: center;
   }
 
@@ -164,15 +169,14 @@
   
   .preview-pane {
       grid-area: preview-pane;
-      /* margin: auto;
-       width: 50%; */
-  }
+  } 
+ 
   
-  .preview-pane img {
+  /* .preview-pane img {
       margin-left: 25%;
       width: 400px !important;
       height: 400px !important;
-  }
+  } */
   
   .buttons {
       display: inline;

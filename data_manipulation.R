@@ -412,7 +412,7 @@ parse_categories <- function(data) {
         options_code = options[,1],
         # option labels
         # Name this by the options_code and fix duplicate names
-        options_label = mapply(function(x,y) y, options[,1], vctrs::vec_as_names(options[,2], repair = "unique", quiet = TRUE))
+        options_label = stripHTML(mapply(function(x,y) y, options[,1], vctrs::vec_as_names(options[,2], repair = "unique", quiet = TRUE)))
       )
     },
     data$field_name, 
@@ -431,7 +431,8 @@ parse_options <- function(options) {
     # Split option codes from option labels over ,
     str_split(",", 2, simplify = TRUE) %>% 
     # Remove leading and trailing whitespace
-    gsub(pattern = "^\\s+|\\s+^", replacement = "")
+    gsub(pattern = "^\\s+|\\s+^", replacement = "") %>%
+    stripHTML()
 }
 
 # parse_live_filters
@@ -505,4 +506,8 @@ parse_live_filters <- function (parameters, categories, data_dictionary,live_fil
       else
         data
     })
+}
+
+stripHTML <- function(htmlString) {
+  return(gsub("<.*?>", "", htmlString))
 }
