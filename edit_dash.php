@@ -113,7 +113,7 @@ console.log("Added event listener");
     console.log("Added event listener");
 		// Initialize the module object
 
-		const graphContainer = document.getElementById('graph-container');
+		const graphContainer = document.getElementById('graph-selectors-container');
     
     // Define a function to generate the select element based on the dataframe
     function generateGraphTypeSelect(dataframe) {
