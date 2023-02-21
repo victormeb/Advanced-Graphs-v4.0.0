@@ -181,8 +181,8 @@ console.log("Added event listener");
 function addGraphSelector() {
     // Clone the first graph selector form and modify the necessary elements
     const newGraphSelector = graphContainer.firstElementChild.cloneNode(true);
-    const graphTypeSelect = newGraphSelector.querySelector('.graph-type-select');
-    const parameterContainer = newGraphSelector.querySelector('.parameter-container');
+    const graphTypeSelect = newGraphSelector.querySelector('.graph-selector');
+    const parameterContainer = newGraphSelector.querySelector('.graph-parameters-container');
     
     // Generate the graph type select based on the dataframe
     const dataframe = {}/* insert your dataframe here */;
@@ -197,17 +197,16 @@ function addGraphSelector() {
         showParametersForGraphType(newGraphTypeSelect.value, parameterContainer);
     });
     
-    newGraphSelector.querySelector('.add-graph-selector').addEventListener('click', addGraphSelector);
-    newGraphSelector.querySelector('.remove-graph-selector').addEventListener('click', () => {
+    newGraphSelector.querySelector('.remove-graph-selector-button').addEventListener('click', () => {
         newGraphSelector.remove();
     });
-    newGraphSelector.querySelector('.move-up-graph-selector').addEventListener('click', () => {
+    newGraphSelector.querySelector('.move-graph-up-button').addEventListener('click', () => {
         const previousSibling = newGraphSelector.previousElementSibling;
         if (previousSibling) {
             graphContainer.insertBefore(newGraphSelector, previousSibling);
         }
     });
-    newGraphSelector.querySelector('.move-down-graph-selector').addEventListener('click', () => {
+    newGraphSelector.querySelector('.move-graph-down-button').addEventListener('click', () => {
         const nextSibling = newGraphSelector.nextElementSibling;
         if (nextSibling) {
             graphContainer.insertBefore(nextSibling, newGraphSelector);
@@ -222,6 +221,8 @@ function addGraphSelector() {
 const addGraphButton = document.getElementById('add-graph-selector-button');
 addGraphButton.addEventListener('click', addGraphSelector);
 console.log("Added event listener");
+
+
 }($, document, window));
 </script>
 <div id="dashboard_saved_success_dialog" class="simpleDialog" style=""><div style="font-size:14px;">The dashboard named "<span style="font-weight:bold;">Example dashboard</span>" has been successfully saved.</div>
