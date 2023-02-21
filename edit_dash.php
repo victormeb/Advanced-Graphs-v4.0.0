@@ -122,7 +122,7 @@ console.log("Added event listener");
         graphTypeSelect.className = 'graph-type-select';
         
         // Add options based on the columns in the dataframe
-        if (dataframe.columns.includes('x') && dataframe.columns.includes('y')) {
+        if (true) {
             const barChartOption = document.createElement('option');
             barChartOption.value = 'bar-chart';
             barChartOption.textContent = 'Bar chart';
@@ -134,7 +134,7 @@ console.log("Added event listener");
             graphTypeSelect.appendChild(lineChartOption);
         }
         
-        if (dataframe.columns.includes('value') && dataframe.columns.includes('label')) {
+        if (true) {
             const pieChartOption = document.createElement('option');
             pieChartOption.value = 'pie-chart';
             pieChartOption.textContent = 'Pie chart';
