@@ -374,9 +374,6 @@ const saveDashboardButton = document.getElementById('save-dashboard-button');
 saveDashboardButton.addEventListener('click', () => {
     saveDashboard();
 });
-
-<script>
-// write a web based form that is intended to be interactive and allow you to select the parameters for a particular graph in a way that is modular and allows for new graph types to added easily. I want to be able to add new instances of the graph selector and be able to change the order of graphs. I'd also like the code to only show graph types that are able to be created given a data structure that has a list of categorical variables, a list of numerical variables, a list of longitudinal and latitudinal variables, and a list of variables that can be interpreted as graphs. I'd like the conditions for which fields can be used to be create each graph to be based. I want each graph selector to have a preview button which can either be an ajax request, or can be a call to a d3 library wrapper function that has a comprehensive set of parameters. I also want to be able to save the list of graphs to be used as a viewable dashboard later.
 </script>
 <div id="dashboard_saved_success_dialog" class="simpleDialog" style=""><div style="font-size:14px;">The dashboard named "<span style="font-weight:bold;">Example dashboard</span>" has been successfully saved.</div>
 </div>
