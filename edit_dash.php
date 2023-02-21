@@ -55,175 +55,328 @@ $module->loadCSS("advanced-graphs.css");
 $title = $report_id ? "<h1>Advanced Graphs</h1>" : "<h1>New Advanced Graphs Dashboards must be run from the context of a report</h1>";
 echo "<div id=\"advanced_graphs\">$title</div>";
 ?>
-<form id="graphs-form">
-    <div id="graph-selectors-container">
-        <!-- Add the first graph selector by default -->
-        <div class="graph-selector" id="graph-selector-0">
-            <label for="graph-type-0">Select a graph type:</label>
-            <select name="graph-type-0" id="graph-type-0">
-                <option value="bar-plot">Bar plot</option>
-                <option value="grouped-bar-plot">Grouped bar plot</option>
-                <option value="stacked-bar-plot">Stacked bar plot</option>
-                <option value="pie-chart">Pie chart</option>
-                <option value="scatter-plot">Scatter plot</option>
-                <option value="likert-plot">Likert plot</option>
-                <option value="table">Table</option>
-                <option value="map">Map</option>
-                <option value="network">Network</option>
+<!-- HTML for the form -->
+<div id="graph-container">
+    <div class="graph-selector">
+        <form>
+            <label for="graph-type-1">Select a graph type:</label>
+            <select name="graph-type" id="graph-type-1">
+                <!-- Options for the available graph types based on the data structure -->
             </select>
-
-            <!-- Include a container element for the parameters -->
-            <div class="graph-parameters-container" id="graph-parameters-container-0"></div>
-
-            <!-- Add buttons to remove the graph selector or move it up/down -->
-            <button class="remove-graph-selector-button" type="button" data-graph-selector-index="0">Remove graph</button>
-            <button class="move-graph-up-button" type="button" data-graph-selector-index="0">Move up</button>
-            <button class="move-graph-down-button" type="button" data-graph-selector-index="0">Move down</button>
+            
+            <div class="parameter-container"></div>
+            
+            <button type="button" class="preview-button">Preview</button>
+        </form>
+        
+        <div class="graph-selector-buttons">
+            <button type="button" class="add-graph-selector">Add Graph</button>
+            <button type="button" class="remove-graph-selector">Remove Graph</button>
+            <button type="button" class="move-up-graph-selector">Move Up</button>
+            <button type="button" class="move-down-graph-selector">Move Down</button>
         </div>
     </div>
+    
+    <button type="button" id="save-button">Save</button>
+</div>
 
-    <!-- Add a button to add a new graph selector -->
-    <button id="add-graph-selector-button" type="button">Add graph</button>
-</form>
-<?php
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+<!-- JavaScript code to handle the form -->
+<script>
+    // Define the available graph types based on the data structure
+    const dataStructure = /* insert your data structure here */;
+    
+    const graphTypes = [
+        {
+            name: 'Bar chart',
+            options: [
+                { label: 'X-axis variable', types: ['categorical', 'numerical'] },
+                { label: 'Y-axis variable', types: ['numerical'] },
+                { label: 'Grouping variable', types: ['categorical'] },
+                { label: 'Aggregation function', types: ['function'] }
+            ],
+            preview: (params) => {
+                // Function to generate a preview of the bar chart
+            }
+        },
+        {
+            name: 'Line chart',
+            options: [
+                { label: 'X-axis variable', types: ['temporal'] },
+                { label: 'Y-axis variable', types: ['numerical'] },
+                { label: 'Grouping variable', types: ['categorical'] },
+                { label: 'Aggregation function', types: ['function'] }
+            ],
+            preview: (params) => {
+                // Function to generate a preview of the line chart
+            }
+        },
+        {
+            name: 'Scatter plot',
+            options: [
+                { label: 'X-axis variable', types: ['numerical'] },
+                { label: 'Y-axis variable', types: ['numerical'] },
+                { label: 'Grouping variable', types: ['categorical'] },
+                { label: 'Color variable', types: ['categorical'] }
+            ],
+            preview: (params) => {
+                // Function to generate a preview of the scatter plot
+            }
+        }
+        // Add additional graph types based on the data structure
+    ];
 
-if (!$report_id)
-	exit(0);
+    // Define a function to generate the parameters for a selected graph type
+function generateGraphTypeParams(graphType, parameterContainer, params) {
+    // Remove any existing parameters from the container
+    parameterContainer.innerHTML = '';
+    
+    // Generate a parameter input field for each option of the selected graph type
+    for (let i = 0; i < graphType.options.length; i++) {
+        const option = graphType.options[i];
+        const input = document.createElement('input');
+        input.name = option.label;
+        input.type = 'text';
+        input.placeholder = option.label;
+        if (params && params[option.label]) {
+            input.value = params[option.label];
+        }
+        parameterContainer.appendChild(input);
+    }
+    
+    const previewButton = parameterContainer.parentElement.querySelector('.preview-button');
+    previewButton.addEventListener('click', () => {
+        const graphParams = {};
+        for (let i = 0; i < graphType.options.length; i++) {
+            const option = graphType.options[i];
+            const input = parameterContainer.querySelector(`[name="${option.label}"]`);
+            if (input.type === 'checkbox') {
+                graphParams[option.label] = input.checked;
+            } else {
+                graphParams[option.label] = input.value;
+            }
+        }
+        graphType.preview(graphParams);
+    });
+  }
 
-$module->initialize_report($pid, USERID, $report_id, $query);
-// echo "report id is $report_id";
-$data_dictionary = MetaData::getDataDictionary("array", false, array(), array(), false, false, null, $_GET['pid']);
+  // Define a function to add a new graph selector to the form
+  function addGraphSelector(params) {
+        const graphContainer = document.getElementById('graph-container');
+        const graphSelectorCount = document.querySelectorAll('.graph-selector').length;
+        
+        const newGraphSelector = document.createElement('div');
+        newGraphSelector.className = 'graph-selector';
+        
+        const newForm = document.createElement('form');
+        newForm.innerHTML = `
+            <label for="graph-type-${graphSelectorCount + 1}">Select a graph type:</label>
+            <select name="graph-type" id="graph-type-${graphSelectorCount + 1}" class="graph-type-select"></select>
+            
+            <div class="parameter-container"></div>
+            
+            <button type="button" class="preview-button">Preview</button>
+        `;
+        newGraphSelector.appendChild(newForm);
+        
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.className = 'graph-selector-buttons';
+        buttonsDiv.innerHTML = `
+            <button type="button" class="add-graph-selector">Add Graph</button>
+            <button type="button" class="remove-graph-selector">Remove Graph</button>
+            <button type="button" class="move-up-graph-selector">Move Up</button>
+            <button type="button" class="move-down-graph-selector">Move Down</button>
+        `;
+        newGraphSelector.appendChild(buttonsDiv);
+        
+        generateGraphTypeSelect(newForm.querySelector('.graph-type-select'), graphTypes);
+        if (params && params.type && params.params) {
+            newForm.querySelector('.graph-type-select').value = graphTypes.findIndex(gt => gt.name === params.type);
+            generateGraphTypeParams(graphTypes[newForm.querySelector('.graph-type-select').value], newForm.querySelector('.parameter-container'), params.params);
+        } else {
+            generateGraphTypeParams(graphTypes[0], newForm.querySelector('.parameter-container'));
+        }
+        
+        // Add event listeners to the graph type select to generate the parameters based on the selected graph type
+        newForm.querySelector('.graph-type-select').addEventListener('change', (event) => {
+            const graphType = graphTypes[event.target.value];
+            generateGraphTypeParams(graphType, event.target.parentElement.querySelector('.parameter-container'));
+        });
+        
+        // Add event listener to preview button to generate a preview of the graph based on the selected parameters
+        const previewButton = newGraphSelector.querySelector('.preview-button');
+        previewButton.addEventListener('click', () => {
+            const graphTypeSelect = newGraphSelector.querySelector('.graph-type-select');
+            const graphType = graphTypes[graphTypeSelect.value];
+            const graphParams = {};
+            for (let j = 0; j < graphType.options.length; j++) {
+                const option = graphType.options[j];
+                const input = newGraphSelector.querySelector(`[name="${option.label}"]`);
+                if (input.type === 'checkbox') {
+                    graphParams[option.label] = input.checked;
+                } else {
+                    graphParams[option.label] = input.value;
+                }
+            }
+            const serializedGraphSelector = { type: graphType.name, params: graphParams };
+            console.log(serializedGraphSelector);
+        });
+        
+        // Add event listener to add-graph-selector button to add a new graph selector
+        buttonsDiv.querySelector('.add-graph-selector').addEventListener('click', () => {
+            addGraphSelector();
+        });
+        
+        // Add event listener to remove-graph-selector button to remove the graph selector
+        buttonsDiv.querySelector('.remove-graph-selector').addEventListener('click', () => {
+            newGraphSelector.remove();
+        });
+        
+        // Add event listener to move-up-graph-selector button to move the graph selector up
+        buttonsDiv.querySelector('.move-up-graph-selector').addEventListener('click', () => {
+            const previousSibling = newGraphSelector.previousElementSibling;
+            if (previousSibling) {
+                graphContainer.insertBefore(newGraphSelector, previousSibling);
+            }
+        });
+        
+        // Add event listener to move-down-graph-selector button to move the graph selector down
+        buttonsDiv.querySelector('.move-down-graph-selector').addEventListener('click', () => {
+            const nextSibling = newGraphSelector.nextElementSibling;
+            if (nextSibling) {
+                graphContainer.insertBefore(nextSibling, newGraphSelector);
+            }
+        });
+        
+        graphContainer.appendChild(newGraphSelector);
+    }
+    
+    // Define a function to serialize the form as an object
+    function serializeForm() {
+        const graphSelectors = document.querySelectorAll('.graph-selector');
+        const serializedGraphSelectors = [];
+        for (let i = 0; i < graphSelectors.length; i++) {
+            const graphSelector = graphSelectors[i];
+            const graphTypeSelect = graphSelector.querySelector('.graph-type-select');
+            const parameterContainer = graphSelector.querySelector('.parameter-container');
+            
+            const graphType = graphTypes[graphTypeSelect.value];
+            const graphParams = {};
+            for (let j = 0; j < graphType.options.length; j++) {
+                const option = graphType.options[j];
+                const input = parameterContainer.querySelector(`[name="${option.label}"]`);
+                if (input.type === 'checkbox') {
+                    graphParams[option.label] = input.checked;
+                } else {
+                    graphParams[option.label] = input.value;
+                }
+            }
+            
+            serializedGraphSelectors.push({ type: graphType.name, params: graphParams });
+        }
+        
+        return JSON.stringify(serializedGraphSelectors);
+    }
+    
+    // Define a function to deserialize the form from an object
+    function deserializeForm(serializedForm) {
+        const savedGraphSelectors = JSON.parse(serializedForm);
+        for (let i = 0; i < savedGraphSelectors.length; i++) {
+            const savedGraphSelector = savedGraphSelectors[i];
+            addGraphSelector({ type: savedGraphSelector.type, params: savedGraphSelector.params });
+        }
+    }
 
-$graph_groups = json_encode(
-		array(
-			"likert_groups" => $module->likert_groups(),
-			"scatter_groups" => $module->scatter_groups(),
-			"barplot_groups" => $module->barplot_groups(),
-			"map_groups" => $module->map_groups(),
-			"network_groups" => $module->network_groups()
-		)
-	);
+    // Define the initialize function
+function initialize() {
+    const graphContainer = document.getElementById('graph-container');
+    
+    // Add an event listener to the "Add Graph" button
+    const addGraphButton = document.querySelector('.add-graph-selector');
+    addGraphButton.addEventListener('click', () => {
+        addGraphSelector();
+    });
+    
+    // Add event listeners to the "Remove Graph" buttons
+    const removeGraphButtons = document.querySelectorAll('.remove-graph-selector');
+    for (let i = 0; i < removeGraphButtons.length; i++) {
+        const removeGraphButton = removeGraphButtons[i];
+        removeGraphButton.addEventListener('click', () => {
+            removeGraphSelector(removeGraphButton);
+        });
+    }
+    
+    // Add event listeners to the "Move Up" buttons
+    const moveUpButtons = document.querySelectorAll('.move-up-graph-selector');
+    for (let i = 0; i < moveUpButtons.length; i++) {
+        const moveUpButton = moveUpButtons[i];
+        moveUpButton.addEventListener('click', () => {
+            moveGraphSelectorUp(moveUpButton);
+        });
+    }
+    
+    // Add event listeners to the "Move Down" buttons
+    const moveDownButtons = document.querySelectorAll('.move-down-graph-selector');
+    for (let i = 0; i < moveDownButtons.length; i++) {
+        const moveDownButton = moveDownButtons[i];
+        moveDownButton.addEventListener('click', () => {
+            moveGraphSelectorDown(moveDownButton);
+        });
+    }
+    
+    // Add event listeners to the "Preview" buttons
+    const previewButtons = document.querySelectorAll('.preview-button');
+    for (let i = 0; i < previewButtons.length; i++) {
+        const previewButton = previewButtons[i];
+        previewButton.addEventListener('click', () => {
+            const graphSelector = previewButton.closest('.graph-selector');
+            const graphTypeSelect = graphSelector.querySelector('.graph-type-select');
+            const parameterContainer = graphSelector.querySelector('.parameter-container');
+            
+            const graphType = graphTypes[graphTypeSelect.value];
+            const graphParams = {};
+            for (let j = 0; j < graphType.options.length; j++) {
+                const option = graphType.options[j];
+                const input = parameterContainer.querySelector(`[name="${option.label}"]`);
+                if (input.type === 'checkbox') {
+                    graphParams[option.label] = input.checked;
+                } else {
+                    graphParams[option.label] = input.value;
+                }
+            }
+            
+            graphType.preview(graphParams);
+        });
+    }
+  }
 
-?>
+  // Define the save dashboard function
+function saveDashboard() {
+    const dashboardName = document.getElementById('dashboard-name').value;
+    const serializedForm = serializeForm();
+    
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/save_dashboard');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = () => {
+        if (xhr.status === 200) {
+            const dashboardSavedSuccessDialog = document.getElementById('dashboard_saved_success_dialog');
+            dashboardSavedSuccessDialog.style.display = 'block';
+        } else {
+            const dashboardSavedFailureDialog = document.getElementById('dashboard_saved_failure_dialog');
+            dashboardSavedFailureDialog.style.display = 'block';
+        }
+    };
+    xhr.send(JSON.stringify({ name: dashboardName, form: serializedForm }));
+}
+
+// add an event listener to the save dashboard button
+const saveDashboardButton = document.getElementById('save-dashboard-button');
+saveDashboardButton.addEventListener('click', () => {
+    saveDashboard();
+});
 
 <script>
-console.log("Added event listener");
-(function($, document, window) {
-    console.log("Added event listener");
-		// Initialize the module object
-
-		const graphContainer = document.getElementById('graph-selectors-container');
-    
-    // Define a function to generate the select element based on the dataframe
-    function generateGraphTypeSelect(dataframe) {
-        const graphTypeSelect = document.createElement('select');
-        graphTypeSelect.name = 'graph-type';
-        graphTypeSelect.className = 'graph-type-select';
-        
-        // Add options based on the columns in the dataframe
-        if (true) {
-            const barChartOption = document.createElement('option');
-            barChartOption.value = 'bar-chart';
-            barChartOption.textContent = 'Bar chart';
-            graphTypeSelect.appendChild(barChartOption);
-            
-            const lineChartOption = document.createElement('option');
-            lineChartOption.value = 'line-chart';
-            lineChartOption.textContent = 'Line chart';
-            graphTypeSelect.appendChild(lineChartOption);
-        }
-        
-        if (true) {
-            const pieChartOption = document.createElement('option');
-            pieChartOption.value = 'pie-chart';
-            pieChartOption.textContent = 'Pie chart';
-            graphTypeSelect.appendChild(pieChartOption);
-        }
-        
-        // Add additional conditions for new graph types here
-        
-        return graphTypeSelect;
-    }
-    
-    // Define a function to show the parameters for a given graph type
-    function showParametersForGraphType(graphType, parameterContainer) {
-        // Clear the parameter container
-        parameterContainer.innerHTML = '';
-        
-        // Generate the appropriate form elements based on the selected graph type
-        if (graphType === 'bar-chart') {
-            // Example parameters for a bar chart
-            parameterContainer.innerHTML = `
-                <label for="x-axis-label">X-axis label:</label>
-                <input type="text" name"x-axis-label" id="x-axis-label">
-            <br>
-            <label for="y-axis-label">Y-axis label:</label>
-            <input type="text" name="y-axis-label" id="y-axis-label">
-        `;
-    } else if (graphType === 'line-chart') {
-        // Example parameters for a line chart
-        parameterContainer.innerHTML = `
-            <label for="line-color">Line color:</label>
-            <input type="color" name="line-color" id="line-color">
-        `;
-    } else if (graphType === 'pie-chart') {
-        // Example parameters for a pie chart
-        parameterContainer.innerHTML = `
-            <label for="slice-colors">Slice colors (comma-separated):</label>
-            <input type="text" name="slice-colors" id="slice-colors">
-        `;
-    }
-    // Add additional conditions for new graph types here
-}
-
-// Define a function to add a new graph selector form
-function addGraphSelector() {
-    // Clone the first graph selector form and modify the necessary elements
-    const newGraphSelector = graphContainer.firstElementChild.cloneNode(true);
-    const graphTypeSelect = newGraphSelector.querySelector('.graph-selector');
-    const parameterContainer = newGraphSelector.querySelector('.graph-parameters-container');
-    
-    // Generate the graph type select based on the dataframe
-    const dataframe = {}/* insert your dataframe here */;
-    const newGraphTypeSelect = generateGraphTypeSelect(dataframe);
-    graphTypeSelect.replaceWith(newGraphTypeSelect);
-    
-    // Show the appropriate parameters based on the initial graph type
-    showParametersForGraphType(newGraphTypeSelect.value, parameterContainer);
-    
-    // Add event listeners to the new form elements
-    newGraphTypeSelect.addEventListener('change', () => {
-        showParametersForGraphType(newGraphTypeSelect.value, parameterContainer);
-    });
-    
-    newGraphSelector.querySelector('.remove-graph-selector-button').addEventListener('click', () => {
-        newGraphSelector.remove();
-    });
-    newGraphSelector.querySelector('.move-graph-up-button').addEventListener('click', () => {
-        const previousSibling = newGraphSelector.previousElementSibling;
-        if (previousSibling) {
-            graphContainer.insertBefore(newGraphSelector, previousSibling);
-        }
-    });
-    newGraphSelector.querySelector('.move-graph-down-button').addEventListener('click', () => {
-        const nextSibling = newGraphSelector.nextElementSibling;
-        if (nextSibling) {
-            graphContainer.insertBefore(nextSibling, newGraphSelector);
-        }
-    });
-    
-    // Add the new graph selector to the container
-    graphContainer.appendChild(newGraphSelector);
-}
-
-// Add an event listener to the "Add Graph" button
-const addGraphButton = document.getElementById('add-graph-selector-button');
-addGraphButton.addEventListener('click', addGraphSelector);
-console.log("Added event listener");
-
-
-}($, document, window));
+// write a web based form that is intended to be interactive and allow you to select the parameters for a particular graph in a way that is modular and allows for new graph types to added easily. I want to be able to add new instances of the graph selector and be able to change the order of graphs. I'd also like the code to only show graph types that are able to be created given a data structure that has a list of categorical variables, a list of numerical variables, a list of longitudinal and latitudinal variables, and a list of variables that can be interpreted as graphs. I'd like the conditions for which fields can be used to be create each graph to be based. I want each graph selector to have a preview button which can either be an ajax request, or can be a call to a d3 library wrapper function that has a comprehensive set of parameters. I also want to be able to save the list of graphs to be used as a viewable dashboard later.
 </script>
 <div id="dashboard_saved_success_dialog" class="simpleDialog" style=""><div style="font-size:14px;">The dashboard named "<span style="font-weight:bold;">Example dashboard</span>" has been successfully saved.</div>
 </div>
