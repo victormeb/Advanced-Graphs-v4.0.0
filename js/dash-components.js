@@ -14,7 +14,35 @@ AdvancedGraphsInteractiveComponents.css.graph_form =
 
 AdvancedGraphsInteractiveComponents.css.graph_selector = 
 ``;
-
+function generateGraphTypeSelect(dataframe) {
+        const graphTypeSelect = document.createElement('select');
+        graphTypeSelect.name = 'graph-type';
+        graphTypeSelect.className = 'graph-type-select';
+        
+        // Add options based on the columns in the dataframe
+        if (dataframe.columns.includes('x') && dataframe.columns.includes('y')) {
+            const barChartOption = document.createElement('option');
+            barChartOption.value = 'bar-chart';
+            barChartOption.textContent = 'Bar chart';
+            graphTypeSelect.appendChild(barChartOption);
+            
+            const lineChartOption = document.createElement('option');
+            lineChartOption.value = 'line-chart';
+            lineChartOption.textContent = 'Line chart';
+            graphTypeSelect.appendChild(lineChartOption);
+        }
+        
+        if (dataframe.columns.includes('value') && dataframe.columns.includes('label')) {
+            const pieChartOption = document.createElement('option');
+            pieChartOption.value = 'pie-chart';
+            pieChartOption.textContent = 'Pie chart';
+            graphTypeSelect.appendChild(pieChartOption);
+        }
+        
+        // Add additional conditions for new graph types here
+        
+        return graphTypeSelect;
+    }
 
 AdvancedGraphsInteractiveComponents.main_page = function(title = "Advanced Graphs Interactive") {
     let main_page = document.createElement("div");
