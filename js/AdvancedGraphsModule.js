@@ -43,7 +43,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         graphSelectorCell.setAttribute('class', 'graphSelectorCell');
         graphSelectorRow.appendChild(graphSelectorCell);
         row.parentNode.insertBefore(graphSelectorRow, row.nextSibling);
-        var graphSelector = new this.GraphSelector(graphSelectorCell);
+        var graphSelector = this.GraphSelector(graphSelectorCell);
 
         // Append this row to the advanced_graphs_dashboard div
         var advancedGraphsDashboard = document.getElementById('advanced_graphs_dashboard');
