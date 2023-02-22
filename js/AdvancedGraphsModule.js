@@ -8,7 +8,10 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
     this.report = report;
     this.report_fields = report_fields;
 
-    this.categorical_fields = ['field1', 'field2', 'field3'];
+    this.categorical_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
+    this.numerical_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
+    this.date_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
+    this.text_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
 
     this.loadDashboardEditor = function () {
         // Add a button to the dashboard editor that will add a row to the dashboard with a graph selector
@@ -272,8 +275,15 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
     };
 
-    this.getBargraphFormParameters() = function() {
-        return null;
+    this.Bargraph = function (report, formData) {
+        // Use d3, the report and the formData to create a bargraph
+        this.report = report;
+        this.formData = formData;
+
+        this.getGraph = function () {
+            return '<div class="graphWrapper"><svg class="bargraph"></svg></div>';
+        };
+
     };
 
     this.getCrossBargraphFormParameters() = function() {
@@ -295,6 +305,150 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
     this.getTableFormParameters() = function() {
         return null;
     };
+
+    this.summaryTableOptions = function () {
+        // for now display an div that contains the header pending
+        var summaryTableOptions = document.createElement('div');
+        summaryTableOptions.setAttribute('class', 'summaryTableOptions');
+        summaryTableOptions.innerHTML = 'Summary Table Options';
+
+        return summaryTableOptions;
+    };
+    
+
+    this.summaryTable = function (report, formData) {
+        // Use the report and the formData to create a summary table
+        this.report = report;
+        this.formData = formData;
+
+        this.getTable = function () {
+            return '<div class="tableWrapper"><table class="summaryTable"></table></div>';
+        };
+
+    };
+
+    // Create a Radio Selector
+    this.createRadioSelector = function (options, name, label) {
+        var radioSelector = document.createElement('div');
+        radioSelector.setAttribute('class', 'radioSelector');
+
+        var radioSelectorLabel = document.createElement('label');
+        radioSelectorLabel.innerHTML = label;
+        radioSelector.appendChild(radioSelectorLabel);
+
+        for (var option in options) {
+            var radioOption = document.createElement('input');
+            radioOption.setAttribute('type', 'radio');
+            radioOption.setAttribute('name', name);
+            radioOption.setAttribute('value', option);
+            radioOption.innerHTML(options[option]);
+            radioSelector.appendChild(radioOption);
+        }
+
+        return radioSelector;
+
+    };
+
+    // Create a field selector
+    this.createFieldSelector = function (fields, name, label) {
+        var fieldSelector = document.createElement('div');
+        fieldSelector.setAttribute('class', 'fieldSelector');
+
+        var fieldSelectorLabel = document.createElement('label');
+        fieldSelectorLabel.innerHTML = label;
+        fieldSelector.appendChild(fieldSelectorLabel);
+
+        var fieldSelectorSelect = document.createElement('select');
+        fieldSelectorSelect.setAttribute('name', name);
+        fieldSelector.appendChild(fieldSelectorSelect);
+
+        var noneOption = document.createElement('option');
+        noneOption.setAttribute('value', '');
+        noneOption.innerHTML = 'None';
+        fieldSelectorSelect.appendChild(noneOption);
+
+        for (var field in fields) {
+            var fieldOption = document.createElement('option');
+            fieldOption.setAttribute('value', field);
+            fieldOption.innerHTML = fields[field];
+            fieldSelectorSelect.appendChild(fieldOption);
+        }
+
+        return fieldSelector;
+
+    };
+
+    // Create a checkbox selector
+    this.createCheckboxSelector = function (options, name, label) {
+        var checkboxSelector = document.createElement('div');
+        checkboxSelector.setAttribute('class', 'checkboxSelector');
+
+        var checkboxSelectorLabel = document.createElement('label');
+        checkboxSelectorLabel.innerHTML = label;
+        checkboxSelector.appendChild(checkboxSelectorLabel);
+
+        for (var option in options) {
+            var checkboxOption = document.createElement('input');
+            checkboxOption.setAttribute('type', 'checkbox');
+            checkboxOption.setAttribute('name', name);
+            checkboxOption.setAttribute('value', option);
+            checkboxOption.innerHTML(options[option]);
+            checkboxSelector.appendChild(checkboxOption);
+        }
+
+        return checkboxSelector;
+
+    };
+
+    // Create an aggregation function selector
+    this.createAggregationFunctionSelector = function (name, label) {
+        var aggregationFunctionSelector = document.createElement('div');
+        aggregationFunctionSelector.setAttribute('class', 'aggregationFunctionSelector');
+
+        var aggregationFunctionSelectorLabel = document.createElement('label');
+        aggregationFunctionSelectorLabel.innerHTML = label;
+        aggregationFunctionSelector.appendChild(aggregationFunctionSelectorLabel);
+
+        var aggregationFunctionSelectorSelect = document.createElement('select');
+        aggregationFunctionSelectorSelect.setAttribute('name', name);
+        aggregationFunctionSelector.appendChild(aggregationFunctionSelectorSelect);
+
+        var noneOption = document.createElement('option');
+        noneOption.setAttribute('value', '');
+        noneOption.innerHTML = 'None';
+        aggregationFunctionSelectorSelect.appendChild(noneOption);
+
+        // Sum option
+        var sumOption = document.createElement('option');
+        sumOption.setAttribute('value', 'sum');
+        sumOption.innerHTML = 'Sum';
+
+        // Average option
+        var averageOption = document.createElement('option');
+        averageOption.setAttribute('value', 'average');
+        averageOption.innerHTML = 'Average';
+
+        // Min option
+        var minOption = document.createElement('option');
+        minOption.setAttribute('value', 'min');
+        minOption.innerHTML = 'Min';
+
+        // Max option
+        var maxOption = document.createElement('option');
+        maxOption.setAttribute('value', 'max');
+        maxOption.innerHTML = 'Max';
+
+        aggregationFunctionSelectorSelect.appendChild(sumOption);
+        aggregationFunctionSelectorSelect.appendChild(averageOption);
+        aggregationFunctionSelectorSelect.appendChild(minOption);
+        aggregationFunctionSelectorSelect.appendChild(maxOption);
+
+        return aggregationFunctionSelector;
+
+    };
+
+
+
 
 
 
