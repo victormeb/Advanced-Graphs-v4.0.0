@@ -46,7 +46,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         var graphSelector = this.GraphSelector(graphSelectorCell);
 
         // Append this row to the advanced_graphs_dashboard div
-        var advancedGraphsDashboard = document.getElementById('advanced_graphs_dashboard');
+        var advancedGraphsDashboard = document.getElementById('dashboard_table');
         advancedGraphsDashboard.appendChild(graphSelectorRow);
 
 
@@ -163,10 +163,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         countOptionGroup.appendChild(countOption);
 
         // if the numeric fields aren't empty, add a selctor for the aggregation function
-        var aggregationFunctionSelector = null;
-        if (this.numerical_fields.length > 0) {
-            aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', 'Aggregation Function');
-        }
+        aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', 'Aggregation Function');
 
         // only show the aggregation function selector if the numerical field selector is not set to count
         var numericalFieldSelectorChange = function (event) {
@@ -348,7 +345,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
             radioOption.setAttribute('type', 'radio');
             radioOption.setAttribute('name', name);
             radioOption.setAttribute('value', option);
-            radioOption.innerHTML(options[option]);
+            radioOption.innerHTML = options[option];
             radioSelector.appendChild(radioOption);
         }
 
@@ -455,7 +452,17 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
     };
 
 
+    // Create a button
+    this.createButton = function (label, name, value) {
+        var button = document.createElement('button');
+        button.setAttribute('type', 'button');
+        button.setAttribute('name', name);
+        button.setAttribute('value', value);
+        button.innerHTML = label;
 
+        return button;
+    };
+    
 
 
 
@@ -477,6 +484,4 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         }
         return serializedForm;
     }
-
-    this.loadDashboardEditor();
 };
