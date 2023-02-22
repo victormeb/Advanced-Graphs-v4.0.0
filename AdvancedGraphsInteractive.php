@@ -608,10 +608,10 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 	// returns the name of the report
 	public function getReportName($project_id, $report_id) {
-		$sql = "select report_name from redcap_reports where project_id = $project_id and report_id = $report_id";
-		$q = $this->query($sql);
+		$sql = "select title from redcap_reports where project_id = $project_id and report_id = $report_id";
+		$q = $this->query($sql, []);
 		$row = $q->fetch_assoc();
-		return $row['report_name'];
+		return $row['title'];
 	}
 
 	// returns the report fields
