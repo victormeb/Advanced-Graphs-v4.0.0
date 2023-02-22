@@ -1,3 +1,4 @@
+// Create a class that will be used to create a module for the dashboard editor
 var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_fields) {
     this.version = '1.0';
     this.authors = 'Victor Esposita, Joel Cohen, David Cherry, and others';
@@ -49,6 +50,20 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         advancedGraphsDashboard.appendChild(graphSelectorRow);
 
 
+    };
+
+    // A function that takes the data dictionary and the report and returns a dictionary of each type of graph with the corresponding form parameters.
+    this.getGraphTypes = function () {
+        // Bar and pie graphs are the same, except for the type of graph they are.
+        var graphTypes = {
+            "bar": this.getBargraphFormParameters(),
+            "cross-bar": this.getCrossBargraphFormParameters(),
+            "likert": this.getLikertFormParameters(),
+            "map": this.getMapFormParameters(),
+            "network": this.getNetworkFormParameters(),
+            "table": this.getTableFormParameters()
+        };
+        return graphTypes;
     };
 
     this.GraphSelector = function (cell) {
@@ -110,19 +125,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
     };
 
-    // A function that takes the data dictionary and the report and returns a dictionary of each type of graph with the corresponding form parameters.
-    this.getGraphTypes = function () {
-        // Bar and pie graphs are the same, except for the type of graph they are.
-        var graphTypes = {
-            "bar": this.getBargraphFormParameters(),
-            "cross-bar": this.getCrossBargraphFormParameters(),
-            "likert": this.getLikertFormParameters(),
-            "map": this.getMapFormParameters(),
-            "network": this.getNetworkFormParameters(),
-            "table": this.getTableFormParameters()
-        };
-        return graphTypes;
-    };
+
 
     // A function that uses the data_dictionary and the report to return the parameters needed to create a bar graph.
     this.getBargraphFormParameters = function () {
@@ -471,5 +474,5 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         return serializedForm;
     }
 
-
+    this.loadDashboardEditor();
 };
