@@ -8,6 +8,8 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
     this.report = report;
     this.report_fields = report_fields;
 
+    this.categorical_fields = ['field1', 'field2', 'field3'];
+
     this.loadDashboardEditor = function () {
         // Add a button to the dashboard editor that will add a row to the dashboard with a graph selector
         var addGraphSelectorRowButton = document.createElement('button');
