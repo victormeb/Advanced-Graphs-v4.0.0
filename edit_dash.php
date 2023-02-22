@@ -2,6 +2,8 @@
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
 
+include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+
 // Get the project ID
 $project_id = $_GET['pid'];
 
@@ -43,7 +45,7 @@ if (isset($dashboard['report_id'])) {
 if ($report_id == null) {
     echo "<h1>You need to create a report before you can create a dashboard.</h1>";
     // Header
-    include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+    include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
     exit;
 }
 
@@ -68,8 +70,8 @@ $module->loadJS('js/AdvancedGraphsModule.js');
 </div>
 
 <script>
-    // in an anonimous function to avoid polluting the global namespace
-    (function() {
+    // in an anonymous function to avoid polluting the global namespace
+    $(document).ready(function() {
         var report_id = <?php echo $report_id; ?>;
         var report_name = "<?php echo $report_name; ?>";
         var dash_id = <?php echo $dash_id; ?>;
@@ -97,5 +99,5 @@ $module->loadJS('js/AdvancedGraphsModule.js');
 
 <?php
 // Footer
-include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 ?>
