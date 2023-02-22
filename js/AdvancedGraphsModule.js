@@ -399,7 +399,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
             checkboxOption.setAttribute('type', 'checkbox');
             checkboxOption.setAttribute('name', name);
             checkboxOption.setAttribute('value', option);
-            checkboxOption.innerHTML(options[option]);
+            checkboxOption.innerHTML = options[option];
             checkboxSelector.appendChild(checkboxOption);
         }
 
