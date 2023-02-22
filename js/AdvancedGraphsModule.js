@@ -286,23 +286,23 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
     };
 
-    this.getCrossBargraphFormParameters() = function() {
+    this.getCrossBargraphFormParameters = function() {
         return null;
     };
 
-    this.getLikertFormParameters() = function() {
+    this.getLikertFormParameters = function() {
         return null;
     };
 
-    this.getMapFormParameters() = function() {
+    this.getMapFormParameters = function() {
         return null;
     };
 
-    this.getNetworkFormParameters() = function() {
+    this.getNetworkFormParameters = function() {
         return null;
     };
 
-    this.getTableFormParameters() = function() {
+    this.getTableFormParameters = function() {
         return null;
     };
 
