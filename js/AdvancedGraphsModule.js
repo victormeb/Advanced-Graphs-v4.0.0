@@ -75,12 +75,12 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
         // When this button is clicked, add a graphSelector to the left of the selected graph
         addGraphLeftButton.addEventListener('click', function (event) {
-            var graphSelector = this.GraphSelector(this.cell);
+            var graphSelectorDiv = this.GraphSelector(this.cell);
           
             if (this.graphSelectorDiv) {
-              this.cell.insertBefore(graphSelector.graphSelectorDiv, this.graphSelectorDiv);
+              this.cell.insertBefore(graphSelectorDiv, this.graphSelectorDiv);
             } else {
-              this.cell.appendChild(graphSelector.graphSelectorDiv);
+              this.cell.appendChild(graphSelectorDiv);
             }
           }.bind(this));
 
@@ -96,9 +96,9 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
             var graphSelector = this.GraphSelector(this.cell);
             
             if (this.graphSelectorDiv && this.graphSelectorDiv.nextSibling) {
-              this.cell.insertBefore(graphSelector.graphSelectorDiv, this.graphSelectorDiv.nextSibling);
+              this.cell.insertBefore(graphSelectorDiv, this.graphSelectorDiv.nextSibling);
             } else {
-              this.cell.appendChild(graphSelector.graphSelectorDiv);
+              this.cell.appendChild(graphSelectorDiv);
             }
           }.bind(this));
 
