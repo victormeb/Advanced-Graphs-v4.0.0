@@ -66,7 +66,11 @@ $module->loadJS('js/AdvancedGraphsModule.js');
 ?>
 
 <div id="advanced_graphs">
-    <div id="dashboard_editor"></div>
+    <div id="dashboard_editor">
+        <div id="dashboard_table">
+
+        </div>
+    </div>
 </div>
 
 <script>
