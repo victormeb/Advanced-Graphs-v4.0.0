@@ -110,7 +110,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
         // When this button is clicked, remove the selected graphSelector (not the row)
         removeGraphButton.addEventListener('click', function (event) {
-            this.cell.removeChild(this.graphSelectorDiv);
+            this.cell.removeChild(graphSelectorDiv);
         }.bind(this));
 
         // Create a new graph selector
@@ -120,11 +120,6 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
         console.log(this);
         let graphTypes = this.getGraphTypes(); 
-        // why am I getting an error that this.getGraphTypes is not a function?
-        // Is it because I'm trying to call a function that is defined in the constructor of the class?
-        // If so, how do I fix this?
-
-        
 
         for (let graphType in graphTypes) {
             if (!graphTypes[graphType])
