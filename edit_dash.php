@@ -66,7 +66,8 @@ $module->loadJS('js/AdvancedGraphsModule.js');
 <div id="advanced_graphs"></div>
 
 <script>
-    $(document).ready(function() {
+    // in an anonimous function to avoid polluting the global namespace
+    (function() {
         var report_id = <?php echo $report_id; ?>;
         var report_name = "<?php echo $report_name; ?>";
         var dash_id = <?php echo $dash_id; ?>;
