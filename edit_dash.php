@@ -81,12 +81,13 @@ $module->loadJS('js/AdvancedGraphsModule.js');
         var dashboard = <?php echo json_encode($dashboard); ?>;
         var report_fields = <?php echo json_encode($report_fields); ?>;
         var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
-        var module = new AdvancedGraphsModule();
+        
+        // Initialize the module from AdvancedGraphsModule.js
+        var module = new AdvancedGraphsModule(dashboard, data_dictionary, report_fields, report, report_fields);
 
-        module.init(dashboard, data_dictionary, report, report_fields);
-
-        // If the dashbaord is not null, load the dashboard as an editor
+        // Load the dashboard editor
         module.loadDashboardEditor();
+
     });
 </script>
 
