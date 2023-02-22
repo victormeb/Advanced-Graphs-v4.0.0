@@ -114,13 +114,13 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         removeGraphButton.innerHTML = 'Remove Graph';
         graphSelectorDiv.appendChild(removeGraphButton);
 
-        // When this button is clicked, remove the selected graph
+        // When this button is clicked, remove the selected graphSelector (not the row)
         removeGraphButton.addEventListener('click', function (event) {
             var graphSelectorRow = this.cell.parentNode;
-            var graphSelectorRowParent = graphSelectorRow.parentNode;
-            graphSelectorRowParent.removeChild(graphSelectorRow);
-        }.bind(this));        
-        
+            var graphSelectorCell = this.cell;
+            graphSelectorRow.removeChild(graphSelectorCell);
+        }.bind(this));
+
         // Create a new graph selector
         this.graphSelector = document.createElement('select');
         this.graphSelector.setAttribute('class', 'graphSelector');
