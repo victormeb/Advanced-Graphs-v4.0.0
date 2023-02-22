@@ -73,16 +73,24 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         addGraphLeftButton.innerHTML = 'Add Graph to Left';
         graphSelectorDiv.appendChild(addGraphLeftButton);
 
-        // When this button is clicked, add a graphSelector to the left of the selected graph
+        // When this button is clicked, add a graphSelector to the left of the selected graph by adding a graphsSelectorCell to the left of the selected graphSelectorCell
         addGraphLeftButton.addEventListener('click', function (event) {
-            var graphSelectorDiv = this.GraphSelector(this.cell);
-          
-            if (this.graphSelectorDiv) {
-              this.cell.insertBefore(graphSelectorDiv, this.graphSelectorDiv);
-            } else {
-              this.cell.appendChild(graphSelectorDiv);
+            var graphSelectorRow = this.cell.parentNode;
+            var graphSelectorCell = this.cell;
+            var graphSelectorRowCells = graphSelectorRow.childNodes;
+            var graphSelectorCellIndex = 0;
+            for (var i = 0; i < graphSelectorRowCells.length; i++) {
+                if (graphSelectorRowCells[i] === graphSelectorCell) {
+                    graphSelectorCellIndex = i;
+                    break;
+                }
             }
-          }.bind(this));
+            var newGraphSelectorCell = document.createElement('td');
+            newGraphSelectorCell.setAttribute('class', 'graphSelectorCell');
+            graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex]);
+            this.addGraphSelectorRow(newGraphSelectorCell);
+        }.bind(this));
+
 
 
         // Create a button to add a graph to the right of the selected graph
@@ -91,16 +99,23 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         addGraphRightButton.innerHTML = 'Add Graph to Right';
         graphSelectorDiv.appendChild(addGraphRightButton);
 
-        // When this button is clicked, add a graphSelector to the right of the selected graph
+        // When this button is clicked, add a graphSelector to the right of the selected graph by adding a graphsSelectorCell to the right of the selected graphSelectorCell
         addGraphRightButton.addEventListener('click', function (event) {
-            var graphSelector = this.GraphSelector(this.cell);
-            
-            if (this.graphSelectorDiv && this.graphSelectorDiv.nextSibling) {
-              this.cell.insertBefore(graphSelectorDiv, this.graphSelectorDiv.nextSibling);
-            } else {
-              this.cell.appendChild(graphSelectorDiv);
+            var graphSelectorRow = this.cell.parentNode;
+            var graphSelectorCell = this.cell;
+            var graphSelectorRowCells = graphSelectorRow.childNodes;
+            var graphSelectorCellIndex = 0;
+            for (var i = 0; i < graphSelectorRowCells.length; i++) {
+                if (graphSelectorRowCells[i] === graphSelectorCell) {
+                    graphSelectorCellIndex = i;
+                    break;
+                }
             }
-          }.bind(this));
+            var newGraphSelectorCell = document.createElement('td');
+            newGraphSelectorCell.setAttribute('class', 'graphSelectorCell');
+            graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex + 1]);
+            this.addGraphSelectorRow(newGraphSelectorCell);
+        }.bind(this));
 
         // Create a button to remove the selected graph
         var removeGraphButton = document.createElement('button');
@@ -108,11 +123,12 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         removeGraphButton.innerHTML = 'Remove Graph';
         graphSelectorDiv.appendChild(removeGraphButton);
 
-        // When this button is clicked, remove the selected graphSelector (not the row)
+        // When this button is clicked, remove the selected graphSelectorCell
         removeGraphButton.addEventListener('click', function (event) {
-            this.cell.removeChild(graphSelectorDiv);
+            var graphSelectorRow = this.cell.parentNode;
+            var graphSelectorCell = this.cell;
+            graphSelectorRow.removeChild(graphSelectorCell);
         }.bind(this));
-
         // Create a new graph selector
         this.graphSelector = document.createElement('select');
         this.graphSelector.setAttribute('class', 'graphSelector');
