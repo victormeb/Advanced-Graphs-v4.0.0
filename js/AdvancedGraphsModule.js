@@ -52,20 +52,6 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
     };
 
-    // A function that takes the data dictionary and the report and returns a dictionary of each type of graph with the corresponding form parameters.
-    this.getGraphTypes = function () {
-        // Bar and pie graphs are the same, except for the type of graph they are.
-        var graphTypes = {
-            "bar": this.getBargraphFormParameters(),
-            "cross-bar": this.getCrossBargraphFormParameters(),
-            "likert": this.getLikertFormParameters(),
-            "map": this.getMapFormParameters(),
-            "network": this.getNetworkFormParameters(),
-            "table": this.getTableFormParameters()
-        };
-        return graphTypes;
-    };
-
     this.GraphSelector = function (cell) {
         this.cell = cell;
 
@@ -105,7 +91,13 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         this.graphSelector.setAttribute('class', 'graphSelector');
         graphSelectorDiv.appendChild(this.graphSelector);
 
-        let graphTypes = this.getGraphTypes();
+        console.log(this);
+        let graphTypes = this.getGraphTypes(); 
+        // why am I getting an error that this.getGraphTypes is not a function?
+        // Is it because I'm trying to call a function that is defined in the constructor of the class?
+        // If so, how do I fix this?
+
+        
 
         for (let graphType in graphTypes) {
             if (!graphTypes[graphType])
@@ -125,7 +117,19 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
     };
 
-
+    // A function that takes the data dictionary and the report and returns a dictionary of each type of graph with the corresponding form parameters.
+    this.getGraphTypes = function () {
+        // Bar and pie graphs are the same, except for the type of graph they are.
+        var graphTypes = {
+            "bar": this.getBargraphFormParameters(),
+            "cross-bar": this.getCrossBargraphFormParameters(),
+            "likert": this.getLikertFormParameters(),
+            "map": this.getMapFormParameters(),
+            "network": this.getNetworkFormParameters(),
+            "table": this.getTableFormParameters()
+        };
+        return graphTypes;
+    };
 
     // A function that uses the data_dictionary and the report to return the parameters needed to create a bar graph.
     this.getBargraphFormParameters = function () {
