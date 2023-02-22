@@ -125,10 +125,12 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
 
         // When this button is clicked, remove the selected graphSelectorCell
         removeGraphButton.addEventListener('click', function (event) {
-            var graphSelectorRow = this.cell.parentNode;
-            var graphSelectorCell = this.cell;
+            var graphSelectorCell = this.cell.parentNode;
+            var graphSelectorRow = graphSelectorCell.parentNode;
             graphSelectorRow.removeChild(graphSelectorCell);
         }.bind(this));
+
+        
         // Create a new graph selector
         this.graphSelector = document.createElement('select');
         this.graphSelector.setAttribute('class', 'graphSelector');
