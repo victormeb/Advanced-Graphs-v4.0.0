@@ -331,7 +331,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 	function loadJS($js_file, $folder = "js", $outputToPage=true) {
 		// Create script tag
-		$output = "<script type=\"text/javascript\" src=\"" . $this->getURL("$folder/".$js_file,  $this->module_js_path). "\"></script>\n";
+		$output = "<script type=\"text/javascript\" src=\"" . $this->getURL($js_file,  $this->module_js_path). "\"></script>\n";
 		if ($outputToPage) {
 			print $output;
 		} else {
@@ -600,6 +600,33 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 										
 		return $content;
 	}
+
+	// returns the data dictionary for a project
+	public function getDataDictionary($project_id) {
+		return REDCap::getDataDictionary($project_id, 'array');
+	}
+
+	// returns the name of the report
+	public function getReportName($project_id, $report_id) {
+		$sql = "select report_name from redcap_reports where project_id = $project_id and report_id = $report_id";
+		$q = $this->query($sql);
+		$row = $q->fetch_assoc();
+		return $row['report_name'];
+	}
+
+	// returns the report fields
+	public function getReportFields($project_id, $report_id) {
+		$fields = array();
+		$sql = "select * from redcap_reports_fields where report_id = $report_id
+				order by field_order";
+		$q = $this->query($sql);
+		while ($row =  $q->fetch_assoc()) {
+			$fields[] = $row['field_name'];
+		}
+		return $fields;
+	}
+	
+
 
 	function getReport($pid, $report_id) {
 		global $lang, $user_rights;
@@ -1642,6 +1669,16 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		return $title;
 	}
 
+	// getDashReportId
+	public function getDashReportId($pid, $dash_id)
+	{
+		// Delete report
+		$sql = "select report_id from advanced_graphs_dashboards where project_id = ".$pid." and dash_id = $dash_id";
+		$q = $this->query($sql, []);
+		$report_id = $q->fetch_assoc()['report_id'];
+		return $report_id;
+	}
+
 	public function resetCache($pid, $dash_id, $doLogging=true)
 	{
 		$dash_id = (int)$dash_id;
@@ -1956,7 +1993,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	function getTableColumns($table)
 	{
 		$sql = "describe `$table`";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		if (!$q) return false;
 		$cols = array();
 		while ($row = $q->fetch_assoc()) {
