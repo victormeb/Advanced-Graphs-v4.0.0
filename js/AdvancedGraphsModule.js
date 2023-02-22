@@ -8,6 +8,27 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
     this.report = report;
     this.report_fields = report_fields;
 
+    this.loadDashboardEditor = function () {
+        // Add a button to the dashboard editor that will add a row to the dashboard with a graph selector
+        var addGraphSelectorRowButton = document.createElement('button');
+        addGraphSelectorRowButton.setAttribute('class', 'addGraphSelectorRowButton');
+        addGraphSelectorRowButton.innerHTML = 'Add Graph Selector Row';
+        var dashboardEditor = document.getElementById('dashboard_editor');
+        dashboardEditor.appendChild(addGraphSelectorRowButton);
+
+        // When the button is clicked, add a row with a graph selector
+        addGraphSelectorRowButton.addEventListener('click', function (event) {
+            var row = document.createElement('tr');
+            var cell = document.createElement('td');
+            cell.setAttribute('colspan', '3');
+            row.appendChild(cell);
+            var dashboardTable = document.getElementById('dashboard_table');
+            dashboardTable.appendChild(row);
+            this.addGraphSelectorRow(row);
+        }.bind(this));
+
+    };
+
     // A function to add a row with a single graph selector cell. On either side of each cell in this row, there will be a cell with a button to add a graph to the left or right of the selected graph.
     this.addGraphSelectorRow = function (row) {
         var graphSelectorRow = document.createElement('tr');
@@ -22,7 +43,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         var advancedGraphsDashboard = document.getElementById('advanced_graphs_dashboard');
         advancedGraphsDashboard.appendChild(graphSelectorRow);
 
-        
+
     };
 
     this.GraphSelector = function (cell) {

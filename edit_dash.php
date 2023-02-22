@@ -63,7 +63,9 @@ $data_dictionary = $module->getDataDictionary($project_id);
 $module->loadJS('js/AdvancedGraphsModule.js');
 ?>
 
-<div id="advanced_graphs"></div>
+<div id="advanced_graphs">
+    <div id="dashboard_editor"></div>
+</div>
 
 <script>
     // in an anonimous function to avoid polluting the global namespace
@@ -80,6 +82,9 @@ $module->loadJS('js/AdvancedGraphsModule.js');
         var module = new AdvancedGraphsModule();
 
         module.init(dashboard, data_dictionary, report, report_fields);
+
+        // If the dashbaord is not null, load the dashboard as an editor
+        module.loadDashboardEditor();
     });
 </script>
 
