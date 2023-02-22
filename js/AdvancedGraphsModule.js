@@ -61,7 +61,7 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         var graphFormDiv = document.createElement('div');
         graphFormDiv.setAttribute('class', 'graphFormDiv');
 
-        this.graphSelectorDiv = graphSelectorDiv;
+        // this.graphSelectorDiv = graphSelectorDiv;
 
         // Add the graph selector and the graph form to the cell
         this.cell.appendChild(graphSelectorDiv);
@@ -141,6 +141,9 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
                 graphFormDiv.appendChild(graphTypes[event.target.value]);
             });
         }
+
+        // return the graph selector div
+        return graphSelectorDiv;
 
     };
 
