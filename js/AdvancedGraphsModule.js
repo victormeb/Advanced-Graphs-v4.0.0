@@ -61,6 +61,8 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         var graphFormDiv = document.createElement('div');
         graphFormDiv.setAttribute('class', 'graphFormDiv');
 
+        this.graphSelectorDiv = graphSelectorDiv;
+
         // Add the graph selector and the graph form to the cell
         this.cell.appendChild(graphSelectorDiv);
         this.cell.appendChild(graphFormDiv);
