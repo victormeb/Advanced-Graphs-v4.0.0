@@ -35,6 +35,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     // A function to add a row with a single graph selector cell.
     this.addGraphSelectorRow = function (table) {
+        var AGM = this;
+
         var graphSelectorRow = document.createElement('tr');
         graphSelectorRow.setAttribute('class', 'graphSelectorRow');
 
@@ -95,10 +97,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // When this button is clicked, open a modal that asks the user to confirm that they want to remove this row
         removeGraphSelectorRowButton.addEventListener('click', function (event) {
             // Create a modal that asks the user to confirm that they want to remove this row
-            this.createConfirmModalDialog(function () {
+            AGM.createConfirmModalDialog(function () {
                 // If the user confirms that they want to remove this row, remove this row
                 graphSelectorRow.parentNode.removeChild(graphSelectorRow);
-            }, this.module.tt('remove_row_confirm'));
+            }, AGM.module.tt('remove_row_confirm'));
 
         });
 
@@ -583,7 +585,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create a modal dialog button for each button in the buttons array
         for (var i = 0; i < buttons.length; i++) {
-            modalDialogFooter.appendChild(modalDialogButton(buttons[i].class, buttons[i].event));
+            modalDialogFooter.appendChild(modalDialogButton(buttons[i].label, buttons[i].class, buttons[i].event));
         }
 
         // Add the modal dialog title, body, and footer to the modal dialog content
