@@ -1,9 +1,10 @@
 // Create a class that will be used to create a module for the dashboard editor
-var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_fields) {
+var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report, report_fields) {
     this.version = '1.0';
     this.authors = 'Victor Esposita, Joel Cohen, David Cherry, and others';
     this.email = '';
 
+    this.module = module;
     this.dashboard = dashboard;
     this.data_dictionary = data_dictionary;
     this.report = report;
@@ -18,42 +19,167 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         // Add a button to the dashboard editor that will add a row to the dashboard with a graph selector
         var addGraphSelectorRowButton = document.createElement('button');
         addGraphSelectorRowButton.setAttribute('class', 'addGraphSelectorRowButton');
-        addGraphSelectorRowButton.innerHTML = 'Add Graph Selector Row';
+        addGraphSelectorRowButton.innerHTML = this.module.tt('add_row');
         var dashboardEditor = document.getElementById('dashboard_editor');
         dashboardEditor.appendChild(addGraphSelectorRowButton);
 
         // When the button is clicked, add a row with a graph selector
         addGraphSelectorRowButton.addEventListener('click', function (event) {
-            var row = document.createElement('tr');
-            var cell = document.createElement('td');
-            cell.setAttribute('colspan', '3');
-            row.appendChild(cell);
             var dashboardTable = document.getElementById('dashboard_table');
-            dashboardTable.appendChild(row);
-            this.addGraphSelectorRow(row);
+
+            dashboardTable.appendChild(this.addGraphSelectorRow());
+            
         }.bind(this));
 
     };
 
-    // A function to add a row with a single graph selector cell. On either side of each cell in this row, there will be a cell with a button to add a graph to the left or right of the selected graph.
-    this.addGraphSelectorRow = function (row) {
+    // A function to add a row with a single graph selector cell.
+    this.addGraphSelectorRow = function (table) {
         var graphSelectorRow = document.createElement('tr');
-        var graphSelectorCell = document.createElement('td');
-        graphSelectorCell.setAttribute('colspan', '3');
-        graphSelectorCell.setAttribute('class', 'graphSelectorCell');
+        graphSelectorRow.setAttribute('class', 'graphSelectorRow');
+
+
+        var graphSelectorCell = this.GraphSelector();
         graphSelectorRow.appendChild(graphSelectorCell);
-        row.parentNode.insertBefore(graphSelectorRow, row.nextSibling);
-        var graphSelector = this.GraphSelector(graphSelectorCell);
+
 
         // Append this row to the advanced_graphs_dashboard div
         var advancedGraphsDashboard = document.getElementById('dashboard_table');
         advancedGraphsDashboard.appendChild(graphSelectorRow);
 
+        // Add a button that moves this row up
+        var moveGraphSelectorRowUpButton = document.createElement('button');
+        moveGraphSelectorRowUpButton.setAttribute('class', 'moveGraphSelectorRowUpButton');
+        moveGraphSelectorRowUpButton.innerHTML = 'Move Graph Selector Row Up';
 
+        // When this button is clicked, move this row up
+        moveGraphSelectorRowUpButton.addEventListener('click', function (event) {
+            // Get the index of this row
+            var graphSelectorRowIndex = Array.prototype.indexOf.call(graphSelectorRow.parentNode.children, graphSelectorRow);
+            
+            // If this row is not the first row, move it up
+            if (graphSelectorRowIndex > 0) {
+                // Get the row above this row
+                var rowAboveGraphSelectorRow = graphSelectorRow.parentNode.children[graphSelectorRowIndex - 1];
+                
+                // Move this row above the row above this row
+                graphSelectorRow.parentNode.insertBefore(graphSelectorRow, rowAboveGraphSelectorRow);
+            }
+        });
+
+        // Add a button that moves this row down
+        var moveGraphSelectorRowDownButton = document.createElement('button');
+        moveGraphSelectorRowDownButton.setAttribute('class', 'moveGraphSelectorRowDownButton');
+        moveGraphSelectorRowDownButton.innerHTML = 'Move Graph Selector Row Down';
+
+        // When this button is clicked, move this row down
+        moveGraphSelectorRowDownButton.addEventListener('click', function (event) {
+            // Get the index of this row
+            var graphSelectorRowIndex = Array.prototype.indexOf.call(graphSelectorRow.parentNode.children, graphSelectorRow);
+
+            // If this row is not the last row, move it down
+            if (graphSelectorRowIndex < graphSelectorRow.parentNode.children.length - 1) {
+                // Get the row below this row
+                var rowBelowGraphSelectorRow = graphSelectorRow.parentNode.children[graphSelectorRowIndex + 1];
+
+                // Move this row below the row below this row
+                graphSelectorRow.parentNode.insertBefore(rowBelowGraphSelectorRow, graphSelectorRow);
+            }
+        });
+
+
+        // Add a button to the row that removes this row
+        var removeGraphSelectorRowButton = document.createElement('button');
+        removeGraphSelectorRowButton.setAttribute('class', 'removeGraphSelectorRowButton');
+        removeGraphSelectorRowButton.innerHTML = 'Remove Graph Selector Row';
+
+        // When this button is clicked, open a modal that asks the user to confirm that they want to remove this row
+        removeGraphSelectorRowButton.addEventListener('click', function (event) {
+            // Create a modal that asks the user to confirm that they want to remove this row
+            var modal = document.createElement('div');
+            modal.setAttribute('class', 'modal');
+            modal.setAttribute('id', 'removeGraphSelectorRowModal');
+            var modalContent = document.createElement('div');
+            modalContent.setAttribute('class', 'modal-content');
+            var modalHeader = document.createElement('div');
+            modalHeader.setAttribute('class', 'modal-header');
+            var modalBody = document.createElement('div');
+            modalBody.setAttribute('class', 'modal-body');
+            var modalFooter = document.createElement('div');
+            modalFooter.setAttribute('class', 'modal-footer');
+            var modalHeaderCloseButton = document.createElement('span');
+            modalHeaderCloseButton.setAttribute('class', 'close');
+            modalHeaderCloseButton.innerHTML = '&times;';
+            var modalHeaderTitle = document.createElement('h2');
+            modalHeaderTitle.innerHTML = 'Remove Graph Selector Row';
+            var modalBodyText = document.createElement('p');
+            modalBodyText.innerHTML = 'Are you sure you want to remove this graph selector row?';
+            var modalFooterYesButton = document.createElement('button');
+            modalFooterYesButton.setAttribute('class', 'modalFooterYesButton');
+            modalFooterYesButton.innerHTML = 'Yes';
+            var modalFooterNoButton = document.createElement('button');
+            modalFooterNoButton.setAttribute('class', 'modalFooterNoButton');
+            modalFooterNoButton.innerHTML = 'No';
+            
+            modalHeader.appendChild(modalHeaderCloseButton);
+            modalHeader.appendChild(modalHeaderTitle);
+            modalBody.appendChild(modalBodyText);
+            modalFooter.appendChild(modalFooterYesButton);
+            modalFooter.appendChild(modalFooterNoButton);
+            modalContent.appendChild(modalHeader);
+            modalContent.appendChild(modalBody);
+            modalContent.appendChild(modalFooter);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+
+            // When the user clicks on the close button, close the modal
+            modalHeaderCloseButton.addEventListener('click', function (event) {
+                modal.style.display = 'none';
+            });
+
+            // When the user clicks on the 'No' button, close the modal
+            modalFooterNoButton.addEventListener('click', function (event) {
+                modal.style.display = 'none';
+            });
+
+            // When the user clicks on the 'Yes' button, remove the row and close the modal
+            modalFooterYesButton.addEventListener('click', function (event) {
+                // Remove the row
+                graphSelectorRow.remove();
+
+                // Close the modal
+                modal.style.display = 'none';
+            });
+
+            // When the user clicks anywhere outside of the modal, close the modal
+            window.addEventListener('click', function (event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+            );
+
+        });
+
+        // Create a cell to hold the buttons
+        var buttonsCell = document.createElement('td');
+        buttonsCell.setAttribute('class', 'buttonsCell');
+
+        // Add the buttons to the cell
+        buttonsCell.appendChild(moveGraphSelectorRowUpButton);
+        buttonsCell.appendChild(moveGraphSelectorRowDownButton);
+        buttonsCell.appendChild(removeGraphSelectorRowButton);
+
+        // Add the cell to the row
+        graphSelectorRow.appendChild(buttonsCell);
+
+        return graphSelectorRow;
     };
 
-    this.GraphSelector = function (cell) {
-        this.cell = cell;
+    this.GraphSelector = function () {
+        // Create a cell that will contain the graph selector and the graph form
+        var cell = document.createElement('td');
+        cell.setAttribute('class', 'graphSelectorCell');
 
         // Create a div that will contain the graph selector and a div that will contain the graph form
         var graphSelectorDiv = document.createElement('div');
@@ -61,102 +187,207 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         var graphFormDiv = document.createElement('div');
         graphFormDiv.setAttribute('class', 'graphFormDiv');
 
-        // this.graphSelectorDiv = graphSelectorDiv;
-
-        // Add the graph selector and the graph form to the cell
-        this.cell.appendChild(graphSelectorDiv);
-        this.cell.appendChild(graphFormDiv);
-
-        // Create a button to add a graph to the left of the selected graph
+        // Create a button to add a GraphSelector to the left of the selected GraphSelector
         var addGraphLeftButton = document.createElement('button');
         addGraphLeftButton.setAttribute('class', 'addGraphLeftButton');
         addGraphLeftButton.innerHTML = 'Add Graph to Left';
-        graphSelectorDiv.appendChild(addGraphLeftButton);
-
-        // When this button is clicked, add a graphSelector to the left of the selected graph by adding a graphsSelectorCell to the left of the selected graphSelectorCell
+        cell.appendChild(addGraphLeftButton);
+        
+        // When this button is clicked, add a graphSelector to the left of the selected graphSelector by adding a graphsSelectorCell to the left of the selected graphSelectorCell
         addGraphLeftButton.addEventListener('click', function (event) {
-            var graphSelectorRow = this.cell.parentNode;
-            var graphSelectorCell = this.cell;
+            var graphSelectorRow = cell.parentNode;
+            var graphSelectorCell = cell;
             var graphSelectorRowCells = graphSelectorRow.childNodes;
             var graphSelectorCellIndex = 0;
             for (var i = 0; i < graphSelectorRowCells.length; i++) {
-                if (graphSelectorRowCells[i] === graphSelectorCell) {
+                if (graphSelectorRowCells[i] == graphSelectorCell) {
                     graphSelectorCellIndex = i;
-                    break;
                 }
             }
-            var newGraphSelectorCell = document.createElement('td');
-            newGraphSelectorCell.setAttribute('class', 'graphSelectorCell');
+            var newGraphSelectorCell = this.GraphSelector();
             graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex]);
-            this.addGraphSelectorRow(newGraphSelectorCell);
-        }.bind(this));
+        });
 
-
-
-        // Create a button to add a graph to the right of the selected graph
+        // Create a button to add a GraphSelector to the right of the selected GraphSelector
         var addGraphRightButton = document.createElement('button');
         addGraphRightButton.setAttribute('class', 'addGraphRightButton');
         addGraphRightButton.innerHTML = 'Add Graph to Right';
-        graphSelectorDiv.appendChild(addGraphRightButton);
+        cell.appendChild(addGraphRightButton);
 
-        // When this button is clicked, add a graphSelector to the right of the selected graph by adding a graphsSelectorCell to the right of the selected graphSelectorCell
+        // When this button is clicked, add a graphSelector to the right of the selected graphSelector by adding a graphsSelectorCell to the right of the selected graphSelectorCell
         addGraphRightButton.addEventListener('click', function (event) {
-            var graphSelectorRow = this.cell.parentNode;
-            var graphSelectorCell = this.cell;
+            var graphSelectorRow = cell.parentNode;
+            var graphSelectorCell = cell;
             var graphSelectorRowCells = graphSelectorRow.childNodes;
             var graphSelectorCellIndex = 0;
             for (var i = 0; i < graphSelectorRowCells.length; i++) {
-                if (graphSelectorRowCells[i] === graphSelectorCell) {
+                if (graphSelectorRowCells[i] == graphSelectorCell) {
                     graphSelectorCellIndex = i;
-                    break;
                 }
             }
-            var newGraphSelectorCell = document.createElement('td');
-            newGraphSelectorCell.setAttribute('class', 'graphSelectorCell');
+            var newGraphSelectorCell = this.GraphSelector();
             graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex + 1]);
-            this.addGraphSelectorRow(newGraphSelectorCell);
-        }.bind(this));
+          
+        });
 
-        // Create a button to remove the selected graph
-        var removeGraphButton = document.createElement('button');
-        removeGraphButton.setAttribute('class', 'removeGraphButton');
-        removeGraphButton.innerHTML = 'Remove Graph';
-        graphSelectorDiv.appendChild(removeGraphButton);
+        // Create a button to remove the selected GraphSelector
+        var removeGraphSelectorButton = document.createElement('button');
+        removeGraphSelectorButton.setAttribute('class', 'removeGraphSelectorButton');
+        removeGraphSelectorButton.innerHTML = 'Remove Graph';
+        cell.appendChild(removeGraphSelectorButton);
 
-        // When this button is clicked, remove the selected graphSelectorCell
-        removeGraphButton.addEventListener('click', function (event) {
-            var graphSelectorCell = this.cell.parentNode;
-            var graphSelectorRow = graphSelectorCell.parentNode;
-            graphSelectorRow.removeChild(graphSelectorCell);
-        }.bind(this));
+        // When this button is clicked, remove the selected graphSelector by removing the selected graphSelectorCell
+        removeGraphSelectorButton.addEventListener('click', function (event) {
+            var graphSelectorRow = cell.parentNode;
+            var graphSelectorCell = cell;
+            var graphSelectorRowCells = graphSelectorRow.childNodes;
+            var graphSelectorCellIndex = 0;
+            for (var i = 0; i < graphSelectorRowCells.length; i++) {
+                if (graphSelectorRowCells[i] == graphSelectorCell) {
+                    graphSelectorCellIndex = i;
+                }
+            }
+            graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);
+        });
+
+        // Create a button to move the selected GraphSelector to the left
+        var moveGraphSelectorLeftButton = document.createElement('button');
+        moveGraphSelectorLeftButton.setAttribute('class', 'moveGraphSelectorLeftButton');
+        moveGraphSelectorLeftButton.innerHTML = 'Move Graph Left';
+        cell.appendChild(moveGraphSelectorLeftButton);
+
+        // When this button is clicked, move the selected graphSelector to the left by moving the selected graphSelectorCell to the left
+        moveGraphSelectorLeftButton.addEventListener('click', function (event) {
+            var graphSelectorRow = cell.parentNode;
+            var graphSelectorCell = cell;
+            var graphSelectorRowCells = graphSelectorRow.childNodes;
+            var graphSelectorCellIndex = 0;
+            for (var i = 0; i < graphSelectorRowCells.length; i++) {
+                if (graphSelectorRowCells[i] == graphSelectorCell) {
+                    graphSelectorCellIndex = i;
+                }
+            }
+            if (graphSelectorCellIndex > 0) {
+                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex], graphSelectorRowCells[graphSelectorCellIndex - 1]);
+            }
+        });
+
+        // Create a button to move the selected GraphSelector to the right
+        var moveGraphSelectorRightButton = document.createElement('button');
+        moveGraphSelectorRightButton.setAttribute('class', 'moveGraphSelectorRightButton');
+        moveGraphSelectorRightButton.innerHTML = 'Move Graph Right';
+        cell.appendChild(moveGraphSelectorRightButton);
+
+        // When this button is clicked, move the selected graphSelector to the right by moving the selected graphSelectorCell to the right
+        moveGraphSelectorRightButton.addEventListener('click', function (event) {
+            var graphSelectorRow = cell.parentNode;
+            var graphSelectorCell = cell;
+            var graphSelectorRowCells = graphSelectorRow.childNodes;
+            var graphSelectorCellIndex = 0;
+            for (var i = 0; i < graphSelectorRowCells.length; i++) {
+                if (graphSelectorRowCells[i] == graphSelectorCell) {
+                    graphSelectorCellIndex = i;
+                }
+            }
+            if (graphSelectorCellIndex < graphSelectorRowCells.length - 1) {
+                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex + 1], graphSelectorRowCells[graphSelectorCellIndex]);
+            }
+        });
 
         
-        // Create a new graph selector
-        this.graphSelector = document.createElement('select');
-        this.graphSelector.setAttribute('class', 'graphSelector');
-        graphSelectorDiv.appendChild(this.graphSelector);
 
-        console.log(this);
-        let graphTypes = this.getGraphTypes(); 
+        // // Add the graph selector and the graph form to the cell
+        // cell.appendChild(graphSelectorDiv);
+        // cell.appendChild(graphFormDiv);
 
-        for (let graphType in graphTypes) {
-            if (!graphTypes[graphType])
-                continue;
+        // // Create a button to add a graph to the left of the selected graph
+        // var addGraphLeftButton = document.createElement('button');
+        // addGraphLeftButton.setAttribute('class', 'addGraphLeftButton');
+        // addGraphLeftButton.innerHTML = 'Add Graph to Left';
+        // graphSelectorDiv.appendChild(addGraphLeftButton);
 
-            let option = document.createElement('option');
-            option.setAttribute('value', graphType);
-            option.innerHTML = graphType;
-            this.graphSelector.appendChild(option);
+        // // When this button is clicked, add a graphSelector to the left of the selected graph by adding a graphsSelectorCell to the left of the selected graphSelectorCell
+        // addGraphLeftButton.addEventListener('click', function (event) {
+        //     var graphSelectorRow = cell.parentNode;
+        //     var graphSelectorCell = cell;
+        //     var graphSelectorRowCells = graphSelectorRow.childNodes;
+        //     var graphSelectorCellIndex = 0;
+        //     for (var i = 0; i < graphSelectorRowCells.length; i++) {
+        //         if (graphSelectorRowCells[i] === graphSelectorCell) {
+        //             graphSelectorCellIndex = i;
+        //             break;
+        //         }
+        //     }
+        //     var newGraphSelectorCell = document.createElement('td');
+        //     newGraphSelectorCell.setAttribute('class', 'graphSelectorCell');
+        //     graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex]);
+        //     this.addGraphSelectorRow(newGraphSelectorCell);
+        // }.bind(this));
 
-            // when this option gets selected, fill the graph form div with the form for the selected graph type
-            option.addEventListener('click', function (event) {
-                graphFormDiv.innerHTML = '';
-                graphFormDiv.appendChild(graphTypes[event.target.value]);
-            });
-        }
 
-        // return the graph selector div
-        return graphSelectorDiv;
+
+        // // Create a button to add a graph to the right of the selected graph
+        // var addGraphRightButton = document.createElement('button');
+        // addGraphRightButton.setAttribute('class', 'addGraphRightButton');
+        // addGraphRightButton.innerHTML = 'Add Graph to Right';
+        // graphSelectorDiv.appendChild(addGraphRightButton);
+
+        // // When this button is clicked, add a graphSelector to the right of the selected graph by adding a graphsSelectorCell to the right of the selected graphSelectorCell
+        // addGraphRightButton.addEventListener('click', function (event) {
+        //     var graphSelectorRow = this.cell.parentNode;
+        //     var graphSelectorCell = this.cell;
+        //     var graphSelectorRowCells = graphSelectorRow.childNodes;
+        //     var graphSelectorCellIndex = 0;
+        //     for (var i = 0; i < graphSelectorRowCells.length; i++) {
+        //         if (graphSelectorRowCells[i] === graphSelectorCell) {
+        //             graphSelectorCellIndex = i;
+        //             break;
+        //         }
+        //     }
+        //     var newGraphSelectorCell = document.createElement('td');
+        //     newGraphSelectorCell.setAttribute('class', 'graphSelectorCell');
+        //     graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex + 1]);
+        //     this.addGraphSelectorRow(newGraphSelectorCell);
+        // }.bind(this));
+
+        // // Create a button to remove the selected graph
+        // var removeGraphButton = document.createElement('button');
+        // removeGraphButton.setAttribute('class', 'removeGraphButton');
+        // removeGraphButton.innerHTML = 'Remove Graph';
+        // graphSelectorDiv.appendChild(removeGraphButton);
+
+        // // When this button is clicked, remove the selected graphSelectorCell
+        // removeGraphButton.addEventListener('click', function (event) {
+        //     var graphSelectorRow = this.cell.parentNode;
+        //     var graphSelectorCell = this.cell;
+        //     graphSelectorRow.removeChild(graphSelectorCell);
+        // }.bind(this));
+        
+        // // Create a new graph selector
+        // this.graphSelector = document.createElement('select');
+        // this.graphSelector.setAttribute('class', 'graphSelector');
+        // graphSelectorDiv.appendChild(this.graphSelector);
+
+        // console.log(this);
+        // let graphTypes = this.getGraphTypes(); 
+
+        // for (let graphType in graphTypes) {
+        //     if (!graphTypes[graphType])
+        //         continue;
+
+        //     let option = document.createElement('option');
+        //     option.setAttribute('value', graphType);
+        //     option.innerHTML = graphType;
+        //     this.graphSelector.appendChild(option);
+
+        //     // when this option gets selected, fill the graph form div with the form for the selected graph type
+        //     option.addEventListener('click', function (event) {
+        //         graphFormDiv.innerHTML = '';
+        //         graphFormDiv.appendChild(graphTypes[event.target.value]);
+        //     });
+        // }
+
+        
 
     };
 
@@ -373,6 +604,69 @@ var AdvancedGraphsModule = function (dashboard, data_dictionary, report, report_
         };
 
     };
+
+    // Create a modal dialog
+    this.createModalDialog = function (title, content, buttons) {
+        var modalDialog = document.createElement('div');
+        modalDialog.setAttribute('class', 'modalDialog');
+
+        var modalDialogHeader = document.createElement('div');
+        modalDialogHeader.setAttribute('class', 'modalDialogHeader');
+        modalDialogHeader.innerHTML = title;
+        modalDialog.appendChild(modalDialogHeader);
+
+        var modalDialogClose = document.createElement('button');
+        modalDialogClose.setAttribute('class', 'modalDialogClose');
+        modalDialogClose.innerHTML = 'X';
+        modalDialogHeader.appendChild(modalDialogClose);
+
+        // add an event listener to the close button that removes the modal dialog from the DOM
+        modalDialogClose.addEventListener('click', function (event) {
+            modalDialog.parentNode.removeChild(modalDialog);
+        });
+
+        var modalDialogContent = document.createElement('div');
+        modalDialogContent.setAttribute('class', 'modalDialogContent');
+        modalDialogContent.innerHTML = content;
+        modalDialog.appendChild(modalDialogContent);
+
+        var modalDialogFooter = document.createElement('div');
+        modalDialogFooter.setAttribute('class', 'modalDialogFooter');
+        modalDialog.appendChild(modalDialogFooter);
+
+        for (var button in buttons) {
+            var modalDialogButton = document.createElement('button');
+            modalDialogButton.setAttribute('class', 'modalDialogButton');
+            modalDialogButton.innerHTML = buttons[button];
+            modalDialogFooter.appendChild(modalDialogButton);
+        }  
+
+        return modalDialog;
+    };
+
+    // Create a modal dialogue that confirms a user's action
+    this.createConfirmModalDialog = function (action, content) {
+        var buttons = [
+            {'action': 'cancel', 
+            'label': 'Cancel',
+            'class': 'modalCancelButton',
+            'event': function (event) {
+                event.preventDefault();
+                this.parentNode.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode.parentNode);
+            }},
+            {'action': 'confirm', 
+            'label': 'Confirm', 
+            'class': 'modalConfirmButton',
+            'event': function(event) {
+                event.preventDefault();
+                this.parentNode.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode.parentNode);
+                action();
+            }}
+        ];
+
+        var modalDialog = this.createModalDialog('Are you sure?', content, buttons);
+
+    }
 
     // Create a Radio Selector
     this.createRadioSelector = function (options, name, label) {

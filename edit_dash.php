@@ -63,6 +63,10 @@ $report_fields = $module->getReportFields($project_id, $report_id);
 $data_dictionary = $module->getDataDictionary($project_id);
 
 $module->loadJS('js/AdvancedGraphsModule.js');
+
+$module->initializeJavascriptModuleObject();
+
+$module->tt_transferToJavascriptModuleObject();
 ?>
 
 <div id="advanced_graphs">
@@ -76,6 +80,7 @@ $module->loadJS('js/AdvancedGraphsModule.js');
 <script>
     // in an anonymous function to avoid polluting the global namespace
     $(document).ready(function() {
+        var module = <?=$this->getJavascriptModuleObjectName()?>;
         var report_id = <?php echo $report_id; ?>;
         var report_name = "<?php echo $report_name; ?>";
         var dash_id = <?php echo $dash_id; ?>;
@@ -87,10 +92,10 @@ $module->loadJS('js/AdvancedGraphsModule.js');
         var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
         
         // Initialize the module from AdvancedGraphsModule.js
-        var module = new AdvancedGraphsModule(dashboard, data_dictionary, report_fields, report, report_fields);
+        var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report_fields, report, report_fields);
 
         // Load the dashboard editor
-        module.loadDashboardEditor();
+        AGM.loadDashboardEditor();
 
     });
 </script>
