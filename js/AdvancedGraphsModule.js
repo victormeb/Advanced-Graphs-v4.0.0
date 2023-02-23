@@ -92,7 +92,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add a button to the row that removes this row
         var removeGraphSelectorRowButton = document.createElement('button');
         removeGraphSelectorRowButton.setAttribute('class', 'removeGraphSelectorRowButton');
-        removeGraphSelectorRowButton.innerHTML = 'Remove Graph Selector Row';
+        removeGraphSelectorRowButton.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
 
         // When this button is clicked, open a modal that asks the user to confirm that they want to remove this row
         removeGraphSelectorRowButton.addEventListener('click', function (event) {
@@ -106,7 +106,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create a cell to hold the buttons
         var buttonsCell = document.createElement('td');
-        buttonsCell.setAttribute('class', 'buttonsCell');
+        buttonsCell.setAttribute('class', 'graphSelectorRowButtons');
 
         // Add the buttons to the cell
         buttonsCell.appendChild(moveGraphSelectorRowUpButton);

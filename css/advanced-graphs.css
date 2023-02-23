@@ -51,3 +51,41 @@
     padding: 5px;
     cursor: pointer;
 }
+
+.graphSelectorRow {
+  min-height: fit-content;
+}
+
+.graphSelectorRowButtons {
+  position: relative;
+  min-height: 60px;
+  min-width: 60px;
+}
+
+.graphSelectorRowButtons .moveGraphSelectorRowUpButton {
+  position: absolute;
+  top: -15px;
+  right: 30px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.graphSelectorRowButtons .moveGraphSelectorRowDownButton {
+  position: absolute;
+  top: 15px;
+  right: 30px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+
+.graphSelectorRowButtons .removeGraphSelectorRowButton {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
