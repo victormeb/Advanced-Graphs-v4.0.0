@@ -38,7 +38,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var graphSelectorRow = document.createElement('tr');
         graphSelectorRow.setAttribute('class', 'graphSelectorRow');
 
-
         var graphSelectorCell = this.GraphSelector();
         graphSelectorRow.appendChild(graphSelectorCell);
 
@@ -177,6 +176,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     };
 
     this.GraphSelector = function () {
+        var AGM = this;
         // Create a cell that will contain the graph selector and the graph form
         var cell = document.createElement('td');
         cell.setAttribute('class', 'graphSelectorCell');
@@ -204,7 +204,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     graphSelectorCellIndex = i;
                 }
             }
-            var newGraphSelectorCell = this.GraphSelector();
+            var newGraphSelectorCell = AGM.GraphSelector();
             graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex]);
         });
 
@@ -225,7 +225,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     graphSelectorCellIndex = i;
                 }
             }
-            var newGraphSelectorCell = this.GraphSelector();
+            var newGraphSelectorCell = AGM.GraphSelector();
             graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex + 1]);
           
         });
@@ -294,7 +294,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             }
         });
 
-        
+        // Return cell
+        return cell;
 
         // // Add the graph selector and the graph form to the cell
         // cell.appendChild(graphSelectorDiv);

@@ -64,7 +64,7 @@ $data_dictionary = $module->getDataDictionary($project_id);
 
 $module->loadJS('js/AdvancedGraphsModule.js');
 
-$module->initializeJavascriptModuleObject();
+$js_module = $module->initializeJavascriptModuleObject();
 
 $module->tt_transferToJavascriptModuleObject();
 ?>
@@ -80,7 +80,7 @@ $module->tt_transferToJavascriptModuleObject();
 <script>
     // in an anonymous function to avoid polluting the global namespace
     $(document).ready(function() {
-        var module = <?=$this->getJavascriptModuleObjectName()?>;
+        var module = <?=ExternalModules::getJavascriptModuleObjectName($module)?>;
         var report_id = <?php echo $report_id; ?>;
         var report_name = "<?php echo $report_name; ?>";
         var dash_id = <?php echo $dash_id; ?>;
