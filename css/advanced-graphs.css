@@ -1,4 +1,4 @@
-.modalDialogue {
+.modalDialog {
     position: fixed;
     top: 0;
     left: 0;
@@ -6,34 +6,33 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    display: none;
+    display: block;
 }
 
-.modalDialogueContent {
+.modalDialogContent {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 400px;
-    height: 300px;
     margin-top: -150px;
     margin-left: -200px;
     background-color: #fff;
     z-index: 1001;
-    display: none;
+    display: block;
 }
 
-.modalDialogueTitle {
+.modalDialogTitle {
     background-color: #f0f0f0;
     padding: 10px;
     font-weight: bold;
     font-size: 14px;
 }
 
-.modalDialogueBody {
+.modalDialogBody {
     padding: 10px;
 }
 
-.modalDialogueFooter {
+.modalDialogFooter {
     background-color: #f0f0f0;
     padding: 10px;
     text-align: right;

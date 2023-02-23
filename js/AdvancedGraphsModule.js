@@ -51,7 +51,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add a button that moves this row up
         var moveGraphSelectorRowUpButton = document.createElement('button');
         moveGraphSelectorRowUpButton.setAttribute('class', 'moveGraphSelectorRowUpButton');
-        moveGraphSelectorRowUpButton.innerHTML = 'Move Graph Selector Row Up';
+        moveGraphSelectorRowUpButton.innerHTML = '<i class="fa fa-arrow-up" aria-hidden="true"></i>';
 
         // When this button is clicked, move this row up
         moveGraphSelectorRowUpButton.addEventListener('click', function (event) {
@@ -71,7 +71,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add a button that moves this row down
         var moveGraphSelectorRowDownButton = document.createElement('button');
         moveGraphSelectorRowDownButton.setAttribute('class', 'moveGraphSelectorRowDownButton');
-        moveGraphSelectorRowDownButton.innerHTML = 'Move Graph Selector Row Down';
+        moveGraphSelectorRowDownButton.innerHTML = '<i class="fa fa-arrow-down" aria-hidden="true"></i>';
 
         // When this button is clicked, move this row down
         moveGraphSelectorRowDownButton.addEventListener('click', function (event) {

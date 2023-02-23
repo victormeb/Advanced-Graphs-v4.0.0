@@ -63,6 +63,7 @@ $report_fields = $module->getReportFields($project_id, $report_id);
 $data_dictionary = $module->getDataDictionary($project_id);
 
 $module->loadJS('js/AdvancedGraphsModule.js');
+$module->loadCSS('css/advanced-graphs.css');
 
 $js_module = $module->initializeJavascriptModuleObject();
 

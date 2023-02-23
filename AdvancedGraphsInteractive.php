@@ -343,7 +343,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	function loadCSS($css_file, $folder = "css", $outputToPage=true)
 	{
 		// Create link tag
-		$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\" href=\"" . $this->getURL("$folder/".$css_file,  $this->module_js_path) . "\">\n";
+		$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\" href=\"" . $this->getURL($css_file,  $this->module_js_path) . "\">\n";
 		if ($outputToPage) {
 			print $output;
 		} else {
