@@ -95,68 +95,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // When this button is clicked, open a modal that asks the user to confirm that they want to remove this row
         removeGraphSelectorRowButton.addEventListener('click', function (event) {
             // Create a modal that asks the user to confirm that they want to remove this row
-            var modal = document.createElement('div');
-            modal.setAttribute('class', 'modal');
-            modal.setAttribute('id', 'removeGraphSelectorRowModal');
-            var modalContent = document.createElement('div');
-            modalContent.setAttribute('class', 'modal-content');
-            var modalHeader = document.createElement('div');
-            modalHeader.setAttribute('class', 'modal-header');
-            var modalBody = document.createElement('div');
-            modalBody.setAttribute('class', 'modal-body');
-            var modalFooter = document.createElement('div');
-            modalFooter.setAttribute('class', 'modal-footer');
-            var modalHeaderCloseButton = document.createElement('span');
-            modalHeaderCloseButton.setAttribute('class', 'close');
-            modalHeaderCloseButton.innerHTML = '&times;';
-            var modalHeaderTitle = document.createElement('h2');
-            modalHeaderTitle.innerHTML = 'Remove Graph Selector Row';
-            var modalBodyText = document.createElement('p');
-            modalBodyText.innerHTML = 'Are you sure you want to remove this graph selector row?';
-            var modalFooterYesButton = document.createElement('button');
-            modalFooterYesButton.setAttribute('class', 'modalFooterYesButton');
-            modalFooterYesButton.innerHTML = 'Yes';
-            var modalFooterNoButton = document.createElement('button');
-            modalFooterNoButton.setAttribute('class', 'modalFooterNoButton');
-            modalFooterNoButton.innerHTML = 'No';
-            
-            modalHeader.appendChild(modalHeaderCloseButton);
-            modalHeader.appendChild(modalHeaderTitle);
-            modalBody.appendChild(modalBodyText);
-            modalFooter.appendChild(modalFooterYesButton);
-            modalFooter.appendChild(modalFooterNoButton);
-            modalContent.appendChild(modalHeader);
-            modalContent.appendChild(modalBody);
-            modalContent.appendChild(modalFooter);
-            modal.appendChild(modalContent);
-            document.body.appendChild(modal);
-
-            // When the user clicks on the close button, close the modal
-            modalHeaderCloseButton.addEventListener('click', function (event) {
-                modal.style.display = 'none';
-            });
-
-            // When the user clicks on the 'No' button, close the modal
-            modalFooterNoButton.addEventListener('click', function (event) {
-                modal.style.display = 'none';
-            });
-
-            // When the user clicks on the 'Yes' button, remove the row and close the modal
-            modalFooterYesButton.addEventListener('click', function (event) {
-                // Remove the row
-                graphSelectorRow.remove();
-
-                // Close the modal
-                modal.style.display = 'none';
-            });
-
-            // When the user clicks anywhere outside of the modal, close the modal
-            window.addEventListener('click', function (event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            }
-            );
+            this.createConfirmModalDialog(function () {
+                // If the user confirms that they want to remove this row, remove this row
+                graphSelectorRow.parentNode.removeChild(graphSelectorRow);
+            }, this.module.tt('remove_row_confirm'));
 
         });
 
@@ -608,39 +550,52 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     // Create a modal dialog
     this.createModalDialog = function (title, content, buttons) {
+        // Create a modal dialog
         var modalDialog = document.createElement('div');
         modalDialog.setAttribute('class', 'modalDialog');
 
-        var modalDialogHeader = document.createElement('div');
-        modalDialogHeader.setAttribute('class', 'modalDialogHeader');
-        modalDialogHeader.innerHTML = title;
-        modalDialog.appendChild(modalDialogHeader);
-
-        var modalDialogClose = document.createElement('button');
-        modalDialogClose.setAttribute('class', 'modalDialogClose');
-        modalDialogClose.innerHTML = 'X';
-        modalDialogHeader.appendChild(modalDialogClose);
-
-        // add an event listener to the close button that removes the modal dialog from the DOM
-        modalDialogClose.addEventListener('click', function (event) {
-            modalDialog.parentNode.removeChild(modalDialog);
-        });
-
+        // Create a modal dialog content
         var modalDialogContent = document.createElement('div');
         modalDialogContent.setAttribute('class', 'modalDialogContent');
-        modalDialogContent.innerHTML = content;
-        modalDialog.appendChild(modalDialogContent);
+        
+        // Create a modal dialog title
+        var modalDialogTitle = document.createElement('div');
+        modalDialogTitle.setAttribute('class', 'modalDialogTitle');
+        modalDialogTitle.innerHTML = title;
 
+        // Create a modal dialog body
+        var modalDialogBody = document.createElement('div');
+        modalDialogBody.setAttribute('class', 'modalDialogBody');
+        modalDialogBody.innerHTML = content;
+
+        // Create a modal dialog footer
         var modalDialogFooter = document.createElement('div');
         modalDialogFooter.setAttribute('class', 'modalDialogFooter');
-        modalDialog.appendChild(modalDialogFooter);
 
-        for (var button in buttons) {
-            var modalDialogButton = document.createElement('button');
-            modalDialogButton.setAttribute('class', 'modalDialogButton');
-            modalDialogButton.innerHTML = buttons[button];
-            modalDialogFooter.appendChild(modalDialogButton);
-        }  
+        // Create a modal dialog button
+        var modalDialogButton = function (label, className, event) {
+            var button = document.createElement('button');
+            button.setAttribute('class', className);
+            button.innerHTML = label;
+            button.addEventListener('click', event);
+            return button;
+        }
+
+        // Create a modal dialog button for each button in the buttons array
+        for (var i = 0; i < buttons.length; i++) {
+            modalDialogFooter.appendChild(modalDialogButton(buttons[i].class, buttons[i].event));
+        }
+
+        // Add the modal dialog title, body, and footer to the modal dialog content
+        modalDialogContent.appendChild(modalDialogTitle);
+        modalDialogContent.appendChild(modalDialogBody);
+        modalDialogContent.appendChild(modalDialogFooter);
+
+        // Add the modal dialog content to the modal dialog
+        modalDialog.appendChild(modalDialogContent);
+
+        // Add the modal dialog to the body
+        document.body.appendChild(modalDialog);
 
         return modalDialog;
     };
@@ -648,15 +603,13 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     // Create a modal dialogue that confirms a user's action
     this.createConfirmModalDialog = function (action, content) {
         var buttons = [
-            {'action': 'cancel', 
-            'label': 'Cancel',
+            {'label': this.module.tt('cancel'),
             'class': 'modalCancelButton',
             'event': function (event) {
                 event.preventDefault();
                 this.parentNode.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode.parentNode);
             }},
-            {'action': 'confirm', 
-            'label': 'Confirm', 
+            {'label': this.module.tt('confirm'), 
             'class': 'modalConfirmButton',
             'event': function(event) {
                 event.preventDefault();
