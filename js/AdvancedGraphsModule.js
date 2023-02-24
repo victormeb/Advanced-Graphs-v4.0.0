@@ -127,6 +127,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Create a button that adds a graph selector cell along with this cell
         var addGraphSelectorButton = document.createElement('button');
         addGraphSelectorButton.setAttribute('class', 'addGraphSelectorButton');
+        addGraphSelectorButton.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i>';
 
         // When this button is clicked, add a graph selector cell along with this cell
         addGraphSelectorButton.addEventListener('click', function (event) {
@@ -221,12 +222,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     graphSelectorCellIndex = i;
                 }
             }
-            if (graphSelectorCellIndex > 0) {
-                graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex - 1]);
-            }
+
+            // Remove the selected graphSelector and the button to the right of it
+            graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);
             graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);
         });
-        
+
 
         // Create a button to move the selected GraphSelector to the left
         var moveGraphSelectorLeftButton = document.createElement('button');
