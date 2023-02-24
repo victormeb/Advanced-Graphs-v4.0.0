@@ -54,13 +54,12 @@
 
 .graphSelectorRow {
   clear: both;
+  min-height: 60px;
 }
 
 .graphSelectorRowButtons {
   position: relative;
   margin-left: 20px;
-  min-height: 60px;
-  min-width: 60px;
 }
 
 .graphSelectorRowButtons .moveGraphSelectorRowUpButton {
@@ -89,4 +88,14 @@
   width: 30px;
   height: 30px;
   cursor: pointer;
+}
+
+.graphSelectorCell {
+  float: left;
+  margin-right: 10px;
+}
+
+.graphSelectorAdderCell {
+  float: left;
+  margin-right: 10px;
 }
