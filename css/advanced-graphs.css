@@ -53,11 +53,12 @@
 }
 
 .graphSelectorRow {
-  min-height: fit-content;
+  clear: both;
 }
 
 .graphSelectorRowButtons {
   position: relative;
+  margin-left: 20px;
   min-height: 60px;
   min-width: 60px;
 }

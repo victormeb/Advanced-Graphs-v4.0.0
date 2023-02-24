@@ -34,10 +34,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     };
 
     // A function to add a row with a single graph selector cell.
-    this.addGraphSelectorRow = function (table) {
+    this.addGraphSelectorRow = function () {
         var AGM = this;
 
-        var graphSelectorRow = document.createElement('tr');
+        var graphSelectorRow = document.createElement('div');
         graphSelectorRow.setAttribute('class', 'graphSelectorRow');
 
         var graphSelectorCell = this.addGraphSelector();
@@ -105,7 +105,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         });
 
         // Create a cell to hold the buttons
-        var buttonsCell = document.createElement('td');
+        var buttonsCell = document.createElement('div');
         buttonsCell.setAttribute('class', 'graphSelectorRowButtons');
 
         // Add the buttons to the cell
@@ -121,7 +121,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     this.addGraphSelector = function () {
         // Create a cell that will contain a button that adds a graph selector cell along with this cell
-        var cell = document.createElement('td');
+        var cell = document.createElement('div');
         cell.setAttribute('class', 'graphSelectorAdderCell');
 
         // Create a button that adds a graph selector cell along with this cell
@@ -153,7 +153,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     this.GraphSelector = function () {
         var AGM = this;
         // Create a cell that will contain the graph selector and the graph form
-        var cell = document.createElement('td');
+        var cell = document.createElement('div');
         cell.setAttribute('class', 'graphSelectorCell');
 
         // Create a div that will contain the graph selector and a div that will contain the graph form
