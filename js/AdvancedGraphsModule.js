@@ -166,7 +166,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var moveGraphSelectorLeftButton = document.createElement('button');
         moveGraphSelectorLeftButton.setAttribute('class', 'moveGraphSelectorLeftButton');
         moveGraphSelectorLeftButton.innerHTML = '<i class="fa fa-arrow-left" aria-hidden="true"></i>';
-        cell.appendChild(moveGraphSelectorLeftButton);
 
         // When this button is clicked, move the selected graphSelector to the left by moving the selected graphSelectorCell to the left
         moveGraphSelectorLeftButton.addEventListener('click', function (event) {
@@ -185,9 +184,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         });
 
          // Create a new graph selector
-        this.graphSelector = document.createElement('select');
-        this.graphSelector.setAttribute('class', 'graphSelector');
-        graphSelectorDiv.appendChild(this.graphSelector);
+        var graphSelector = document.createElement('select');
+        graphSelector.setAttribute('class', 'graphSelector');
 
         let graphTypes = this.getGraphTypes(); 
 
@@ -213,7 +211,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var removeGraphSelectorButton = document.createElement('button');
         removeGraphSelectorButton.setAttribute('class', 'removeGraphSelectorButton');
         removeGraphSelectorButton.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
-        cell.appendChild(removeGraphSelectorButton);
 
         // When this button is clicked, remove the selected graphSelector and the button to the right of it
         removeGraphSelectorButton.addEventListener('click', function (event) {
@@ -237,7 +234,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var moveGraphSelectorRightButton = document.createElement('button');
         moveGraphSelectorRightButton.setAttribute('class', 'moveGraphSelectorRightButton');
         moveGraphSelectorRightButton.innerHTML = '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
-        cell.appendChild(moveGraphSelectorRightButton);
 
         // When this button is clicked, move the selected graphSelector to the right by moving the selected graphSelectorCell to the right
         moveGraphSelectorRightButton.addEventListener('click', function (event) {
@@ -254,6 +250,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex + 1], graphSelectorRowCells[graphSelectorCellIndex]);
             }
         });
+
+        // Add the left button, the graph selector, the right button, and the remove button to the graph selector div
+        graphSelectorDiv.appendChild(moveGraphSelectorLeftButton);
+        graphSelectorDiv.appendChild(graphSelector);
+        graphSelectorDiv.appendChild(moveGraphSelectorRightButton);
+        graphSelectorDiv.appendChild(removeGraphSelectorButton);
+
+        // Add the graph selector div and the graph form div to the cell
+        cell.appendChild(graphSelectorDiv);
+        cell.appendChild(graphFormDiv);
+
 
         // Return cell
         return cell;
