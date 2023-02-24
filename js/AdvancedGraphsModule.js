@@ -40,7 +40,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var graphSelectorRow = document.createElement('tr');
         graphSelectorRow.setAttribute('class', 'graphSelectorRow');
 
-        var graphSelectorCell = this.GraphSelector();
+        var graphSelectorCell = this.addGraphSelector();
         graphSelectorRow.appendChild(graphSelectorCell);
 
 
@@ -119,6 +119,36 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return graphSelectorRow;
     };
 
+    this.addGraphSelector = function () {
+        // Create a cell that will contain a button that adds a graph selector cell along with this cell
+        var cell = document.createElement('td');
+        cell.setAttribute('class', 'graphSelectorAdderCell');
+
+        // Create a button that adds a graph selector cell along with this cell
+        var addGraphSelectorButton = document.createElement('button');
+        addGraphSelectorButton.setAttribute('class', 'addGraphSelectorButton');
+
+        // When this button is clicked, add a graph selector cell along with this cell
+        addGraphSelectorButton.addEventListener('click', function (event) {
+            // Get the row that contains this cell
+            var graphSelectorRow = cell.parentNode;
+
+            // Get the index of this cell
+            var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectorRow.children, cell);
+
+            // Add a graph selector cell along with this cell
+            graphSelectorRow.insertBefore(this.GraphSelector(), graphSelectorRow.children[graphSelectorCellIndex + 1]);
+
+            // Add a graphSelectorAdderCell to the right of the added graphSelectorCell
+            graphSelectorRow.insertBefore(this.addGraphSelector(), graphSelectorRow.children[graphSelectorCellIndex + 2]);
+        }.bind(this));
+
+        // Add the button to the cell
+        cell.appendChild(addGraphSelectorButton);
+
+        return cell;
+    }
+
     this.GraphSelector = function () {
         var AGM = this;
         // Create a cell that will contain the graph selector and the graph form
@@ -137,50 +167,50 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         addGraphLeftButton.innerHTML = 'Add Graph to Left';
         cell.appendChild(addGraphLeftButton);
         
-        // When this button is clicked, add a graphSelector to the left of the selected graphSelector by adding a graphsSelectorCell to the left of the selected graphSelectorCell
-        addGraphLeftButton.addEventListener('click', function (event) {
-            var graphSelectorRow = cell.parentNode;
-            var graphSelectorCell = cell;
-            var graphSelectorRowCells = graphSelectorRow.childNodes;
-            var graphSelectorCellIndex = 0;
-            for (var i = 0; i < graphSelectorRowCells.length; i++) {
-                if (graphSelectorRowCells[i] == graphSelectorCell) {
-                    graphSelectorCellIndex = i;
-                }
-            }
-            var newGraphSelectorCell = AGM.GraphSelector();
-            graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex]);
-        });
+        // // When this button is clicked, add a graphSelector to the left of the selected graphSelector by adding a graphsSelectorCell to the left of the selected graphSelectorCell
+        // addGraphLeftButton.addEventListener('click', function (event) {
+        //     var graphSelectorRow = cell.parentNode;
+        //     var graphSelectorCell = cell;
+        //     var graphSelectorRowCells = graphSelectorRow.childNodes;
+        //     var graphSelectorCellIndex = 0;
+        //     for (var i = 0; i < graphSelectorRowCells.length; i++) {
+        //         if (graphSelectorRowCells[i] == graphSelectorCell) {
+        //             graphSelectorCellIndex = i;
+        //         }
+        //     }
+        //     var newGraphSelectorCell = AGM.GraphSelector();
+        //     graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex]);
+        // });
 
-        // Create a button to add a GraphSelector to the right of the selected GraphSelector
-        var addGraphRightButton = document.createElement('button');
-        addGraphRightButton.setAttribute('class', 'addGraphRightButton');
-        addGraphRightButton.innerHTML = 'Add Graph to Right';
-        cell.appendChild(addGraphRightButton);
+        // // Create a button to add a GraphSelector to the right of the selected GraphSelector
+        // var addGraphRightButton = document.createElement('button');
+        // addGraphRightButton.setAttribute('class', 'addGraphRightButton');
+        // addGraphRightButton.innerHTML = 'Add Graph to Right';
+        // cell.appendChild(addGraphRightButton);
 
-        // When this button is clicked, add a graphSelector to the right of the selected graphSelector by adding a graphsSelectorCell to the right of the selected graphSelectorCell
-        addGraphRightButton.addEventListener('click', function (event) {
-            var graphSelectorRow = cell.parentNode;
-            var graphSelectorCell = cell;
-            var graphSelectorRowCells = graphSelectorRow.childNodes;
-            var graphSelectorCellIndex = 0;
-            for (var i = 0; i < graphSelectorRowCells.length; i++) {
-                if (graphSelectorRowCells[i] == graphSelectorCell) {
-                    graphSelectorCellIndex = i;
-                }
-            }
-            var newGraphSelectorCell = AGM.GraphSelector();
-            graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex + 1]);
+        // // When this button is clicked, add a graphSelector to the right of the selected graphSelector by adding a graphsSelectorCell to the right of the selected graphSelectorCell
+        // addGraphRightButton.addEventListener('click', function (event) {
+        //     var graphSelectorRow = cell.parentNode;
+        //     var graphSelectorCell = cell;
+        //     var graphSelectorRowCells = graphSelectorRow.childNodes;
+        //     var graphSelectorCellIndex = 0;
+        //     for (var i = 0; i < graphSelectorRowCells.length; i++) {
+        //         if (graphSelectorRowCells[i] == graphSelectorCell) {
+        //             graphSelectorCellIndex = i;
+        //         }
+        //     }
+        //     var newGraphSelectorCell = AGM.GraphSelector();
+        //     graphSelectorRow.insertBefore(newGraphSelectorCell, graphSelectorRowCells[graphSelectorCellIndex + 1]);
           
-        });
+        // });
 
-        // Create a button to remove the selected GraphSelector
+        // Create a button to remove the selected GraphSelector and the button to the right of it
         var removeGraphSelectorButton = document.createElement('button');
         removeGraphSelectorButton.setAttribute('class', 'removeGraphSelectorButton');
         removeGraphSelectorButton.innerHTML = 'Remove Graph';
         cell.appendChild(removeGraphSelectorButton);
 
-        // When this button is clicked, remove the selected graphSelector by removing the selected graphSelectorCell
+        // When this button is clicked, remove the selected graphSelector and the button to the right of it
         removeGraphSelectorButton.addEventListener('click', function (event) {
             var graphSelectorRow = cell.parentNode;
             var graphSelectorCell = cell;
@@ -191,8 +221,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     graphSelectorCellIndex = i;
                 }
             }
+            if (graphSelectorCellIndex > 0) {
+                graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex - 1]);
+            }
             graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);
         });
+        
 
         // Create a button to move the selected GraphSelector to the left
         var moveGraphSelectorLeftButton = document.createElement('button');
