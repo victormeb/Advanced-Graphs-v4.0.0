@@ -35,13 +35,19 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     // A function to add a row with a single graph selector cell.
     this.addGraphSelectorRow = function () {
-        var AGM = this;
-
         var graphSelectorRow = document.createElement('div');
         graphSelectorRow.setAttribute('class', 'graphSelectorRow');
 
-        var graphSelectorCell = this.addGraphSelector();
-        graphSelectorRow.appendChild(graphSelectorCell);
+        // Add a button that adds a graph selector cell to the row.
+        var graphSelectorAdder = this.addGraphSelector();
+        graphSelectorRow.appendChild(graphSelectorAdder);
+
+        // Create a div that will hold the graph selectors
+        var graphSelectors = document.createElement('div');
+        graphSelectors.setAttribute('class', 'graphSelectors');
+
+        // Add the graph selectors div to the row
+        graphSelectorRow.appendChild(graphSelectors);
 
 
         // Append this row to the advanced_graphs_dashboard div
@@ -97,12 +103,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // When this button is clicked, open a modal that asks the user to confirm that they want to remove this row
         removeGraphSelectorRowButton.addEventListener('click', function (event) {
             // Create a modal that asks the user to confirm that they want to remove this row
-            AGM.createConfirmModalDialog(function () {
+            this.createConfirmModalDialog(function () {
                 // If the user confirms that they want to remove this row, remove this row
                 graphSelectorRow.parentNode.removeChild(graphSelectorRow);
-            }, AGM.module.tt('remove_row_confirm'));
+            }, this.module.tt('remove_row_confirm'));
 
-        });
+        }).bind(this);
 
         // Create a cell to hold the buttons
         var buttonsCell = document.createElement('div');
@@ -120,35 +126,29 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     };
 
     this.addGraphSelector = function () {
-        // Create a cell that will contain a button that adds a graph selector cell along with this cell
-        var cell = document.createElement('div');
-        cell.setAttribute('class', 'graphSelectorAdderCell');
-
         // Create a button that adds a graph selector cell along with this cell
         var addGraphSelectorButton = document.createElement('button');
         addGraphSelectorButton.setAttribute('class', 'addGraphSelectorButton');
         addGraphSelectorButton.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i>';
 
-        // When this button is clicked, add a graph selector cell along with this cell
+
+
+        // When this button is clicked, add a graph selector cell to the beginning of the graphSelectors div in the row that contains this button
         addGraphSelectorButton.addEventListener('click', function (event) {
-            // Get the row that contains this cell
-            var graphSelectorRow = cell.parentNode;
+            // Get the row that contains this button
+            var graphSelectorRow = addGraphSelectorButton.parentNode.parentNode;
 
-            // Get the index of this cell
-            var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectorRow.children, cell);
+            // Get the graphSelectors div in this row
+            var graphSelectors = graphSelectorRow.getElementsByClassName('graphSelectors')[0];
 
-            // Add a graph selector cell
-            graphSelectorRow.insertBefore(this.GraphSelector(), graphSelectorRow.children[graphSelectorCellIndex + 1]);
+            // Add a graph selector cell to the beginning of the graphSelectors div
+            graphSelectors.insertBefore(this.addGraphSelector(), graphSelectors.children[0]);
         }.bind(this));
-
-        // Add the button to the cell
-        cell.appendChild(addGraphSelectorButton);
 
         return cell;
     }
 
     this.GraphSelector = function () {
-        var AGM = this;
         // Create a cell that will contain the graph selector and the graph form
         var cell = document.createElement('div');
         cell.setAttribute('class', 'graphSelectorCell');
@@ -174,7 +174,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 // Move this cell to the left of the cell to the left of this cell
                 graphSelectorRow.insertBefore(cell, cellToLeftOfGraphSelectorCell);
             }
-        });
+        }).bind(this);
 
         // Create a div that will contain the graph selector and a div that will contain the graph form
         var graphSelectorDiv = document.createElement('div');
@@ -247,24 +247,29 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);    
         });
 
-        // Create a button that creates a new graph selector and adds it to the row
+        // Create a button that creates a new graph selector and adds it to the graphSelectors div in the row that contains this graph selector 
         var addGraphSelectorButton = document.createElement('button');
         addGraphSelectorButton.setAttribute('class', 'graphSelectorAdder');
+        addGraphSelectorButton.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i>';
 
-        // When this button is clicked, add a new graph selector to the row
+        // When this button is clicked, add a graph selector cell to the right of this button's parent
         addGraphSelectorButton.addEventListener('click', function (event) {
-            // Get the row that contains this cell
-            var graphSelectorRow = cell.parentNode;
+            // Get the row that contains this button
+            var graphSelectorRow = addGraphSelectorButton.parentNode.parentNode;
 
-            // Get the index of this cell
+            // Get the graphSelectors div in this row
+            var graphSelectors = graphSelectorRow.getElementsByClassName('graphSelectors')[0];
+
+            // Get the index of this graph selector
             var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectorRow.children, cell);
 
             // Create a new graph selector
-            var newGraphSelector = AGM.GraphSelector();
+            var newGraphSelector = new this.GraphSelector();
 
-            // Add the new graph selector to the row
-            graphSelectorRow.insertBefore(newGraphSelector, graphSelectorRow.children[graphSelectorCellIndex + 1]);
-        });
+            // Add the new graph selector to the graphSelectors div
+            graphSelectors.insertBefore(newGraphSelector, graphSelectors.children[graphSelectorCellIndex + 1]);
+        }.bind(this));
+
 
         // Create a div that will contain the graph form
         var graphFormDiv = document.createElement('div');
