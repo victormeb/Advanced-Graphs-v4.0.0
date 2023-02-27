@@ -137,11 +137,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Get the index of this cell
             var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectorRow.children, cell);
 
-            // Add a graph selector cell along with this cell
+            // Add a graph selector cell
             graphSelectorRow.insertBefore(this.GraphSelector(), graphSelectorRow.children[graphSelectorCellIndex + 1]);
-
-            // Add a graphSelectorAdderCell to the right of the added graphSelectorCell
-            graphSelectorRow.insertBefore(this.addGraphSelector(), graphSelectorRow.children[graphSelectorCellIndex + 2]);
         }.bind(this));
 
         // Add the button to the cell
