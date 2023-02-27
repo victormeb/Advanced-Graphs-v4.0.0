@@ -243,9 +243,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
             }
 
-            // Remove the selected graphSelector and the button to the right of it
-            graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);
-            graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);
+            // Remove the selected graphSelector
+            graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);    
         });
 
         // Create a button that creates a new graph selector and adds it to the row

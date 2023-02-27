@@ -55,7 +55,9 @@
 .graphSelectorRow {
   display: grid;
   grid-template-rows: 1fr;
-  grid-template-columns: 30px repeat(auto-fit, minmax(0, 1fr));
+  grid-template-columns: 0.1fr 0.8fr 0.1fr;
+  grid-template-areas: 
+    "addButton graphSelectors rowButtons";
   width: 100%;
 }
 
