@@ -156,13 +156,34 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var cell = document.createElement('div');
         cell.setAttribute('class', 'graphSelectorCell');
 
+        // Create an arrow that will move the graph selector cell to the left
+        var moveGraphSelectorCellLeftButton = document.createElement('button');
+        moveGraphSelectorCellLeftButton.setAttribute('class', 'graphSelectorArrow');
+        moveGraphSelectorCellLeftButton.innerHTML = '<i class="fa fa-arrow-left" aria-hidden="true"></i>';
+
+        // When this button is clicked, move the graph selector cell to the left
+        moveGraphSelectorCellLeftButton.addEventListener('click', function (event) {
+            // Get the row that contains this cell
+            var graphSelectorRow = cell.parentNode;
+
+            // Get the index of this cell
+            var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectorRow.children, cell);
+
+            // If this cell is not the first cell, move it to the left
+            if (graphSelectorCellIndex > 0) {
+                // Get the cell to the left of this cell
+                var cellToLeftOfGraphSelectorCell = graphSelectorRow.children[graphSelectorCellIndex - 1];
+
+                // Move this cell to the left of the cell to the left of this cell
+                graphSelectorRow.insertBefore(cell, cellToLeftOfGraphSelectorCell);
+            }
+        });
+
         // Create a div that will contain the graph selector and a div that will contain the graph form
         var graphSelectorDiv = document.createElement('div');
         graphSelectorDiv.setAttribute('class', 'graphSelectorDiv');
-        var graphFormDiv = document.createElement('div');
-        graphFormDiv.setAttribute('class', 'graphFormDiv');
 
-         // Create a new graph selector
+        // Create a new graph selector
         var graphSelector = document.createElement('select');
         graphSelector.setAttribute('class', 'graphSelector');
 
@@ -184,11 +205,33 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             });
         }
 
+        // Create a button that will move the graph selector cell to the right
+        var moveGraphSelectorCellRightButton = document.createElement('button');
+        moveGraphSelectorCellRightButton.setAttribute('class', 'graphSelectorArrow');
+        moveGraphSelectorCellRightButton.innerHTML = '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
+
+        // When this button is clicked, move the graph selector cell to the right
+        moveGraphSelectorCellRightButton.addEventListener('click', function (event) {
+            // Get the row that contains this cell
+            var graphSelectorRow = cell.parentNode;
+
+            // Get the index of this cell
+            var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectorRow.children, cell);
+
+            // If this cell is not the last cell, move it to the right
+            if (graphSelectorCellIndex < graphSelectorRow.children.length - 1) {
+                // Get the cell to the right of this cell
+                var cellToRightOfGraphSelectorCell = graphSelectorRow.children[graphSelectorCellIndex + 1];
+                
+                // Move this cell to the right of the cell to the right of this cell
+                graphSelectorRow.insertBefore(cell, cellToRightOfGraphSelectorCell.nextSibling);
+            }
+        });
 
 
         // Create a button to remove the selected GraphSelector and the button to the right of it
         var removeGraphSelectorButton = document.createElement('button');
-        removeGraphSelectorButton.setAttribute('class', 'removeGraphSelectorButton');
+        removeGraphSelectorButton.setAttribute('class', 'graphSelectorRemover');
         removeGraphSelectorButton.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
 
         // When this button is clicked, remove the selected graphSelector and the button to the right of it
@@ -208,21 +251,42 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);
         });
 
+        // Create a button that creates a new graph selector and adds it to the row
+        var addGraphSelectorButton = document.createElement('button');
+        addGraphSelectorButton.setAttribute('class', 'graphSelectorAdder');
 
-        // Create a button to move the selected GraphSelector to the right
-        var moveGraphSelectorRightButton = document.createElement('button');
-        moveGraphSelectorRightButton.setAttribute('class', 'moveGraphSelectorRightButton');
-        moveGraphSelectorRightButton.innerHTML = '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
+        // When this button is clicked, add a new graph selector to the row
+        addGraphSelectorButton.addEventListener('click', function (event) {
+            // Get the row that contains this cell
+            var graphSelectorRow = cell.parentNode;
+
+            // Get the index of this cell
+            var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectorRow.children, cell);
+
+            // Create a new graph selector
+            var newGraphSelector = AGM.GraphSelector();
+
+            // Add the new graph selector to the row
+            graphSelectorRow.insertBefore(newGraphSelector, graphSelectorRow.children[graphSelectorCellIndex + 1]);
+        });
+
+        // Create a div that will contain the graph form
+        var graphFormDiv = document.createElement('div');
+        graphFormDiv.setAttribute('class', 'graphFormDiv');
 
 
-        // Add the left button, the graph selector, the right button, and the remove button to the graph selector div
-        graphSelectorDiv.appendChild(graphSelector);
-        graphSelectorDiv.appendChild(removeGraphSelectorButton);
-
-        // Add the graph selector div and the graph form div to the cell
+        // Add the move left button, the graph selector, the move right button, the remove button, and the add button to the graph selector div cell
+        cell.appendChild(moveGraphSelectorCellLeftButton);
         cell.appendChild(graphSelectorDiv);
-        cell.appendChild(graphFormDiv);
+        cell.appendChild(moveGraphSelectorCellRightButton);
+        cell.appendChild(removeGraphSelectorButton);
+        cell.appendChild(addGraphSelectorButton);
 
+        // Add the graph selector to the graph selector div
+        graphSelectorDiv.appendChild(graphSelector);
+
+        // Add the graph form div to the graph selector div
+        graphSelectorDiv.appendChild(graphFormDiv);
 
         // Return cell
         return cell;
