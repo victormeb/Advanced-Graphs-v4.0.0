@@ -162,28 +162,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var graphFormDiv = document.createElement('div');
         graphFormDiv.setAttribute('class', 'graphFormDiv');
 
-        // Create a button to move the selected GraphSelector to the left
-        var moveGraphSelectorLeftButton = document.createElement('button');
-        moveGraphSelectorLeftButton.setAttribute('class', 'moveGraphSelectorLeftButton');
-        moveGraphSelectorLeftButton.innerHTML = '<i class="fa fa-arrow-left" aria-hidden="true"></i>';
-
-        // When this button is clicked, move the selected graphSelector to the left by moving the selected graphSelectorCell to the left
-        moveGraphSelectorLeftButton.addEventListener('click', function (event) {
-            var graphSelectorRow = cell.parentNode;
-            var graphSelectorCell = cell;
-            var graphSelectorRowCells = graphSelectorRow.childNodes;
-            var graphSelectorCellIndex = 0;
-            for (var i = 0; i < graphSelectorRowCells.length; i++) {
-                if (graphSelectorRowCells[i] == graphSelectorCell) {
-                    graphSelectorCellIndex = i;
-                }
-            }
-            // Move the selected graphSelectorCell two cells to the left
-            if (graphSelectorCellIndex > 1) {
-                graphSelectorRow.insertBefore(graphSelectorCell, graphSelectorRow.childNodes[graphSelectorCellIndex - 2]);
-            }
-        });
-
          // Create a new graph selector
         var graphSelector = document.createElement('select');
         graphSelector.setAttribute('class', 'graphSelector');
@@ -197,7 +175,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             let option = document.createElement('option');
             option.setAttribute('value', graphType);
             option.innerHTML = graphType;
-            this.graphSelector.appendChild(option);
+            graphSelector.appendChild(option);
 
             // when this option gets selected, fill the graph form div with the form for the selected graph type
             option.addEventListener('click', function (event) {
@@ -236,28 +214,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         moveGraphSelectorRightButton.setAttribute('class', 'moveGraphSelectorRightButton');
         moveGraphSelectorRightButton.innerHTML = '<i class="fa fa-arrow-right" aria-hidden="true"></i>';
 
-        // When this button is clicked, move the selected graphSelector to the right by moving the selected graphSelectorCell to the right
-        moveGraphSelectorRightButton.addEventListener('click', function (event) {
-            var graphSelectorRow = cell.parentNode;
-            var graphSelectorCell = cell;
-            var graphSelectorRowCells = graphSelectorRow.childNodes;
-            var graphSelectorCellIndex = 0;
-            for (var i = 0; i < graphSelectorRowCells.length; i++) {
-                if (graphSelectorRowCells[i] == graphSelectorCell) {
-                    graphSelectorCellIndex = i;
-                }
-            }
-            // Move the selected graphSelectorCell two cells to the right
-            if (graphSelectorCellIndex < graphSelectorRowCells.length - 2) {
-                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex + 2], graphSelectorCell);
-            }
-            
-        });
 
         // Add the left button, the graph selector, the right button, and the remove button to the graph selector div
-        graphSelectorDiv.appendChild(moveGraphSelectorLeftButton);
         graphSelectorDiv.appendChild(graphSelector);
-        graphSelectorDiv.appendChild(moveGraphSelectorRightButton);
         graphSelectorDiv.appendChild(removeGraphSelectorButton);
 
         // Add the graph selector div and the graph form div to the cell
