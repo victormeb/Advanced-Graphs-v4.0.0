@@ -179,7 +179,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
             }
             if (graphSelectorCellIndex > 0) {
-                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex], graphSelectorRowCells[graphSelectorCellIndex - 1]);
+                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex], graphSelectorRowCells[graphSelectorCellIndex - 2]);
             }
         });
 
@@ -247,7 +247,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
             }
             if (graphSelectorCellIndex < graphSelectorRowCells.length - 1) {
-                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex + 1], graphSelectorRowCells[graphSelectorCellIndex]);
+                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex + 1], graphSelectorRowCells[graphSelectorCellIndex+1]);
             }
         });
 
