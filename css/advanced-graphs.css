@@ -53,8 +53,10 @@
 }
 
 .graphSelectorRow {
-  clear: both;
-  min-height: 60px;
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 30px repeat(auto-fit, minmax(0, 1fr));
+  width: 100%;
 }
 
 .graphSelectorRowButtons {
@@ -91,6 +93,7 @@
 }
 
 .graphSelectorCell {
+  float: left;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr auto;
@@ -99,6 +102,10 @@
   grid-template-areas: 
     "graphSelectorArrow graphSelectorDiv graphSelectorArrow graphSelectorRemover graphSelectorAdder"
     "graphFormDiv graphFormDiv graphFormDiv graphFormDiv";
+}
+
+.graphSelectorCell > div {
+  width: 100%;
 }
 
 .graphSelectorAdderCell {
