@@ -178,9 +178,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     graphSelectorCellIndex = i;
                 }
             }
-            // Move the selected graphSelectorCell to the left of the button to the left of it
-            if (graphSelectorCellIndex > 0) {
-                graphSelectorRow.insertBefore(graphSelectorCell, graphSelectorRow.childNodes[graphSelectorCellIndex - 1]);
+            // Move the selected graphSelectorCell two cells to the left
+            if (graphSelectorCellIndex > 1) {
+                graphSelectorRow.insertBefore(graphSelectorCell, graphSelectorRow.childNodes[graphSelectorCellIndex - 2]);
             }
         });
 
@@ -247,10 +247,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     graphSelectorCellIndex = i;
                 }
             }
-            // Move the selected graphSelectorCell to the right of the button to the right of it
-            if (graphSelectorCellIndex < graphSelectorRowCells.length - 1) {
-                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex + 1], graphSelectorCell);
+            // Move the selected graphSelectorCell two cells to the right
+            if (graphSelectorCellIndex < graphSelectorRowCells.length - 2) {
+                graphSelectorRow.insertBefore(graphSelectorRowCells[graphSelectorCellIndex + 2], graphSelectorCell);
             }
+            
         });
 
         // Add the left button, the graph selector, the right button, and the remove button to the graph selector div
