@@ -91,8 +91,14 @@
 }
 
 .graphSelectorCell {
-  float: left;
-  margin-right: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  grid-gap: 5px;
+  margin-bottom: 10px;
+  grid-template-areas: 
+    "graphSelectorArrow graphSelectorDiv graphSelectorArrow graphSelectorRemover graphSelectorAdder"
+    "graphFormDiv graphFormDiv graphFormDiv graphFormDiv";
 }
 
 .graphSelectorAdderCell {
