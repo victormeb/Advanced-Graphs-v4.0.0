@@ -185,21 +185,30 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var graphSelector = document.createElement('select');
         graphSelector.setAttribute('class', 'graphSelector');
 
+        // Add a disabled default option
+        var defaultOption = document.createElement('option');
+        defaultOption.setAttribute('value', '');
+        defaultOption.setAttribute('disabled', 'disabled');
+        defaultOption.setAttribute('selected', 'selected');
+        defaultOption.innerHTML = this.module.tt('select_graph_type');
+        graphSelector.appendChild(defaultOption);
+
+        // Add an option for each graph type
         let graphTypes = this.getGraphTypes(); 
 
         for (let graphType in graphTypes) {
-            if (!graphTypes[graphType])
+            if (!graphTypes[graphType]['form'])
                 continue;
 
             let option = document.createElement('option');
             option.setAttribute('value', graphType);
-            option.innerHTML = graphType;
+            option.innerHTML = graphTypes[graphType]['label'];
             graphSelector.appendChild(option);
 
             // when this option gets selected, fill the graph form div with the form for the selected graph type
             option.addEventListener('click', function (event) {
                 graphFormDiv.innerHTML = '';
-                graphFormDiv.appendChild(graphTypes[event.target.value]);
+                graphFormDiv.appendChild(graphTypes[event.target.value]['form']);
             });
         }
 
@@ -290,14 +299,24 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     this.getGraphTypes = function () {
         // Bar and pie graphs are the same, except for the type of graph they are.
         var graphTypes = {
-            "bar": this.getBargraphFormParameters(),
-            "cross-bar": this.getCrossBargraphFormParameters(),
-            "likert": this.getLikertFormParameters(),
-            "map": this.getMapFormParameters(),
-            "network": this.getNetworkFormParameters(),
-            "table": this.getTableFormParameters()
+            "scatter": {"label": this.module.tt('graph_type_scatter'), "form": this.getScatterFormParameters()},
+            "bar": {"label": this.module.tt('graph_type_bar'), "form": this.getBargraphFormParameters()},
+            "cross-bar": {"label": this.module.tt('graph_type_crossbar'), "form": this.getCrossBargraphFormParameters()},
+            "likert": {"label": this.module.tt('graph_type_likert'), "form": this.getLikertFormParameters()},
+            "map": {"label": this.module.tt('graph_type_map'), "form": this.getMapFormParameters()},
+            "network": {"label": this.module.tt('graph_type_network'), "form": this.getNetworkFormParameters()},
+            "table": {"label": this.module.tt('graph_type_table'), "form": this.getTableFormParameters()}
         };
         return graphTypes;
+    };
+
+    // A function that uses the data_dictionary and the report to return the parameters needed to create a scatter graph.
+    this.getScatterFormParameters = function () {
+        if (this.numerical_fields.length < 2) {
+            return null;
+        }
+
+        return null;
     };
 
     // A function that uses the data_dictionary and the report to return the parameters needed to create a bar graph.
@@ -570,7 +589,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             }}
         ];
 
-        var modalDialog = this.createModalDialog('Are you sure?', content, buttons);
+        var modalDialog = this.createModalDialog(this.module.tt('are_you_sure'), content, buttons);
 
     }
 
