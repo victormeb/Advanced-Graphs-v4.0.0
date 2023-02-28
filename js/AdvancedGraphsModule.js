@@ -232,21 +232,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         removeGraphSelectorButton.setAttribute('class', 'graphSelectorRemover');
         removeGraphSelectorButton.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
 
-        // When this button is clicked, remove the selected graphSelector and the button to the right of it
+       
+        // When this button is clicked, open a modal that asks the user to confirm that they want to remove this graph selector
         removeGraphSelectorButton.addEventListener('click', function (event) {
-            var graphSelectorRow = cell.parentNode;
-            var graphSelectorCell = cell;
-            var graphSelectorRowCells = graphSelectorRow.childNodes;
-            var graphSelectorCellIndex = 0;
-            for (var i = 0; i < graphSelectorRowCells.length; i++) {
-                if (graphSelectorRowCells[i] == graphSelectorCell) {
-                    graphSelectorCellIndex = i;
-                }
-            }
+            // Create a modal that asks the user to confirm that they want to remove this row
+            this.createConfirmModalDialog(function () {
+                // If the user confirms that they want to remove this graph selector, remove this graph selector and the button to the right of it
+                cell.parentNode.removeChild(cell);
+            }, this.module.tt('remove_graph_selector_confirm'));
 
-            // Remove the selected graphSelector
-            graphSelectorRow.removeChild(graphSelectorRowCells[graphSelectorCellIndex]);    
-        });
+        }.bind(this));
 
         // Create a button that creates a new graph selector and adds it to the graphSelectors div in the row that contains this graph selector 
         var addGraphSelectorButton = document.createElement('button');
