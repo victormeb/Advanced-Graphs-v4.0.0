@@ -281,7 +281,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // When this button is clicked, add a graph selector cell to the right of this button's parent
         addGraphSelectorButton.addEventListener('click', function (event) {
             // Get the row that contains this button
-            var graphSelectors = this.parentNode.parentNode;
+            var graphSelectors = this.parentNode.parentNode.parentNode;
 
             // Get the index of this graph selector
             var graphSelectorCellIndex = Array.prototype.indexOf.call(graphSelectors.children, cell);
@@ -483,7 +483,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // add the preview div and preview button to the form
         bargraphForm.appendChild(previewDiv);
-        bargraphForm.appendChild(previewButton);
+
+        // Add a div to hold the buttons at the bottom of the form
+        formButtons = document.createElement('div');
+        formButtons.setAttribute('class', 'graphFormButtons');
+
+        // Add the preview button to the formButtons
+        formButtons.appendChild(previewButton);
+
+        // Add the formButtons to the bargraphForm
+        bargraphForm.appendChild(formButtons);
 
 
         // return the form

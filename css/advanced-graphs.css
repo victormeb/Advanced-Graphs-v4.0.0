@@ -54,7 +54,7 @@
 
 .graphSelectorRow {
   display: grid;
-  grid-template-rows: 0.1fr 0.9fr;
+  grid-template-rows: 0.1fr 1fr;
   grid-template-columns: 0.1fr 0.8fr 0.1fr;
   grid-template-areas:
       "addButton graphSelectors rowButtons"
@@ -111,10 +111,13 @@
   grid-template-areas: 
     "graphSelectorButtons"
     "graphFormDiv";
+  align-items: start;
 }
 
 .graphSelectorButtons {
   grid-area: graphSelectorButtons;
+  display: inline-flex;
+  justify-content: center;
 }
 
 .graphSelectorCell > div {
@@ -128,16 +131,20 @@
 
 .graphFormDiv {
   grid-area: graphFormDiv;
+}
+
+.bargraphForm {
   display: grid;
-  border: 1px solid #999;
   width: 100%;
+  border: 1px solid #999;
   grid-template-columns: 1fr 1fr; 
-    grid-template-rows: 1fr auto 0.1fr; 
-    gap: 0px 0px; 
-    grid-template-areas: 
-      "form-left form-right"
-      "preview-pane preview-pane"
-      "buttons buttons"
+  grid-template-rows: 1fr auto 0.1fr; 
+  gap: 0px 0px; 
+  grid-template-areas: 
+    "form-left form-right"
+    "preview-pane preview-pane"
+    "buttons buttons";
+  overflow: auto;
 }
 
 
@@ -155,4 +162,20 @@
 
 .graphFormButtons {
   grid-area: buttons;
+}
+
+.radioTitle {
+  display: block;
+  font-size: 1.5em;
+}
+
+.radioOption {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.radioOption input {
+  margin: 4px;
+  cursor: pointer;
 }
