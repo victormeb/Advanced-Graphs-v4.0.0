@@ -363,14 +363,14 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // return a selector that lets you choose the numerical field or a count of each instance of the categorical field
         var numericalFieldSelectorDiv = this.createFieldSelector(this.numerical_fields, 'numericalFieldSelector', this.module.tt('numeric_field'));
 
-        var numericalFieldSelector = numericalFieldSelectorDiv.getElementsByClassName('numericalFieldSelector')[0];
+        var numericalFieldSelector = numericalFieldSelectorDiv.getElementsByClassName('fieldSelector')[0];
 
         var countOption = document.createElement('option');
 
         // Add an option group for the Count option
         var countOptionGroup = document.createElement('optgroup');
         countOptionGroup.setAttribute('label', this.module.tt('count'));
-        numericalFieldSelector.getElementsByClassName('numericalFieldSelector').insertBefore(countOptionGroup, numericalFieldSelector.firstChild);
+        numericalFieldSelector.appendChild(countOptionGroup);
         
         // Add the Count option
         countOption.setAttribute('value', 'count');
@@ -385,7 +385,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // only show the aggregation function selector if the numerical field selector is not set to count
         var numericalFieldSelectorChange = function (event) {
-            if (event.target.parentNode.label === this.module.tt('count')) {
+            if (event.target.querySelector('option:checked').parentElement.label === this.module.tt('count')) {
                 aggregationFunctionSelector.setAttribute('disabled', 'disabled');
                 aggregationFunctionSelector.value = 'none';
 
@@ -397,7 +397,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 // show the aggregation function selector
                 aggregationFunctionSelector.removeAttribute('hidden');
             }
-        }
+        }.bind(this);
 
         // add the event listener to the numerical field selector
         numericalFieldSelector.addEventListener('change', numericalFieldSelectorChange);
@@ -482,7 +482,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // add the graphTypeSelector categorical field selector, the numerical field selector, and the aggregation function selector to the left side of the form
         leftSide.appendChild(graphTypeSelector);
         leftSide.appendChild(categoricalFieldSelector);
-        leftSide.appendChild(numericalFieldSelector);
+        leftSide.appendChild(numericalFieldSelectorDiv);
         leftSide.appendChild(aggregationFunctionSelector);
 
         // add the display selector and the summary table options to the right side of the form
@@ -684,15 +684,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     // Create a field selector
     this.createFieldSelector = function (fields, name, label) {
         var fieldSelector = document.createElement('div');
-        fieldSelector.setAttribute('class', 'fieldSelector');
+        fieldSelector.setAttribute('class', 'fieldSelectorDiv');
 
         var fieldSelectorLabel = document.createElement('label');
+        fieldSelectorLabel.setAttribute('class', 'fieldSelectorLabel');
         fieldSelectorLabel.innerHTML = label;
         fieldSelector.appendChild(fieldSelectorLabel);
 
         var fieldSelectorSelect = document.createElement('select');
         fieldSelectorSelect.setAttribute('name', name);
-        fieldSelector.appendChild(fieldSelectorSelect);
+        fieldSelectorSelect.setAttribute('class', 'fieldSelector');
+        fieldSelectorLabel.appendChild(fieldSelectorSelect);
 
         var noneOption = document.createElement('option');
         noneOption.setAttribute('value', '');
