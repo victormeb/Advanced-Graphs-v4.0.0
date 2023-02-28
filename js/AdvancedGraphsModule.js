@@ -348,31 +348,31 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
 
         // return a radio button that lets you choose whether to display as pie chart or bar chart
-        var graphTypeSelector = this.createRadioSelector({'bar': 'Bar', 'pie': 'Pie'}, 'graphTypeSelector', 'Graph Type');
+        var graphTypeSelector = this.createRadioSelector({'bar': this.module.tt('bar'), 'pie': this.module.tt('pie')}, 'graphTypeSelector', this.module.tt('graph_type'));
 
         // return a selector that lets you choose the categorical field
-        var categoricalFieldSelector = this.createFieldSelector(this.categorical_fields, 'categoricalFieldSelector', 'Categorical Field');
+        var categoricalFieldSelector = this.createFieldSelector(this.categorical_fields, 'categoricalFieldSelector', this.module.tt('categorical_field'));
 
         // return a selector that lets you choose the numerical field or a count of each instance of the categorical field
-        var numericalFieldSelector = this.createFieldSelector(this.numerical_fields, 'numericalFieldSelector', 'Numerical Field');
+        var numericalFieldSelector = this.createFieldSelector(this.numerical_fields, 'numericalFieldSelector', this.module.tt('numeric_field'));
         var countOption = document.createElement('option');
 
         // Add an option group for the Count option
         var countOptionGroup = document.createElement('optgroup');
-        countOptionGroup.setAttribute('label', 'Count');
+        countOptionGroup.setAttribute('label', this.module.tt('count'));
         numericalFieldSelector.insertBefore(countOptionGroup, numericalFieldSelector.firstChild);
         
         // Add the Count option
         countOption.setAttribute('value', 'count');
-        countOption.innerHTML = 'Count';
+        countOption.innerHTML = this.module.tt('count');
         countOptionGroup.appendChild(countOption);
 
         // if the numeric fields aren't empty, add a selctor for the aggregation function
-        aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', 'Aggregation Function');
+        aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', this.module.tt('aggregate_function'));
 
         // only show the aggregation function selector if the numerical field selector is not set to count
         var numericalFieldSelectorChange = function (event) {
-            if (event.target.parentNode.label === 'Count') {
+            if (event.target.parentNode.label === this.module.tt('count')) {
                 aggregationFunctionSelector.setAttribute('disabled', 'disabled');
                 aggregationFunctionSelector.value = 'none';
             } else {
@@ -385,7 +385,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         
 
         // add a radio option to display the graph, the table, or both the graph and the table
-        var displaySelector = this.createRadioSelector({'graph': 'Graph', 'table': 'Table', 'both': 'Both'}, 'displaySelector', 'Display');
+        var displaySelector = this.createRadioSelector({'graph': this.module.tt('graph'), 'table': this.module.tt('table'), 'both': this.module.tt('both')}, 'displaySelector', this.module.tt('display'));
 
         // when table or both is selected, add the options that are avaiable to "summary" tables
         var summaryTableOptions = this.summaryTableOptions();
@@ -612,20 +612,41 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     // Create a Radio Selector
     this.createRadioSelector = function (options, name, label) {
+        // Create a radio selector
         var radioSelector = document.createElement('div');
         radioSelector.setAttribute('class', 'radioSelector');
 
+        // Create a radio selector label
         var radioSelectorLabel = document.createElement('label');
+
+        // Add a radioTitle class to the radio selector label
+        radioSelectorLabel.setAttribute('class', 'radioTitle');
         radioSelectorLabel.innerHTML = label;
         radioSelector.appendChild(radioSelectorLabel);
 
+        // Create a radio selector option for each option in the options array
         for (var option in options) {
+            // Create a label for the radio selector option
+            var radioOptionLabel = document.createElement('label');
+
+            // Add a radioOption class to the radio selector option label
+            radioOptionLabel.setAttribute('class', 'radioOption');
+
+            // Create a text node for the radio selector option label
+            var radioOptionLabelText = document.createTextNode(options[option]);
+            radioSelector.appendChild(radioOptionLabel);
+
+            // Add the text node to the radio selector option label
+            radioOptionLabel.appendChild(radioOptionLabelText);
+
+            // Create a radio selector option
             var radioOption = document.createElement('input');
             radioOption.setAttribute('type', 'radio');
             radioOption.setAttribute('name', name);
             radioOption.setAttribute('value', option);
-            radioOption.innerHTML = options[option];
-            radioSelector.appendChild(radioOption);
+
+            // Add the radio selector option to the radio selector option label
+            radioOptionLabel.appendChild(radioOption);
         }
 
         return radioSelector;

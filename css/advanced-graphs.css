@@ -125,4 +125,31 @@
 
 .graphFormDiv {
   grid-area: graphFormDiv;
+  display: grid;
+  border: 1px solid #999;
+  width: 100%;
+  grid-template-columns: 1fr 1fr; 
+    grid-template-rows: 1fr auto 0.1fr; 
+    gap: 0px 0px; 
+    grid-template-areas: 
+      "form-left form-right"
+      "preview-pane preview-pane"
+      "buttons buttons"
+}
+
+
+.leftSide {
+  grid-area: form-left;
+}
+
+.rightSide {
+  grid-area: form-right;
+}
+
+.previewDiv {
+  grid-area: preview-pane;
+} 
+
+.graphFormButtons {
+  grid-area: buttons;
 }
