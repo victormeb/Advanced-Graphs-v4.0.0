@@ -104,13 +104,17 @@
   flex: auto;
   float: left;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
   grid-template-rows: 0.1fr auto;
   grid-gap: 5px;
   margin-bottom: 10px;
   grid-template-areas: 
-    "graphSelectorArroLeft graphSelectorDiv graphSelectorArrowRight graphSelectorRemover graphSelectorAdder"
-    "graphFormDiv graphFormDiv graphFormDiv graphFormDiv graphFormDiv ";
+    "graphSelectorButtons"
+    "graphFormDiv";
+}
+
+.graphSelectorButtons {
+  grid-area: graphSelectorButtons;
 }
 
 .graphSelectorCell > div {
@@ -118,7 +122,6 @@
 }
 
 .graphSelectorAdderCell {
-  grid-area: addButton;
   float: left;
   margin-right: 10px;
 }

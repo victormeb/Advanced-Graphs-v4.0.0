@@ -154,6 +154,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var cell = document.createElement('div');
         cell.setAttribute('class', 'graphSelectorCell');
 
+        // Create a div that will contain the graph selector inputs
+        var graphSelectorButtons = document.createElement('div');
+        graphSelectorButtons.setAttribute('class', 'graphSelectorButtons');
+
         // Create an arrow that will move the graph selector cell to the left
         var moveGraphSelectorCellLeftButton = document.createElement('button');
         moveGraphSelectorCellLeftButton.setAttribute('class', 'graphSelectorArrow');
@@ -294,13 +298,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var graphFormDiv = document.createElement('div');
         graphFormDiv.setAttribute('class', 'graphFormDiv');
 
+        // Add the move left button, the graph selector, the move right button, the remove button, the add button and the graph form div to the graph selector button cell
+        graphSelectorButtons.appendChild(moveGraphSelectorCellLeftButton);
+        graphSelectorButtons.appendChild(graphSelectorDiv);
+        graphSelectorButtons.appendChild(moveGraphSelectorCellRightButton);
+        graphSelectorButtons.appendChild(removeGraphSelectorButton);
+        graphSelectorButtons.appendChild(addGraphSelectorButton);
+
 
         // Add the move left button, the graph selector, the move right button, the remove button, the add button and the graph form div to the graph selector div cell
-        cell.appendChild(moveGraphSelectorCellLeftButton);
-        cell.appendChild(graphSelectorDiv);
-        cell.appendChild(moveGraphSelectorCellRightButton);
-        cell.appendChild(removeGraphSelectorButton);
-        cell.appendChild(addGraphSelectorButton);
+        cell.appendChild(graphSelectorButtons);
         cell.appendChild(graphFormDiv);
 
         // Add the graph selector to the graph selector div
