@@ -204,13 +204,30 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             option.setAttribute('value', graphType);
             option.innerHTML = graphTypes[graphType]['label'];
             graphSelector.appendChild(option);
-
-            // when this option gets selected, fill the graph form div with the form for the selected graph type
-            option.addEventListener('click', function (event) {
-                graphFormDiv.innerHTML = '';
-                graphFormDiv.appendChild(graphTypes[event.target.value]['form']);
-            });
         }
+
+        // When the graph selector changes, show the graph form for the selected graph type
+        graphSelector.addEventListener('change', function (event) {
+            // Get the graph form div
+            var graphFormDiv = cell.getElementsByClassName('graphFormDiv')[0];
+
+            // Remove all the children of the graph form div
+            while (graphFormDiv.firstChild) {
+                graphFormDiv.removeChild(graphFormDiv.firstChild);
+            }
+
+            // If a graph type was selected, show the graph form for that graph type
+            if (graphSelector.value) {
+                // Get the graph form for the selected graph type
+                var graphForm = this.getGraphForm(graphSelector.value);
+
+                // Add the graph form to the graph form div
+                graphFormDiv.appendChild(graphForm);
+            }
+        }.bind(this));
+
+        // Add the graph selector to the graph selector div
+        graphSelectorDiv.appendChild(graphSelector);
 
         // Create a button that will move the graph selector cell to the right
         var moveGraphSelectorCellRightButton = document.createElement('button');
