@@ -361,29 +361,41 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var categoricalFieldSelector = this.createFieldSelector(this.categorical_fields, 'categoricalFieldSelector', this.module.tt('categorical_field'));
 
         // return a selector that lets you choose the numerical field or a count of each instance of the categorical field
-        var numericalFieldSelector = this.createFieldSelector(this.numerical_fields, 'numericalFieldSelector', this.module.tt('numeric_field'));
+        var numericalFieldSelectorDiv = this.createFieldSelector(this.numerical_fields, 'numericalFieldSelector', this.module.tt('numeric_field'));
+
+        var numericalFieldSelector = numericalFieldSelectorDiv.getElementsByClassName('numericalFieldSelector')[0];
+
         var countOption = document.createElement('option');
 
         // Add an option group for the Count option
         var countOptionGroup = document.createElement('optgroup');
         countOptionGroup.setAttribute('label', this.module.tt('count'));
-        numericalFieldSelector.insertBefore(countOptionGroup, numericalFieldSelector.firstChild);
+        numericalFieldSelector.getElementsByClassName('numericalFieldSelector').insertBefore(countOptionGroup, numericalFieldSelector.firstChild);
         
         // Add the Count option
         countOption.setAttribute('value', 'count');
         countOption.innerHTML = this.module.tt('count');
         countOptionGroup.appendChild(countOption);
 
-        // if the numeric fields aren't empty, add a selctor for the aggregation function
-        aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', this.module.tt('aggregate_function'));
+        // if the numeric fields aren't empty add a selctor for the aggregation function
+        var aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', this.module.tt('aggregate_function'));
+
+        // hide the aggregation function selector 
+        aggregationFunctionSelector.setAttribute('hidden', 'hidden');
 
         // only show the aggregation function selector if the numerical field selector is not set to count
         var numericalFieldSelectorChange = function (event) {
             if (event.target.parentNode.label === this.module.tt('count')) {
                 aggregationFunctionSelector.setAttribute('disabled', 'disabled');
                 aggregationFunctionSelector.value = 'none';
+
+                // hide the aggregation function selector
+                aggregationFunctionSelector.setAttribute('hidden', 'hidden');
             } else {
                 aggregationFunctionSelector.removeAttribute('disabled');
+
+                // show the aggregation function selector
+                aggregationFunctionSelector.removeAttribute('hidden');
             }
         }
 
@@ -684,7 +696,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         var noneOption = document.createElement('option');
         noneOption.setAttribute('value', '');
-        noneOption.innerHTML = 'None';
+        noneOption.setAttribute('selected', 'selected');
+        noneOption.setAttribute('disabled', 'disabled');
+        noneOption.innerHTML = this.module.tt('select_a_field');
         fieldSelectorSelect.appendChild(noneOption);
 
         for (var field in fields) {
