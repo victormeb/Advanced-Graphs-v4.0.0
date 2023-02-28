@@ -59,42 +59,39 @@
   grid-template-areas: 
     "addButton graphSelectors rowButtons";
   width: 100%;
+  min-height: 60px;
 }
 
 .graphSelectorRowButtons {
-  position: relative;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: 
+    "upButton removeButton"
+    "downButton removeButton";
   margin-left: 20px;
 }
 
 .graphSelectorRowButtons .moveGraphSelectorRowUpButton {
-  position: absolute;
-  top: -15px;
-  right: 30px;
-  width: 30px;
-  height: 30px;
-  cursor: pointer;
+  grid-area: upButton;
 }
 
 .graphSelectorRowButtons .moveGraphSelectorRowDownButton {
-  position: absolute;
-  top: 15px;
-  right: 30px;
-  width: 30px;
-  height: 30px;
-  cursor: pointer;
+  grid-area: downButton;
 }
 
 
 .graphSelectorRowButtons .removeGraphSelectorRowButton {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  width: 30px;
-  height: 30px;
-  cursor: pointer;
+  grid-area: removeButton;
+}
+
+.graphSelectors {
+  display: flex;
+  overflow: auto;
 }
 
 .graphSelectorCell {
+  flex: auto;
   float: left;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
