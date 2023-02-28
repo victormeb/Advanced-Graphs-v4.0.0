@@ -219,7 +219,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // If a graph type was selected, show the graph form for that graph type
             if (graphSelector.value) {
                 // Get the graph form for the selected graph type
-                var graphForm = this.getGraphForm(graphSelector.value);
+                var graphForm = graphTypes[graphSelector.value]['form'];
 
                 // Add the graph form to the graph form div
                 graphFormDiv.appendChild(graphForm);
@@ -295,18 +295,18 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         graphFormDiv.setAttribute('class', 'graphFormDiv');
 
 
-        // Add the move left button, the graph selector, the move right button, the remove button, and the add button to the graph selector div cell
+        // Add the move left button, the graph selector, the move right button, the remove button, the add button and the graph form div to the graph selector div cell
         cell.appendChild(moveGraphSelectorCellLeftButton);
         cell.appendChild(graphSelectorDiv);
         cell.appendChild(moveGraphSelectorCellRightButton);
         cell.appendChild(removeGraphSelectorButton);
         cell.appendChild(addGraphSelectorButton);
+        cell.appendChild(graphFormDiv);
 
         // Add the graph selector to the graph selector div
         graphSelectorDiv.appendChild(graphSelector);
 
-        // Add the graph form div to the graph selector div
-        graphSelectorDiv.appendChild(graphFormDiv);
+    
 
         // Return cell
         return cell;

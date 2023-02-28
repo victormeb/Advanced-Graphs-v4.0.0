@@ -54,15 +54,18 @@
 
 .graphSelectorRow {
   display: grid;
-  grid-template-rows: 1fr;
+  grid-template-rows: 0.1fr 0.9fr;
   grid-template-columns: 0.1fr 0.8fr 0.1fr;
-  grid-template-areas: 
-    "addButton graphSelectors rowButtons";
+  grid-template-areas:
+      "addButton graphSelectors rowButtons"
+      ". graphSelectors .";
   width: 100%;
   min-height: 60px;
+  align-items: start;
 }
 
 .graphSelectorRowButtons {
+  grid-area: rowButtons;
   display: grid;
   grid-template-rows: 1fr 1fr;
   grid-template-columns: 1fr 1fr;
@@ -86,8 +89,15 @@
 }
 
 .graphSelectors {
+  grid-area: graphSelectors;
   display: flex;
   overflow: auto;
+}
+
+.graphSelectors > * {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .graphSelectorCell {
@@ -95,12 +105,12 @@
   float: left;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: 0.1fr auto;
   grid-gap: 5px;
   margin-bottom: 10px;
   grid-template-areas: 
-    "graphSelectorArrow graphSelectorDiv graphSelectorArrow graphSelectorRemover graphSelectorAdder"
-    "graphFormDiv graphFormDiv graphFormDiv graphFormDiv";
+    "graphSelectorArroLeft graphSelectorDiv graphSelectorArrowRight graphSelectorRemover graphSelectorAdder"
+    "graphFormDiv graphFormDiv graphFormDiv graphFormDiv graphFormDiv ";
 }
 
 .graphSelectorCell > div {
@@ -108,6 +118,11 @@
 }
 
 .graphSelectorAdderCell {
+  grid-area: addButton;
   float: left;
   margin-right: 10px;
+}
+
+.graphFormDiv {
+  grid-area: graphFormDiv;
 }
