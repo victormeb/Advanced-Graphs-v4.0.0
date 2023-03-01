@@ -388,6 +388,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         numericalFieldSelectorIsCount.setAttribute('checked', 'checked');
         numericalFieldSelectorIsCount.setAttribute('name', 'is_count');
 
+        // Add the checkbox to the numerical field selector div
+        numericalFieldSelectorDiv.appendChild(numericalFieldSelectorIsCount);
+
         // if the numeric fields aren't empty add a selctor for the aggregation function
         var aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', this.module.tt('aggregate_function'));
 
@@ -480,25 +483,25 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var formData = this.serializeForm(bargraphForm);
 
             console.log(formData);
-            // // call the chart.js wrapper to create a bar (or pie) chart
-            // var bargraph = new this.Bargraph(this.report, formData);
+            // call the plot wrapper to create a bar (or pie) chart
+            var bargraph = new this.Bargraph(this.report, formData);
 
-            // // if the display selector is set to table or both, create a table preview from the "summary" table wrapper
-            // if (formData.display === 'table' || formData.display === 'both') {
-            //     var summaryTable = new this.SummaryTable(this.report, formData);
-            // }
+            // if the display selector is set to table or both, create a table preview from the "summary" table wrapper
+            if (formData.display === 'table' || formData.display === 'both') {
+                var summaryTable = new this.SummaryTable(this.report, formData);
+            }
 
-            // // if the display selector is set to graph or both, create a graph preview
-            // if (formData.display === 'graph' || formData.display === 'both') {
-            //     // fill the preview div with the bargraph
-            //     previewDiv.appendChild(bargraph.getChart());
-            // }
+            // if the display selector is set to graph or both, create a graph preview
+            if (formData.display === 'graph' || formData.display === 'both') {
+                // fill the preview div with the bargraph
+                previewDiv.appendChild(bargraph.getChart());
+            }
 
-            // // if the display selector is set to table or both, create a table preview
-            // if (formData.display === 'table' || formData.display === 'both') {
-            //     // fill the preview div with the summary table
-            //     previewDiv.appendChild(summaryTable.getTable());
-            // }
+            // if the display selector is set to table or both, create a table preview
+            if (formData.display === 'table' || formData.display === 'both') {
+                // fill the preview div with the summary table
+                previewDiv.appendChild(summaryTable.getTable());
+            }
 
         }
 
@@ -522,6 +525,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         leftSide.appendChild(categoricalFieldSelector);
         leftSide.appendChild(numericalFieldSelectorDiv);
         leftSide.appendChild(aggregationFunctionSelector);
+
 
         // add the display selector and the summary table options to the right side of the form
         rightSide.appendChild(displaySelector);
@@ -550,8 +554,37 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     };
 
-    this.Bargraph = function (formData) {
-        return null;
+    this.Bargraph = function (report, formData) {
+        // Use the report and the formData to create a bargraph
+        this.report = report;
+        this.formData = formData;
+
+        this.aggregate_function = this.formData.aggregate_function;
+
+        this.categorical_field = this.formData.categorical_field;
+
+        this.numerical_field = this.formData.numerical_field;
+
+        this.graph_type = this.formData.graph_type;
+
+        // if is_count is in the formData
+        if ('is_count' in this.formData) {
+            // set this.data to the count of the categorical field
+            this.data = d3.rollup(this.report, v => v.length, d => d[this.categorical_field]);
+        } else {
+            // otherwise, set this.data to the aggregate function of the numerical field
+            this.data = d3.rollup(this.report, v => d3[this.aggregate_function](v, d => d[this.numerical_field]), d => d[this.categorical_field]);
+        }
+
+        this.getChart = function () {
+            // if the graph type is pie, create a pie chart
+            if (this.graph_type === 'pie') {
+                return d3.PieChart(this.data);
+            } else {
+                // otherwise, create a bar chart
+                return d3.BarChart(this.data);
+            }
+        }
     };
 
     this.getCrossBargraphFormParameters = function() {
