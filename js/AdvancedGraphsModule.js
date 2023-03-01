@@ -455,18 +455,24 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // when the categoricalFieldSelector is selected and the numerical field selector is selected, if the numerical field selector isn't count and the aggregate function is selected, enable the preview button 
         var previewButtonChange = function (event) {
             if (
+                // The categorical field is selected
                 categoricalFieldSelector.querySelector('select').value !== '' 
-                && numericalFieldSelector.querySelector('select').value !== '' 
+                // And the numerical field is a field or count
                 && (
-                    numericalFieldSelector.querySelector('option:checked').parentElement.label !== this.module.tt('count') 
-                    && aggregationFunctionSelector.querySelector('select').value !== ''
+                    numericalFieldSelectorDiv.querySelector('select').value !== '' 
+                    || numericalFieldSelector.querySelector('option:checked').parentElement.label === this.module.tt('count')
+                    )
+                // And if the numerical field is not count then the aggregate field has a selected value
+                && (
+                    numericalFieldSelector.querySelector('option:checked').parentElement.label === this.module.tt('count')
+                    || aggregationFunctionSelector.querySelector('select').value !== ''
                     )
                 ) {
                 previewButton.removeAttribute('disabled');
             } else {
                 previewButton.setAttribute('disabled', 'disabled');
             }
-        }
+        }.bind(this);
 
         // when the button is clicked, create a preview of the graph by calling a wrapper to the d3 library that creates a bar (or pie) chart. Also, if the display selector is set to table or both, create a table preview from the "summary" table wrapper.
         var previewButtonClick = function (event) {
@@ -735,7 +741,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             fieldSelectorSelect.appendChild(fieldOption);
         }
 
-        return fieldSelector;
+        return fieldSelectorDiv;
 
     };
 
@@ -807,7 +813,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         aggregationFunctionSelectorSelect.appendChild(minOption);
         aggregationFunctionSelectorSelect.appendChild(maxOption);
 
-        return aggregationFunctionSelector;
+        return aggregationFunctionSelectorDiv;
 
     };
 
