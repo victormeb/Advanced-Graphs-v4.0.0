@@ -1,5 +1,5 @@
 // Create a class that will be used to create a module for the dashboard editor
-var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report, report_fields) {
+var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_fields_by_reapeat_instrument, report) {
     this.version = '1.0';
     this.authors = 'Victor Esposita, Joel Cohen, David Cherry, and others';
     this.email = '';
@@ -8,7 +8,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     this.dashboard = dashboard;
     this.data_dictionary = data_dictionary;
     this.report = report;
-    this.report_fields = report_fields;
+    this.report_fields_by_reapeat_instrument = report_fields_by_reapeat_instrument;
 
     this.categorical_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
     this.categorical_fields =  {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
@@ -343,6 +343,85 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return graphTypes;
     };
 
+    // An object that can be used to create an instrument selector that holds the fields of the selected instrument.
+    this.instrumentSelector = function(formDiv, formFunc) {
+        // Create a div to hold the instrument selector
+        var instrumentSelectorDiv = document.createElement('div');
+        instrumentSelectorDiv.setAttribute('class', 'instrumentSelectorDiv');
+
+        // The number of non-repeatable instruments is one or zero depending on whether there are any fields present
+        var nonRepeatableInstruments = this.report_fields_by_reapeat_instrument['non_repeats'].length ? 1 : 0;
+
+
+        // If the length of the repeatable instruments and the non-repeatable instruments is equal to 1, then set the content of the formDiv to the form parameters of the only instrument.
+        if (this.report_fields_by_reapeat_instrument['repeat_instruments'].length + nonRepeatableInstruments == 1) {
+            // If there is only one instrument, then set the content of the formDiv to the form parameters of the only instrument.
+            // If there is only one non-repeatable instrument, then set the content of the formDiv to the form parameters of the only instrument.
+            if (nonRepeatableInstruments == 1) {
+                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['non_repeats']);
+            }
+            // If there is only one repeatable instrument, then set the content of the formDiv to the form parameters of the only instrument.
+            else {
+                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['repeat_instruments'][0]);
+            }
+            return instrumentSelectorDiv;
+        }
+
+        // Create a label for the instrument selector
+        var instrumentSelectorLabel = document.createElement('label');
+        instrumentSelectorLabel.setAttribute('class', 'instrumentSelectorLabel');
+        instrumentSelectorLabel.innerHTML = this.module.tt('instrument_selector_label');
+
+        // Create a select element to hold the instruments
+        var instrumentSelector = document.createElement('select');
+        instrumentSelector.setAttribute('class', 'instrumentSelector');
+
+        // Create an option element to hold the select an instrument option
+        var selectAnInstrumentOption = document.createElement('option');
+        selectAnInstrumentOption.setAttribute('class', 'selectAnInstrumentOption');
+        selectAnInstrumentOption.setAttribute('value', 'select_an_instrument');
+        selectAnInstrumentOption.innerHTML = this.module.tt('select_an_instrument');
+        selectAnInstrumentOption.setAttribute('selected', 'selected');
+        selectAnInstrumentOption.setAttribute('disabled', 'disabled');
+
+        // Add the select an instrument option to the instrument selector
+        instrumentSelector.appendChild(selectAnInstrumentOption);
+
+        // Create an option element to hold the non-repeatable instrument option
+        var nonRepeatableInstrumentOption = document.createElement('option');
+        nonRepeatableInstrumentOption.setAttribute('class', 'nonRepeatableInstrumentOption');
+        nonRepeatableInstrumentOption.setAttribute('value', 'non_repeatable_instrument');
+        nonRepeatableInstrumentOption.innerHTML = this.module.tt('non_repeatable_instrument');
+
+        // Add the non-repeatable instrument option to the instrument selector
+        instrumentSelector.appendChild(nonRepeatableInstrumentOption);
+
+        // Create an option element to hold the repeatable instruments options
+        for (const repeatableInstrument in this.report_fields_by_reapeat_instrument['repeat_instruments']) {
+            var repeatableInstrumentOption = document.createElement('option');
+            repeatableInstrumentOption.setAttribute('class', 'repeatableInstrumentOption');
+            repeatableInstrumentOption.setAttribute('value', repeatableInstrument);
+            repeatableInstrumentOption.innerHTML = this.report_fields_by_reapeat_instrument['repeat_instruments'][repeatableInstrument]['form_label'];
+            instrumentSelector.appendChild(repeatableInstrumentOption);
+        }
+
+        // When the instrument selector changes, set the content of the formDiv to the form parameters of the selected instrument.
+        instrumentSelector.onchange = function() {
+            if (this.value == 'non_repeatable_instrument') {
+                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['non_repeats']);
+            }
+            else {
+                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['repeat_instruments'][this.value]);
+            }
+        }
+
+        // Add the instrument selector label and the instrument selector to the instrument selector div
+        instrumentSelectorDiv.appendChild(instrumentSelectorLabel);
+        instrumentSelectorLabel.appendChild(instrumentSelector);
+
+        return instrumentSelectorDiv;
+    }
+
     // A function that uses the data_dictionary and the report to return the parameters needed to create a scatter graph.
     this.getScatterFormParameters = function () {
         if (this.numerical_fields.length < 2) {
@@ -352,11 +431,86 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return null;
     };
 
-    // A function that uses the data_dictionary and the report to return the parameters needed to create a bar graph.
-    this.getBargraphFormParameters = function () {
-        if (this.categorical_fields.length < 1) {
-            return null;
+    // A function that returns the available fields for a given instrument
+    this.getAvailableFields = function (instrument) {
+        var non_numeric_field_names = ['record_id', 'redcap_event_name', 'redcap_repeat_instrument', 'redcap_repeat_instance', ];
+        var numeric_field_text_validation_types = ['number', 'integer', 'float', 'decimal'];
+        var categorical_field_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
+        var longitude_keywords = ['longitude', 'longitud', 'Longitude', 'Longitud'];
+        var latitude_keywords = ['latitude', 'latitud', 'Latitude', 'Latitud'];
+
+        var available_fields = {
+            'numerical': [],
+            'date': [],
+            'categorical': [],
+            'checkbox': [],
+            'coordinates': {},
+            'text': []
+        };
+
+        for (const field in instrument) {
+            if (instrument[field]['field_type'] == 'text') {
+                available_fields['text'].push(instrument[field['field_name']]);
+            }
+            else if (instrument[field]['field_type'] == 'checkbox') {
+                available_fields['checkbox'].push(instrument[field['field_name']]);
+            }
+            // If the field type is one of 'radio', 'dropdown', 'yesno', or 'truefalse' then it is a categorical field
+            else if (['radio', 'dropdown', 'yesno', 'truefalse'].includes(instrument[field]['field_type'])) {
+                available_fields['categorical'].push(instrument[field['field_name']]);
+            }
+            // if none of the strings in the array non_numeric_field_names is a substring of the field name
+            // and (
+            // (the field type is text and the field text_validation_type_or_show_slider_number is one of the strings in the array numeric_field_text_validation_types)
+            // or
+            // the field type is calc) then it is a numerical field
+            else if (!non_numeric_field_names.some(v => instrument[field]['field_name'].includes(v)) && (
+                (instrument[field]['field_type'] == 'text' && numeric_field_text_validation_types.includes(instrument[field]['text_validation_type_or_show_slider_number']))
+                || instrument[field]['field_type'] == 'calc')) {
+                available_fields['numerical'].push(instrument[field['field_name']]);
+            }
+            // If the field type is date then it is a date field
+            else if (instrument[field]['field_type'] == 'date') {
+                available_fields['date'].push(instrument[field['field_name']]);
+            }
         }
+
+        // For the coordinates fields, loop through the available fields and check if the field name contains any of the strings in the array longitude_keywords
+        // If it does, then it is a longitude field. Attempt to find the corresponding latitude field by replacing the longitude keyword with the corresponding latitude keyword.
+        // If the latitude field is found, then add the longitude and latitude fields to the coordinates object.
+        for (const field in instrument) {
+            if (longitude_keywords.some(v => instrument[field]['field_name'].includes(v))) {
+                var latitude_field_name = instrument[field]['field_name'].replace(longitude_keywords[longitude_keywords.indexOf(v)], latitude_keywords[longitude_keywords.indexOf(v)]);
+                // If the instrument conatin a field with the latitude field name, then add the longitude and latitude fields to the coordinates object.
+                for (const field in instrument) {
+                    if (instrument[field]['field_name'] == latitude_field_name) {
+                        // get the common string between the longitude and latitude field names
+                        var common_string = instrument[field]['field_name'].replace(latitude_field_name, '');
+                        available_fields['coordinates'][common_string] = {
+                            'longitude': instrument[field]['field_name'],
+                            'latitude': latitude_field_name
+                        };
+                    }
+                }
+            }
+        }
+
+        return available_fields;
+    }
+
+    
+    // A function that uses the data_dictionary and the report to return the parameters needed to create a bar graph.
+    this.getBargraphFormParameters = function (instrument) {
+        // Get the avaiable fields for the selected instrument
+        var available_fields = this.getAvailableFields(instrument);
+
+        // If there no categorical fields, then return a div that says that there are no categorical fields available for the selected instrument so a bargraph cannot be created.
+        if (available_fields['categorical'].length == 0) {
+            var noCategoricalFieldsDiv = document.createElement('div');
+            noCategoricalFieldsDiv.innerHTML = this.module.tt('no_categorical_fields_no_bargraph');
+            return noCategoricalFieldsDiv;
+        }
+
 
         // Create a form to hold the parameters for the bargraph
         var bargraphForm = document.createElement('form');
@@ -370,10 +524,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         graphTypeSelector.querySelector('input[value="bar"]').checked = true;
 
         // return a selector that lets you choose the categorical field
-        var categoricalFieldSelector = this.createFieldSelector(this.categorical_fields, 'categorical_field', this.module.tt('categorical_field'));
+        var categoricalFieldSelector = this.createFieldSelector(available_fields['categorical'], 'categorical_field', this.module.tt('categorical_field'));
 
         // return a selector that lets you choose the numerical field or a count of each instance of the categorical field
-        var numericalFieldSelectorDiv = this.createFieldSelector(this.numerical_fields, 'numerical_field', this.module.tt('bar_heights'));
+        var numericalFieldSelectorDiv = this.createFieldSelector(available_fields['numerical'], 'numerical_field', this.module.tt('bar_heights'));
 
         var numericalFieldSelector = numericalFieldSelectorDiv.getElementsByClassName('fieldSelector')[0];
 
@@ -882,6 +1036,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return button;
     };
     
+
 
 
 

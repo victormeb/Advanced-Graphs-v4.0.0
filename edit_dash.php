@@ -103,7 +103,7 @@ $module->tt_transferToJavascriptModuleObject();
         console.log(report_fields_by_reapeat_instrument);
         
         // Initialize the module from AdvancedGraphsModule.js
-        var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report_fields, report, report_fields);
+        var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report_fields_by_reapeat_instrument, report);
 
         // Load the dashboard editor
         AGM.loadDashboardEditor();
