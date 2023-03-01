@@ -634,16 +634,25 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$report_fields =$this->getReportFields($project_id, $report_id);
 
 		$repeat_dictionary = array();
+		$non_repeats = array();
 
+		// get the repeating instruments
 		for ($repeat_instruments as $instrument) {
-			$repeat_dictionary[] = array("form_name" => $instrument, "form_label" => );
+			$repeat_dictionary[$instrument] = array("form_label" => REDCap::getInstumentNames($instrument, $project_id), "fields" => array());
 		}
 
+		// get the fields for each repeating instrument
 		for ($report_fields as $field_name) {
 			$field = $data_dictionary[$field_name];
 
-			if (\in_array($field['form_name'], ))
+			if (\in_array($field['form_name'], $repeat_instruments))
+				$repeat_dictionary[$field['form_name']]['fields'][] = $field;
+			else
+				$non_repeats[] = $field;
 		}
+
+		// return an array of repeating instruments and non repeating fields
+		return array("repeat_instruments" => $repeat_dictionary, "non_repeats" => $non_repeats);
 	}
 
 
