@@ -355,13 +355,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
 
         // return a radio button that lets you choose whether to display as pie chart or bar chart
-        var graphTypeSelector = this.createRadioSelector({'bar': this.module.tt('bar'), 'pie': this.module.tt('pie')}, 'graphTypeSelector', this.module.tt('graph_type'));
+        var graphTypeSelector = this.createRadioSelector({'bar': this.module.tt('bar'), 'pie': this.module.tt('pie')}, 'graph_type', this.module.tt('graph_type'));
+
+        // Set bar as the default graph type
+        graphTypeSelector.querySelector('input[value="bar"]').checked = true;
 
         // return a selector that lets you choose the categorical field
-        var categoricalFieldSelector = this.createFieldSelector(this.categorical_fields, 'categoricalFieldSelector', this.module.tt('categorical_field'));
+        var categoricalFieldSelector = this.createFieldSelector(this.categorical_fields, 'categorical_field', this.module.tt('categorical_field'));
 
         // return a selector that lets you choose the numerical field or a count of each instance of the categorical field
-        var numericalFieldSelectorDiv = this.createFieldSelector(this.numerical_fields, 'numericalFieldSelector', this.module.tt('numeric_field'));
+        var numericalFieldSelectorDiv = this.createFieldSelector(this.numerical_fields, 'numerical_field', this.module.tt('bar_heights'));
 
         var numericalFieldSelector = numericalFieldSelectorDiv.getElementsByClassName('fieldSelector')[0];
 
@@ -373,9 +376,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         numericalFieldSelector.appendChild(countOptionGroup);
         
         // Add the Count option
-        countOption.setAttribute('value', 'count');
+        countOption.setAttribute('value', '');
         countOption.innerHTML = this.module.tt('count');
         countOptionGroup.appendChild(countOption);
+
+        // Add a hidden checkbox that keeps track of whether the numerical field selector is set to count
+        var numericalFieldSelectorIsCount = document.createElement('input');
+        numericalFieldSelectorIsCount.setAttribute('type', 'checkbox');
+        numericalFieldSelectorIsCount.setAttribute('hidden', 'hidden');
+        numericalFieldSelectorIsCount.setAttribute('class', 'numericalFieldSelectorIsCount');
+        numericalFieldSelectorIsCount.setAttribute('checked', 'checked');
+        numericalFieldSelectorIsCount.setAttribute('name', 'is_count');
 
         // if the numeric fields aren't empty add a selctor for the aggregation function
         var aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', this.module.tt('aggregate_function'));
@@ -391,11 +402,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
                 // hide the aggregation function selector
                 aggregationFunctionSelector.setAttribute('hidden', 'hidden');
+
+                // set the numerical field selector to count
+                numericalFieldSelectorIsCount.setAttribute('checked', 'checked');
             } else {
                 aggregationFunctionSelector.removeAttribute('disabled');
 
                 // show the aggregation function selector
                 aggregationFunctionSelector.removeAttribute('hidden');
+
+                // set the numerical field selector to not count
+                numericalFieldSelectorIsCount.removeAttribute('checked');
             }
         }.bind(this);
 
@@ -405,6 +422,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // add a radio option to display the graph, the table, or both the graph and the table
         var displaySelector = this.createRadioSelector({'graph': this.module.tt('graph'), 'table': this.module.tt('table'), 'both': this.module.tt('both')}, 'displaySelector', this.module.tt('display'));
+
+        // set graph as the default display option
+        displaySelector.querySelector('input[value="graph"]').checked = true;
 
         // when table or both is selected, add the options that are avaiable to "summary" tables
         var summaryTableOptions = this.summaryTableOptions();
@@ -429,11 +449,19 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
 
         // add a preview button that is disabled by default
-        var previewButton = this.createButton('Preview', 'previewButton', 'Preview', 'disabled');
+        var previewButton = this.createButton('Preview', 'previewButton', 'preview');
+        previewButton.setAttribute('disabled', 'disabled');
 
         // when the categoricalFieldSelector is selected and the numerical field selector is selected, if the numerical field selector isn't count and the aggregate function is selected, enable the preview button 
         var previewButtonChange = function (event) {
-            if (categoricalFieldSelector.value || numericalFieldSelector.value == 'count' || aggregationFunctionSelector.value !== 'none') {
+            if (
+                categoricalFieldSelector.querySelector('select').value !== '' 
+                && numericalFieldSelector.querySelector('select').value !== '' 
+                && (
+                    numericalFieldSelector.querySelector('option:checked').parentElement.label !== this.module.tt('count') 
+                    && aggregationFunctionSelector.querySelector('select').value !== ''
+                    )
+                ) {
                 previewButton.removeAttribute('disabled');
             } else {
                 previewButton.setAttribute('disabled', 'disabled');
@@ -445,27 +473,31 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // serialize the form data using this module's function
             var formData = this.serializeForm(bargraphForm);
 
-            // call the d3 wrapper to create a bar (or pie) chart
-            var bargraph = new this.Bargraph(this.report, formData);
+            console.log(formData);
+            // // call the chart.js wrapper to create a bar (or pie) chart
+            // var bargraph = new this.Bargraph(this.report, formData);
 
-            // if the display selector is set to table or both, create a table preview from the "summary" table wrapper
-            if (formData.display === 'table' || formData.display === 'both') {
-                var summaryTable = new this.SummaryTable(this.report, formData);
-            }
+            // // if the display selector is set to table or both, create a table preview from the "summary" table wrapper
+            // if (formData.display === 'table' || formData.display === 'both') {
+            //     var summaryTable = new this.SummaryTable(this.report, formData);
+            // }
 
-            // if the display selector is set to graph or both, create a graph preview
-            if (formData.display === 'graph' || formData.display === 'both') {
-                // fill the preview div with the bargraph
-                previewDiv.innerHTML = bargraph.getGraph();
-            }
+            // // if the display selector is set to graph or both, create a graph preview
+            // if (formData.display === 'graph' || formData.display === 'both') {
+            //     // fill the preview div with the bargraph
+            //     previewDiv.appendChild(bargraph.getChart());
+            // }
 
-            // if the display selector is set to table or both, create a table preview
-            if (formData.display === 'table' || formData.display === 'both') {
-                // fill the preview div with the summary table
-                previewDiv.innerHTML = summaryTable.getTable();
-            }
+            // // if the display selector is set to table or both, create a table preview
+            // if (formData.display === 'table' || formData.display === 'both') {
+            //     // fill the preview div with the summary table
+            //     previewDiv.appendChild(summaryTable.getTable());
+            // }
 
         }
+
+        // add the event listener to the preview button
+        previewButton.addEventListener('click', previewButtonClick.bind(this));
 
         // add the event listener to the categorical field selector, the numerical field selector, and the aggregation function selector
         categoricalFieldSelector.addEventListener('change', previewButtonChange);
@@ -512,15 +544,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     };
 
-    this.Bargraph = function (report, formData) {
-        // Use d3, the report and the formData to create a bargraph
-        this.report = report;
-        this.formData = formData;
-
-        this.getGraph = function () {
-            return '<div class="graphWrapper"><svg class="bargraph"></svg></div>';
-        };
-
+    this.Bargraph = function (formData) {
+        return null;
     };
 
     this.getCrossBargraphFormParameters = function() {
@@ -683,13 +708,13 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     // Create a field selector
     this.createFieldSelector = function (fields, name, label) {
-        var fieldSelector = document.createElement('div');
-        fieldSelector.setAttribute('class', 'fieldSelectorDiv');
+        var fieldSelectorDiv = document.createElement('div');
+        fieldSelectorDiv.setAttribute('class', 'fieldSelectorDiv');
 
         var fieldSelectorLabel = document.createElement('label');
         fieldSelectorLabel.setAttribute('class', 'fieldSelectorLabel');
         fieldSelectorLabel.innerHTML = label;
-        fieldSelector.appendChild(fieldSelectorLabel);
+        fieldSelectorDiv.appendChild(fieldSelectorLabel);
 
         var fieldSelectorSelect = document.createElement('select');
         fieldSelectorSelect.setAttribute('name', name);
@@ -738,41 +763,44 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     // Create an aggregation function selector
     this.createAggregationFunctionSelector = function (name, label) {
-        var aggregationFunctionSelector = document.createElement('div');
-        aggregationFunctionSelector.setAttribute('class', 'aggregationFunctionSelector');
+        var aggregationFunctionSelectorDiv = document.createElement('div');
+        aggregationFunctionSelectorDiv.setAttribute('class', 'aggregationFunctionSelectorDiv');
 
         var aggregationFunctionSelectorLabel = document.createElement('label');
+        aggregationFunctionSelectorLabel.setAttribute('class', 'aggregationFunctionSelectorLabel');
         aggregationFunctionSelectorLabel.innerHTML = label;
-        aggregationFunctionSelector.appendChild(aggregationFunctionSelectorLabel);
+        aggregationFunctionSelectorDiv.appendChild(aggregationFunctionSelectorLabel);
 
         var aggregationFunctionSelectorSelect = document.createElement('select');
         aggregationFunctionSelectorSelect.setAttribute('name', name);
-        aggregationFunctionSelector.appendChild(aggregationFunctionSelectorSelect);
+        aggregationFunctionSelectorLabel.appendChild(aggregationFunctionSelectorSelect);
 
         var noneOption = document.createElement('option');
         noneOption.setAttribute('value', '');
-        noneOption.innerHTML = 'None';
+        noneOption.innerHTML = this.module.tt('select_aggregate_function');
+        noneOption.setAttribute('selected', 'selected');
+        noneOption.setAttribute('disabled', 'disabled');
         aggregationFunctionSelectorSelect.appendChild(noneOption);
 
         // Sum option
         var sumOption = document.createElement('option');
         sumOption.setAttribute('value', 'sum');
-        sumOption.innerHTML = 'Sum';
+        sumOption.innerHTML = this.module.tt('sum');
 
         // Average option
         var averageOption = document.createElement('option');
         averageOption.setAttribute('value', 'average');
-        averageOption.innerHTML = 'Average';
+        averageOption.innerHTML = this.module.tt('average');
 
         // Min option
         var minOption = document.createElement('option');
         minOption.setAttribute('value', 'min');
-        minOption.innerHTML = 'Min';
+        minOption.innerHTML = this.module.tt('min');
 
         // Max option
         var maxOption = document.createElement('option');
         maxOption.setAttribute('value', 'max');
-        maxOption.innerHTML = 'Max';
+        maxOption.innerHTML = this.module.tt('max');
 
         aggregationFunctionSelectorSelect.appendChild(sumOption);
         aggregationFunctionSelectorSelect.appendChild(averageOption);

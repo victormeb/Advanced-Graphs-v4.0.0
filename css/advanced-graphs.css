@@ -166,16 +166,22 @@
 
 .radioTitle {
   display: block;
-  font-size: 1.5em;
+  font-size: 1.2em;
 }
 
 .radioOption {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
+  font-size: 1em;
 }
 
 .radioOption input {
   margin: 4px;
   cursor: pointer;
+}
+
+.fieldSelectorLabel {
+  display: block;
+  font-size: 1.2em;
 }
