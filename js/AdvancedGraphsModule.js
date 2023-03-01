@@ -392,7 +392,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         numericalFieldSelectorDiv.appendChild(numericalFieldSelectorIsCount);
 
         // if the numeric fields aren't empty add a selctor for the aggregation function
-        var aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregationFunctionSelector', this.module.tt('aggregate_function'));
+        var aggregationFunctionSelector = this.createAggregationFunctionSelector('aggregate_function', this.module.tt('aggregate_function'));
 
         // hide the aggregation function selector 
         aggregationFunctionSelector.setAttribute('hidden', 'hidden');
