@@ -370,7 +370,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			foreach ($eventForms as $dkey=>$row){
 				$event_name = Event::getEventNameById($Proj->project_id,$dkey);
 				$sql = "select form_name, custom_repeat_form_label from redcap_events_repeat where event_id = " . db_escape($dkey) . "";
-				$q = $this->query($sql);
+				$q = $this->query($sql, []);
 				if(db_num_rows($q) > 0){
 					while ($row = $q->fetch_assoc()){
 						$form_name = ($row['form_name'] ? $row['form_name'] : '');
@@ -619,13 +619,32 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$fields = array();
 		$sql = "select * from redcap_reports_fields where report_id = $report_id
 				order by field_order";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row =  $q->fetch_assoc()) {
 			$fields[] = $row['field_name'];
 		}
 		return $fields;
 	}
 	
+	// returns the report fields by repeating instument
+	public function getReportFieldsByRepeatInstrument($project_id, $report_id) {
+		$Proj = $this->getProject($project_id);
+		$data_dictionary = REDCap::getDataDictionary($project_id, "array");
+		$repeat_instruments = $Proj->getRepeatingForms();
+		$report_fields =$this->getReportFields($project_id, $report_id);
+
+		$repeat_dictionary = array();
+
+		for ($repeat_instruments as $instrument) {
+			$repeat_dictionary[] = array("form_name" => $instrument, "form_label" => );
+		}
+
+		for ($report_fields as $field_name) {
+			$field = $data_dictionary[$field_name];
+
+			if (\in_array($field['form_name'], ))
+		}
+	}
 
 
 	function getReport($pid, $report_id) {
@@ -679,7 +698,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 		// Get main attributes
 		$sql = "select * from redcap_reports where project_id = $pid and report_id = $report_id";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 
 		
 		if ($row =  $q->fetch_assoc()) {
@@ -705,7 +724,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// Get list of fields in report
 		$sql = "select * from redcap_reports_fields where report_id = $report_id
 				order by field_order";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row =  $q->fetch_assoc()) {
 			// If field does not (or no longer) exists in project, then skip it
 			if (!isset($Proj->metadata[$row['field_name']])) continue;
@@ -754,50 +773,50 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		}
 		// Get event filters
 		$sql = "select * from redcap_reports_filter_events where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['limiter_events'][] = $row['event_id'];
 		}
 
 		// Get DAG filters
 		$sql = "select * from redcap_reports_filter_dags where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['limiter_dags'][] = $row['group_id'];
 		}
 		// Get user access - users
 		$sql = "select * from redcap_reports_access_users where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['user_access_users'][] = $row['username'];
 		}
 		// Get user access - roles
 		$sql = "select * from redcap_reports_access_roles where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['user_access_roles'][] = $row['role_id'];
 		}
 		// Get user access - DAGs
 		$sql = "select * from redcap_reports_access_dags where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['user_access_dags'][] = $row['group_id'];
 		}
 		// Get user edit access - users
 		$sql = "select * from redcap_reports_edit_access_users where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['user_edit_access_users'][] = $row['username'];
 		}
 		// Get user edit access - roles
 		$sql = "select * from redcap_reports_edit_access_roles where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['user_edit_access_roles'][] = $row['role_id'];
 		}
 		// Get user edit access - DAGs
 		$sql = "select * from redcap_reports_edit_access_dags where report_id in (" . prep_implode(array_keys($reports)) . ")";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			$report['user_edit_access_dags'][] = $row['group_id'];
 		}
@@ -865,7 +884,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$report_fields = array();
 
 		$sql = "select * from redcap_reports_fields where project_id = $pid and report_id = $report_id";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row =  $q->fetch_assoc()) {
 			$report_fields[] = $row['field_name'];
 		}
@@ -1514,7 +1533,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			$sqlr = $sql = "update advanced_graphs_dashboards 
 							set live_filters = '".db_escape($live_filters)."', title = '".db_escape($title)."', body = '".db_escape($body)."', user_access = '".db_escape($user_access)."', is_public = $is_public
 							where project_id = ".$pid." and dash_id = $dash_id and report_id = $report_id";
-			if (!$this->query($sql)) $errors++;
+			if (!$this->query($sql, [])) $errors++;
 		} else {
 			// Get next dash_order number
 			$q = $this->query("select max(dash_order) from advanced_graphs_dashboards where project_id = ".$pid);
@@ -1523,7 +1542,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			// Insert
 			$sqlr = $sql = "insert into advanced_graphs_dashboards (project_id, report_id, live_filters, title, body, user_access, dash_order, is_public)
 							values (".$pid.", ". intval($report_id) . ", '".db_escape($live_filters)."', '".db_escape($title)."', '".db_escape($body)."', '".db_escape($user_access)."', $new_dash_order, $is_public)";
-			if (!$this->query($sql)) $errors++;
+			if (!$this->query($sql, [])) $errors++;
 			// Set new dash_id
 			$dash_id = db_insert_id();
 		}
@@ -1613,7 +1632,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$sql = "select * from advanced_graphs_dashboards where project_id = ".$project_id;
 		if (is_numeric($dash_id)) $sql .= " and dash_id = $dash_id";
 		$sql .= " order by dash_order";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		while ($row = $q->fetch_assoc()) {
 			// Add to reports array
 			$dashboards[$row['dash_id']] = $row;
@@ -1634,19 +1653,19 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// TODO USER ACCESS???
 	// 	// Get user access - users
 	// 	$sql = "select * from redcap_project_dashboards_access_users where dash_id in (" . prep_implode(array_keys($dashboards)) . ")";
-	// 	$q = $this->query($sql);
+	// 	$q = $this->query($sql, []);
 	// 	while ($row = $q->fetch_assoc()) {
 	// 		$dashboards[$row['dash_id']]['user_access_users'][] = $row['username'];
 	// 	}
 	// 	// Get user access - roles
 	// 	$sql = "select * from redcap_project_dashboards_access_roles where dash_id in (" . prep_implode(array_keys($dashboards)) . ")";
-	// 	$q = $this->query($sql);
+	// 	$q = $this->query($sql, []);
 	// 	while ($row = $q->fetch_assoc()) {
 	// 		$dashboards[$row['dash_id']]['user_access_roles'][] = $row['role_id'];
 	// 	}
 	// 	// Get user access - DAGs
 	// 	$sql = "select * from redcap_project_dashboards_access_dags where dash_id in (" . prep_implode(array_keys($dashboards)) . ")";
-	// 	$q = $this->query($sql);
+	// 	$q = $this->query($sql, []);
 	// 	while ($row = $q->fetch_assoc()) {
 	// 		$dashboards[$row['dash_id']]['user_access_dags'][] = $row['group_id'];
 	// 	}
@@ -1664,7 +1683,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	{
 		// Delete report
 		$sql = "select title from advanced_graphs_dashboards where project_id = ".$pid." and dash_id = $dash_id";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		$title = strip_tags(label_decode(db_result($q, 0)));
 		return $title;
 	}
@@ -1684,7 +1703,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$dash_id = (int)$dash_id;
 		$sql = "update advanced_graphs_dashboards set cache_time = null, cache_content = null
                 where dash_id = $dash_id and project_id = ".$pid;
-		if ($this->query($sql)) {
+		if ($this->query($sql, [])) {
 			// Logging
 			if ($doLogging) {
 			    Logging::logEvent($sql, "advanced_graphs_dashboards", "MANAGE", $dash_id, "dash_id = $dash_id", "Reset cached snapshot for advanced graph dashboard" . " - \"".$this->getDashboardName($dash_id)."\"");
@@ -1710,7 +1729,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// 	$sql = "select sum(dash_order) as actual, round(count(1)*(count(1)+1)/2) as ideal,
 	// 			min(dash_order) as min, max(dash_order) as max, count(1) as dash_count
 	// 			from redcap_project_dashboards where project_id = " . PROJECT_ID;
-	// 	$q = $this->query($sql);
+	// 	$q = $this->query($sql, []);
 	// 	$row = $q->fetch_assoc();
 	// 	db_free_result($q);
 	// 	if ( ($row['actual'] != $row['ideal']) || ($row['min'] != '1') || ($row['max'] != $row['dash_count']) )
@@ -1724,7 +1743,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// {
 	// 	// Set all dash_orders to null
 	// 	$sql = "select @n := 0";
-	// 	$this->query($sql);
+	// 	$this->query($sql, []);
 	// 	// Reset field_order of all fields, beginning with "1"
 	// 	$sql = "update redcap_project_dashboards
 	// 			set dash_order = @n := @n + 1 where project_id = ".PROJECT_ID."
@@ -1735,7 +1754,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// 		$sql = "select dash_id from redcap_project_dashboards
     //                 where project_id = ".PROJECT_ID."
     //                 order by dash_order, dash_id";
-	// 		$q = $this->query($sql);
+	// 		$q = $this->query($sql, []);
 	// 		$dash_order = 1;
 	// 		$dash_orders = array();
 	// 		while ($row = $q->fetch_assoc()) {
@@ -1743,13 +1762,13 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// 		}
 	// 		// Reset all orders to null
 	// 		$sql = "update redcap_project_dashboards set dash_order = null where project_id = ".PROJECT_ID;
-	// 		$this->query($sql);
+	// 		$this->query($sql, []);
 	// 		foreach ($dash_orders as $dash_id=>$dash_order) {
 	// 		    // Set order of each individually
 	// 			$sql = "update redcap_project_dashboards
     //                     set dash_order = $dash_order 
     //                     where dash_id = $dash_id";
-	// 			$this->query($sql);
+	// 			$this->query($sql, []);
 	// 		}
 	// 	}
 	// 	// Return boolean on success
@@ -1837,7 +1856,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		if (isinteger($dash_id) && $dash_id > 0) {
 			$sql .= " and dash_id = $dash_id";
 		}
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		$dash_ids = [];
 		while ($row = $q->fetch_assoc()) {
 			$dash_ids[] = $row['dash_id'];
@@ -1851,7 +1870,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				$unique_name = generateRandomHash(11, false, true);
 				// Update the table
 				$sql = "update advanced_graphs_dashboards set hash = '".db_escape($unique_name)."' where dash_id = $dash_id";
-				$success = $this->query($sql);
+				$success = $this->query($sql, []);
 			}
 		}
 	}
@@ -1862,7 +1881,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$title = $this->getDashboardName($pid, $dash_id);
 		// Delete report
 		$sql = "delete from advanced_graphs_dashboards where project_id = ".$pid." and dash_id = $dash_id";
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		if (!$q) return false;
 		// Fix ordering of reports (if needed) now that this report has been removed
 		$this->checkDashOrder();
@@ -1894,7 +1913,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// Move all report orders up one to make room for new one
 		$sql = "update advanced_graphs_dashboards set dash_order = dash_order + 1 where project_id = ".$pid."
 				and dash_order >= ".$dash['dash_order']." order by dash_order desc";
-		if (!$this->query($sql)) $errors++;
+		if (!$this->query($sql, [])) $errors++;
 
 		// Loop through report attributes and add to $table to input into query
 		foreach ($dash as $key=>$val) {
@@ -1942,7 +1961,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$sql = "select sum(dash_order) as actual, round(count(1)*(count(1)+1)/2) as ideal,
 				min(dash_order) as min, max(dash_order) as max, count(1) as dash_count
 				from advanced_graphs_dashboards where project_id = " . PROJECT_ID;
-		$q = $this->query($sql);
+		$q = $this->query($sql, []);
 		$row = $q->fetch_assoc();
 		db_free_result($q);
 		if ( ($row['actual'] != $row['ideal']) || ($row['min'] != '1') || ($row['max'] != $row['dash_count']) )
@@ -1956,18 +1975,18 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	{
 		// Set all dash_orders to null
 		$sql = "select @n := 0";
-		$this->query($sql);
+		$this->query($sql, []);
 		// Reset field_order of all fields, beginning with "1"
 		$sql = "update advanced_graphs_dashboards
 				set dash_order = @n := @n + 1 where project_id = ".PROJECT_ID."
 				order by dash_order, dash_id";
-		if (!$this->query($sql))
+		if (!$this->query($sql, []))
 		{
 			// If unique key prevented easy fix, then do manually via looping
 			$sql = "select dash_id from advanced_graphs_dashboards
 					where project_id = ".PROJECT_ID."
 					order by dash_order, dash_id";
-			$q = $this->query($sql);
+			$q = $this->query($sql, []);
 			$dash_order = 1;
 			$dash_orders = array();
 			while ($row = $q->fetch_assoc()) {
@@ -1975,13 +1994,13 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			}
 			// Reset all orders to null
 			$sql = "update advanced_graphs_dashboards set dash_order = null where project_id = ".PROJECT_ID;
-			$this->query($sql);
+			$this->query($sql, []);
 			foreach ($dash_orders as $dash_id=>$dash_order) {
 				// Set order of each individually
 				$sql = "update advanced_graphs_dashboards
 						set dash_order = $dash_order 
 						where dash_id = $dash_id";
-				$this->query($sql);
+				$this->query($sql, []);
 			}
 		}
 		// Return boolean on success

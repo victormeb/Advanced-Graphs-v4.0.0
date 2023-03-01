@@ -10,7 +10,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     this.report = report;
     this.report_fields = report_fields;
 
-    this.categorical_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
+    this.categorical_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
+    this.categorical_fields =  {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
+
+    // for (const field_name of this.report_fields) {
+    //     if (!this.report_fields.includes(field['field_name']))
+    //         continue;
+
+        
+    // }
+    
     this.numerical_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
     this.date_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
     this.text_fields = {'field1': 'Field one', 'field2': 'Field two', 'field3': 'Field three'};
@@ -424,7 +433,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         
 
         // add a radio option to display the graph, the table, or both the graph and the table
-        var displaySelector = this.createRadioSelector({'graph': this.module.tt('graph'), 'table': this.module.tt('table'), 'both': this.module.tt('both')}, 'displaySelector', this.module.tt('display'));
+        var displaySelector = this.createRadioSelector({'graph': this.module.tt('graph'), 'table': this.module.tt('table'), 'both': this.module.tt('both')}, 'display', this.module.tt('display'));
 
         // set graph as the default display option
         displaySelector.querySelector('input[value="graph"]').checked = true;
@@ -567,24 +576,35 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         this.graph_type = this.formData.graph_type;
 
+        this.aggregate_function_dictionary = {
+            "sum": d3.sum,
+            "mean": d3.mean,
+            "min": d3.min,
+            "max": d3.max
+        };
+
         // if is_count is in the formData
         if ('is_count' in this.formData) {
             // set this.data to the count of the categorical field
             this.data = d3.rollup(this.report, v => v.length, d => d[this.categorical_field]);
         } else {
             // otherwise, set this.data to the aggregate function of the numerical field
-            this.data = d3.rollup(this.report, v => d3[this.aggregate_function](v, d => d[this.numerical_field]), d => d[this.categorical_field]);
+            this.data = d3.rollup(this.report, v => this.aggregate_function_dictionary[this.aggregate_function](v, d => d[this.numerical_field]), d => d[this.categorical_field]);
         }
 
+        console.log(this.graph_type);
+
         this.getChart = function () {
+            console.log("hello from here 1");
             // if the graph type is pie, create a pie chart
             if (this.graph_type === 'pie') {
+                console.log("hello from here");
                 return d3.PieChart(this.data);
             } else {
                 // otherwise, create a bar chart
                 return d3.BarChart(this.data);
             }
-        }
+        }.bind(this);
     };
 
     this.getCrossBargraphFormParameters = function() {

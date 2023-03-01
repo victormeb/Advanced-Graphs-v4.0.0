@@ -62,6 +62,9 @@ $report_fields = $module->getReportFields($project_id, $report_id);
 // Get the data dictionary
 $data_dictionary = $module->getDataDictionary($project_id);
 
+// Get the report fields by the repeating instruments
+$report_fields_by_reapeat_instrument = $module->getProject()->getRepeatingForms();
+
 $module->loadJS('js/AdvancedGraphsModule.js');
 $module->loadCSS('css/advanced-graphs.css');
 
@@ -94,6 +97,9 @@ $module->tt_transferToJavascriptModuleObject();
         var dashboard = <?php echo json_encode($dashboard); ?>;
         var report_fields = <?php echo json_encode($report_fields); ?>;
         var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
+        var report_fields_by_reapeat_instrument = <?php echo json_encode($report_fields_by_reapeat_instrument); ?>;
+
+        console.log(report_fields_by_reapeat_instrument);
         
         // Initialize the module from AdvancedGraphsModule.js
         var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report_fields, report, report_fields);

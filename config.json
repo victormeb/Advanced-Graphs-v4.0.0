@@ -5,6 +5,7 @@
 	"versions": [{
 		"1.0": "Initial Development Version on EMs"
 	}],
+	"framework-version": 11,
 	"compatibility": {
 		"redcap-version-min": "8.0.3"
 	},
