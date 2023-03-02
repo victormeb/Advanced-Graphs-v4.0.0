@@ -194,53 +194,66 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         var graphSelectorDiv = document.createElement('div');
         graphSelectorDiv.setAttribute('class', 'graphSelectorDiv');
 
-        // Create a new graph selector
-        var graphSelector = document.createElement('select');
-        graphSelector.setAttribute('class', 'graphSelector');
+        // Create a div that will contain the graph form
+        var graphFormDiv = document.createElement('div');
+        graphFormDiv.setAttribute('class', 'graphFormDiv');
 
-        // Add a disabled default option
-        var defaultOption = document.createElement('option');
-        defaultOption.setAttribute('value', '');
-        defaultOption.setAttribute('disabled', 'disabled');
-        defaultOption.setAttribute('selected', 'selected');
-        defaultOption.innerHTML = this.module.tt('select_graph_type');
-        graphSelector.appendChild(defaultOption);
+        // Create a div that will contain the instrument selector
+        var instrumentSelectorDiv = document.createElement('div');
+        instrumentSelectorDiv.setAttribute('class', 'instrumentSelectorDiv');
 
-        // Add an option for each graph type
-        let graphTypes = this.getGraphTypes(); 
+        // Populate the instrument selector div
+        instrumentSelectorDiv.appendChild(this.instrumentSelector(graphSelectorDiv, graphFormDiv));
 
-        for (let graphType in graphTypes) {
-            if (!graphTypes[graphType]['form'])
-                continue;
+        
 
-            let option = document.createElement('option');
-            option.setAttribute('value', graphType);
-            option.innerHTML = graphTypes[graphType]['label'];
-            graphSelector.appendChild(option);
-        }
+        // // Create a new graph selector
+        // var graphSelector = document.createElement('select');
+        // graphSelector.setAttribute('class', 'graphSelector');
 
-        // When the graph selector changes, show the graph form for the selected graph type
-        graphSelector.addEventListener('change', function (event) {
-            // Get the graph form div
-            var graphFormDiv = cell.getElementsByClassName('graphFormDiv')[0];
+        // // Add a disabled default option
+        // var defaultOption = document.createElement('option');
+        // defaultOption.setAttribute('value', '');
+        // defaultOption.setAttribute('disabled', 'disabled');
+        // defaultOption.setAttribute('selected', 'selected');
+        // defaultOption.innerHTML = this.module.tt('select_graph_type');
+        // graphSelector.appendChild(defaultOption);
 
-            // Remove all the children of the graph form div
-            while (graphFormDiv.firstChild) {
-                graphFormDiv.removeChild(graphFormDiv.firstChild);
-            }
+        // // Add an option for each graph type
+        // let graphTypes = this.getGraphTypes(); 
 
-            // If a graph type was selected, show the graph form for that graph type
-            if (graphSelector.value) {
-                // Get the graph form for the selected graph type
-                var graphForm = graphTypes[graphSelector.value]['form'];
+        // for (let graphType in graphTypes) {
+        //     if (!graphTypes[graphType]['form'])
+        //         continue;
 
-                // Add the graph form to the graph form div
-                graphFormDiv.appendChild(graphForm);
-            }
-        }.bind(this));
+        //     let option = document.createElement('option');
+        //     option.setAttribute('value', graphType);
+        //     option.innerHTML = graphTypes[graphType]['label'];
+        //     graphSelector.appendChild(option);
+        // }
+
+        // // When the graph selector changes, show the graph form for the selected graph type
+        // graphSelector.addEventListener('change', function (event) {
+        //     // Get the graph form div
+        //     var graphFormDiv = cell.getElementsByClassName('graphFormDiv')[0];
+
+        //     // Remove all the children of the graph form div
+        //     while (graphFormDiv.firstChild) {
+        //         graphFormDiv.removeChild(graphFormDiv.firstChild);
+        //     }
+
+        //     // If a graph type was selected, show the graph form for that graph type
+        //     if (graphSelector.value) {
+        //         // Get the graph form for the selected graph type
+        //         var graphForm = graphTypes[graphSelector.value]['form'];
+
+        //         // Add the graph form to the graph form div
+        //         graphFormDiv.appendChild(graphForm);
+        //     }
+        // }.bind(this));
 
         // Add the graph selector to the graph selector div
-        graphSelectorDiv.appendChild(graphSelector);
+        // graphSelectorDiv.appendChild(graphSelector);
 
         // Create a button that will move the graph selector cell to the right
         var moveGraphSelectorCellRightButton = document.createElement('button');
@@ -303,10 +316,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         });
 
 
-        // Create a div that will contain the graph form
-        var graphFormDiv = document.createElement('div');
-        graphFormDiv.setAttribute('class', 'graphFormDiv');
-
         // Add the move left button, the graph selector, the move right button, the remove button, the add button and the graph form div to the graph selector button cell
         graphSelectorButtons.appendChild(moveGraphSelectorCellLeftButton);
         graphSelectorButtons.appendChild(graphSelectorDiv);
@@ -329,98 +338,224 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
     };
 
     // A function that takes the data dictionary and the report and returns a dictionary of each type of graph with the corresponding form parameters.
-    this.getGraphTypes = function () {
+    this.getGraphTypes = function (available_fields) {
         // Bar and pie graphs are the same, except for the type of graph they are.
         var graphTypes = {
-            "scatter": {"label": this.module.tt('graph_type_scatter'), "form": this.getScatterFormParameters()},
-            "bar": {"label": this.module.tt('graph_type_bar'), "form": this.getBargraphFormParameters()},
-            "cross-bar": {"label": this.module.tt('graph_type_crossbar'), "form": this.getCrossBargraphFormParameters()},
-            "likert": {"label": this.module.tt('graph_type_likert'), "form": this.getLikertFormParameters()},
-            "map": {"label": this.module.tt('graph_type_map'), "form": this.getMapFormParameters()},
-            "network": {"label": this.module.tt('graph_type_network'), "form": this.getNetworkFormParameters()},
-            "table": {"label": this.module.tt('graph_type_table'), "form": this.getTableFormParameters()}
+            "scatter": {"label": this.module.tt('graph_type_scatter'), "form": this.getScatterFormParameters(available_fields)},
+            "bar": {"label": this.module.tt('graph_type_bar'), "form": this.getBargraphFormParameters(available_fields)},
+            "cross-bar": {"label": this.module.tt('graph_type_crossbar'), "form": this.getCrossBargraphFormParameters(available_fields)},
+            "likert": {"label": this.module.tt('graph_type_likert'), "form": this.getLikertFormParameters(available_fields)},
+            "map": {"label": this.module.tt('graph_type_map'), "form": this.getMapFormParameters(available_fields)},
+            "network": {"label": this.module.tt('graph_type_network'), "form": this.getNetworkFormParameters(available_fields)},
+            "table": {"label": this.module.tt('graph_type_table'), "form": this.getTableFormParameters(available_fields)}
         };
         return graphTypes;
     };
 
     // An object that can be used to create an instrument selector that holds the fields of the selected instrument.
-    this.instrumentSelector = function(formDiv, formFunc) {
-        // Create a div to hold the instrument selector
+    this.instrumentSelector = function(graphSelectorDiv, formDiv) {
         var instrumentSelectorDiv = document.createElement('div');
         instrumentSelectorDiv.setAttribute('class', 'instrumentSelectorDiv');
+        // Set the non_repeating instrument
+        this.non_repeating_instrument = this.report_fields_by_reapeat_instrument['non_repeats'];
 
-        // The number of non-repeatable instruments is one or zero depending on whether there are any fields present
-        var nonRepeatableInstruments = this.report_fields_by_reapeat_instrument['non_repeats'].length ? 1 : 0;
+        // Set the repeating instruments
+        this.repeating_instruments = this.report_fields_by_reapeat_instrument['repeat_instruments'];
 
+        // Create a dictionary that will hold the graph selector and instrument labels of each instrument
+        this.instrument_form_parameters = [{'value': 'adv_graph_non_repeats', 'graph_selector': this.graphTypeSelector(non_repeating_instrument, formDiv), 'label': 'Non-repeating Instruments'}];
 
-        // If the length of the repeatable instruments and the non-repeatable instruments is equal to 1, then set the content of the formDiv to the form parameters of the only instrument.
-        if (this.report_fields_by_reapeat_instrument['repeat_instruments'].length + nonRepeatableInstruments == 1) {
-            // If there is only one instrument, then set the content of the formDiv to the form parameters of the only instrument.
-            // If there is only one non-repeatable instrument, then set the content of the formDiv to the form parameters of the only instrument.
-            if (nonRepeatableInstruments == 1) {
-                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['non_repeats']);
-            }
-            // If there is only one repeatable instrument, then set the content of the formDiv to the form parameters of the only instrument.
-            else {
-                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['repeat_instruments'][0]);
-            }
+        // For each instrument, create a dictionary that will hold the form parameters and instrument labels of each instrument
+        for (const instrument in this.repeating_instruments) {
+            this.instrument_form_parameters.push({
+                "value": instrument,
+                "graph_selector": this.graphTypeSelector(this.repeating_instruments[instrument]['fields'], formDiv),
+                "label": this.repeating_instruments[instrument]['label']
+            });
+        }
+
+        // If there is only one instrument, then set the content of the graphSelectorDiv to the graphSelector of the only instrument.
+        if (this.instrument_form_parameters.length == 1) {
+            formDiv.innerHTML = this.instrument_form_parameters[0]['form'];
+
+            // Return an empty div with the class instrumentSelectorDiv
             return instrumentSelectorDiv;
         }
 
-        // Create a label for the instrument selector
-        var instrumentSelectorLabel = document.createElement('label');
-        instrumentSelectorLabel.setAttribute('class', 'instrumentSelectorLabel');
-        instrumentSelectorLabel.innerHTML = this.module.tt('instrument_selector_label');
-
-        // Create a select element to hold the instruments
+        // Create a select element that will hold the instruments
         var instrumentSelector = document.createElement('select');
         instrumentSelector.setAttribute('class', 'instrumentSelector');
 
-        // Create an option element to hold the select an instrument option
-        var selectAnInstrumentOption = document.createElement('option');
-        selectAnInstrumentOption.setAttribute('class', 'selectAnInstrumentOption');
-        selectAnInstrumentOption.setAttribute('value', 'select_an_instrument');
-        selectAnInstrumentOption.innerHTML = this.module.tt('select_an_instrument');
-        selectAnInstrumentOption.setAttribute('selected', 'selected');
-        selectAnInstrumentOption.setAttribute('disabled', 'disabled');
+        // Add a disabled "Select an instrument" option to the instrumentSelector
+        var instrumentOption = document.createElement('option');
+        instrumentOption.setAttribute('value', '');
+        instrumentOption.setAttribute('disabled', 'disabled');
+        instrumentOption.setAttribute('selected', 'selected');
+        instrumentOption.innerHTML = this.module.tt('select_an_instrument');
+        instrumentSelector.appendChild(instrumentOption);
 
-        // Add the select an instrument option to the instrument selector
-        instrumentSelector.appendChild(selectAnInstrumentOption);
-
-        // Create an option element to hold the non-repeatable instrument option
-        var nonRepeatableInstrumentOption = document.createElement('option');
-        nonRepeatableInstrumentOption.setAttribute('class', 'nonRepeatableInstrumentOption');
-        nonRepeatableInstrumentOption.setAttribute('value', 'non_repeatable_instrument');
-        nonRepeatableInstrumentOption.innerHTML = this.module.tt('non_repeatable_instrument');
-
-        // Add the non-repeatable instrument option to the instrument selector
-        instrumentSelector.appendChild(nonRepeatableInstrumentOption);
-
-        // Create an option element to hold the repeatable instruments options
-        for (const repeatableInstrument in this.report_fields_by_reapeat_instrument['repeat_instruments']) {
-            var repeatableInstrumentOption = document.createElement('option');
-            repeatableInstrumentOption.setAttribute('class', 'repeatableInstrumentOption');
-            repeatableInstrumentOption.setAttribute('value', repeatableInstrument);
-            repeatableInstrumentOption.innerHTML = this.report_fields_by_reapeat_instrument['repeat_instruments'][repeatableInstrument]['form_label'];
-            instrumentSelector.appendChild(repeatableInstrumentOption);
+        // For each instrument in the instrument_form_parameters, create an option element and add it to the instrumentSelector
+        for (const instrument of this.instrument_form_parameters) {
+            var instrumentOption = document.createElement('option');
+            instrumentOption.setAttribute('value', instrument['value']);
+            instrumentOption.innerHTML = instrument['label'];
+            instrumentSelector.appendChild(instrumentOption);
         }
 
-        // When the instrument selector changes, set the content of the formDiv to the form parameters of the selected instrument.
-        instrumentSelector.onchange = function() {
-            if (this.value == 'non_repeatable_instrument') {
-                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['non_repeats']);
-            }
-            else {
-                formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['repeat_instruments'][this.value]);
-            }
-        }
+        // When the instrumentSelector is changed, set the content of the graphSelectorDiv to the form parameters of the selected instrument
+        instrumentSelector.addEventListener('change', function (event) {
+            // Get the value of the selected instrument
+            var instrumentValue = instrumentSelector.value;
 
-        // Add the instrument selector label and the instrument selector to the instrument selector div
-        instrumentSelectorDiv.appendChild(instrumentSelectorLabel);
-        instrumentSelectorLabel.appendChild(instrumentSelector);
+            // Get the form parameters of the selected instrument
+            var instrumentFormParameters = this.instrument_form_parameters.filter(function (instrument) {
+                return instrument['value'] == instrumentValue;
+            })[0]['form'];
 
+            // Set the content of the graphSelectorDiv to the form parameters of the selected instrument
+            graphSelectorDiv.innerHTML = instrumentFormParameters;
+        }.bind(this));
+
+        // Add the instrumentSelector to the instrumentSelectorDiv
+        instrumentSelectorDiv.appendChild(instrumentSelector);
+
+        // Return the instrumentSelectorDiv
         return instrumentSelectorDiv;
+
+        // // Create a div to hold the instrument selector
+        // var instrumentSelectorDiv = document.createElement('div');
+        // instrumentSelectorDiv.setAttribute('class', 'instrumentSelectorDiv');
+
+        // // The number of non-repeatable instruments is one or zero depending on whether there are any fields present
+        // var nonRepeatableInstruments = this.report_fields_by_reapeat_instrument['non_repeats'].length ? 1 : 0;
+
+
+        // // If the length of the repeatable instruments and the non-repeatable instruments is equal to 1, then set the content of the formDiv to the form parameters of the only instrument.
+        // if (this.report_fields_by_reapeat_instrument['repeat_instruments'].length + nonRepeatableInstruments == 1) {
+        //     // If there is only one instrument, then set the content of the formDiv to the form parameters of the only instrument.
+        //     // If there is only one non-repeatable instrument, then set the content of the formDiv to the form parameters of the only instrument.
+        //     if (nonRepeatableInstruments == 1) {
+        //         formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['non_repeats']);
+        //     }
+        //     // If there is only one repeatable instrument, then set the content of the formDiv to the form parameters of the only instrument.
+        //     else {
+        //         formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['repeat_instruments'][0]);
+        //     }
+        //     return instrumentSelectorDiv;
+        // }
+
+        // // Create a label for the instrument selector
+        // var instrumentSelectorLabel = document.createElement('label');
+        // instrumentSelectorLabel.setAttribute('class', 'instrumentSelectorLabel');
+        // instrumentSelectorLabel.innerHTML = this.module.tt('instrument_selector_label');
+
+        // // Create a select element to hold the instruments
+        // var instrumentSelector = document.createElement('select');
+        // instrumentSelector.setAttribute('class', 'instrumentSelector');
+
+        // // Create an option element to hold the select an instrument option
+        // var selectAnInstrumentOption = document.createElement('option');
+        // selectAnInstrumentOption.setAttribute('class', 'selectAnInstrumentOption');
+        // selectAnInstrumentOption.setAttribute('value', 'select_an_instrument');
+        // selectAnInstrumentOption.innerHTML = this.module.tt('select_an_instrument');
+        // selectAnInstrumentOption.setAttribute('selected', 'selected');
+        // selectAnInstrumentOption.setAttribute('disabled', 'disabled');
+
+        // // Add the select an instrument option to the instrument selector
+        // instrumentSelector.appendChild(selectAnInstrumentOption);
+
+        // // Create an option element to hold the non-repeatable instrument option
+        // var nonRepeatableInstrumentOption = document.createElement('option');
+        // nonRepeatableInstrumentOption.setAttribute('class', 'nonRepeatableInstrumentOption');
+        // nonRepeatableInstrumentOption.setAttribute('value', 'non_repeatable_instrument');
+        // nonRepeatableInstrumentOption.innerHTML = this.module.tt('non_repeatable_instrument');
+
+        // // Add the non-repeatable instrument option to the instrument selector
+        // instrumentSelector.appendChild(nonRepeatableInstrumentOption);
+
+        // // Create an option element to hold the repeatable instruments options
+        // for (const repeatableInstrument in this.report_fields_by_reapeat_instrument['repeat_instruments']) {
+        //     var repeatableInstrumentOption = document.createElement('option');
+        //     repeatableInstrumentOption.setAttribute('class', 'repeatableInstrumentOption');
+        //     repeatableInstrumentOption.setAttribute('value', repeatableInstrument);
+        //     repeatableInstrumentOption.innerHTML = this.report_fields_by_reapeat_instrument['repeat_instruments'][repeatableInstrument]['form_label'];
+        //     instrumentSelector.appendChild(repeatableInstrumentOption);
+        // }
+
+        // // When the instrument selector changes, set the content of the formDiv to the form parameters of the selected instrument.
+        // instrumentSelector.onchange = function() {
+        //     if (this.value == 'non_repeatable_instrument') {
+        //         formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['non_repeats']);
+        //     }
+        //     else {
+        //         formDiv.innerHTML = formFunc(this.report_fields_by_reapeat_instrument['repeat_instruments'][this.value]);
+        //     }
+        // }
+
+        // // Add the instrument selector label and the instrument selector to the instrument selector div
+        // instrumentSelectorDiv.appendChild(instrumentSelectorLabel);
+        // instrumentSelectorLabel.appendChild(instrumentSelector);
+
+        // return instrumentSelectorDiv;
     }
+
+    // A function that returns a selector for the avaialble graph types of a given instrument
+    this.graphTypeSelector = function (instrument, formDiv) {
+        // Create a div to hold the graph type selector
+        var graphTypeSelectorDiv = document.createElement('div');
+        graphTypeSelectorDiv.setAttribute('class', 'graphTypeSelectorDiv');
+
+        // Create a label for the graph type selector
+        var graphTypeSelectorLabel = document.createElement('label');
+        graphTypeSelectorLabel.setAttribute('class', 'graphTypeSelectorLabel');
+        graphTypeSelectorLabel.innerHTML = this.module.tt('graph_type_selector_label');
+
+        // Create a select element to hold the graph types
+        var graphTypeSelector = document.createElement('select');
+        graphTypeSelector.setAttribute('class', 'graphTypeSelector');
+        
+        // Create an option element to hold the select a graph type option
+        var selectAGraphTypeOption = document.createElement('option');
+        selectAGraphTypeOption.setAttribute('class', 'selectGraphTypeOption');
+        selectAGraphTypeOption.setAttribute('value', 'graph_type');
+        selectAGraphTypeOption.innerHTML = this.module.tt('select_graph_type');
+
+        // Add the select a graph type option to the graph type selector
+        graphTypeSelector.appendChild(selectAGraphTypeOption);
+
+        // Get the available fields for the given instrument
+        var availableFields = this.getAvailableFields(instrument);
+
+        // Get the available graph types given the available fields
+        var availableGraphTypes = this.getGraphTypes(availableFields);
+
+        // Create an option element to hold the available graph types
+        for (const graphType in availableGraphTypes) {
+            // If the graphType is null continue to the next graphType
+            if (availableGraphTypes[graphType] == null) {
+                continue;
+            }
+
+            var graphTypeOption = document.createElement('option');
+            graphTypeOption.setAttribute('class', 'graphTypeOption');
+            graphTypeOption.setAttribute('value', graphType);
+            graphTypeOption.innerHTML = availableGraphTypes[graphType]['label'];
+            graphTypeSelector.appendChild(graphTypeOption);
+
+        }
+
+        // When the graph type selector changes, set the content of the formDiv to the form parameters of the selected graph type.
+        graphTypeSelector.onchange = function() {
+            formDiv.innerHTML = availableGraphTypes[this.value]['form_func'];
+        }
+
+        // Add the graph type selector label and the graph type selector to the graph type selector div
+        graphTypeSelectorDiv.appendChild(graphTypeSelectorLabel);
+        graphTypeSelectorLabel.appendChild(graphTypeSelector);
+
+        return graphTypeSelectorDiv;
+    }
+
 
     // A function that uses the data_dictionary and the report to return the parameters needed to create a scatter graph.
     this.getScatterFormParameters = function () {
@@ -456,7 +591,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
                 available_fields['checkbox'].push(instrument[field['field_name']]);
             }
             // If the field type is one of 'radio', 'dropdown', 'yesno', or 'truefalse' then it is a categorical field
-            else if (['radio', 'dropdown', 'yesno', 'truefalse'].includes(instrument[field]['field_type'])) {
+            else if (categorical_field_types.includes(instrument[field]['field_type'])) {
                 available_fields['categorical'].push(instrument[field['field_name']]);
             }
             // if none of the strings in the array non_numeric_field_names is a substring of the field name
@@ -500,9 +635,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
 
     
     // A function that uses the data_dictionary and the report to return the parameters needed to create a bar graph.
-    this.getBargraphFormParameters = function (instrument) {
+    this.getBargraphFormParameters = function (available_fields) {
         // Get the avaiable fields for the selected instrument
-        var available_fields = this.getAvailableFields(instrument);
 
         // If there no categorical fields, then return a div that says that there are no categorical fields available for the selected instrument so a bargraph cannot be created.
         if (available_fields['categorical'].length == 0) {
