@@ -318,6 +318,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
 
         // Add the move left button, the graph selector, the move right button, the remove button, the add button and the graph form div to the graph selector button cell
         graphSelectorButtons.appendChild(moveGraphSelectorCellLeftButton);
+        graphSelectorButtons.appendChild(instrumentSelectorDiv);
         graphSelectorButtons.appendChild(graphSelectorDiv);
         graphSelectorButtons.appendChild(moveGraphSelectorCellRightButton);
         graphSelectorButtons.appendChild(removeGraphSelectorButton);
@@ -329,7 +330,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         cell.appendChild(graphFormDiv);
 
         // Add the graph selector to the graph selector div
-        graphSelectorDiv.appendChild(graphSelector);
+        // graphSelectorDiv.appendChild(graphSelector);
 
     
 
@@ -363,7 +364,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         this.repeating_instruments = this.report_fields_by_reapeat_instrument['repeat_instruments'];
 
         // Create a dictionary that will hold the graph selector and instrument labels of each instrument
-        this.instrument_form_parameters = [{'value': 'adv_graph_non_repeats', 'graph_selector': this.graphTypeSelector(non_repeating_instrument, formDiv), 'label': 'Non-repeating Instruments'}];
+        this.instrument_form_parameters = [{'value': 'adv_graph_non_repeats', 'graph_selector': this.graphTypeSelector(this.non_repeating_instrument, formDiv), 'label': 'Non-repeating Instruments'}];
 
         // For each instrument, create a dictionary that will hold the form parameters and instrument labels of each instrument
         for (const instrument in this.repeating_instruments) {
@@ -410,10 +411,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
             // Get the form parameters of the selected instrument
             var instrumentFormParameters = this.instrument_form_parameters.filter(function (instrument) {
                 return instrument['value'] == instrumentValue;
-            })[0]['form'];
+            })[0]['graph_selector'];
 
             // Set the content of the graphSelectorDiv to the form parameters of the selected instrument
-            graphSelectorDiv.innerHTML = instrumentFormParameters;
+            graphSelectorDiv.appendChild(instrumentFormParameters);
         }.bind(this));
 
         // Add the instrumentSelector to the instrumentSelectorDiv
@@ -508,7 +509,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         // Create a label for the graph type selector
         var graphTypeSelectorLabel = document.createElement('label');
         graphTypeSelectorLabel.setAttribute('class', 'graphTypeSelectorLabel');
-        graphTypeSelectorLabel.innerHTML = this.module.tt('graph_type_selector_label');
+        graphTypeSelectorLabel.innerHTML = this.module.tt('graph_type');
 
         // Create a select element to hold the graph types
         var graphTypeSelector = document.createElement('select');
@@ -532,7 +533,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         // Create an option element to hold the available graph types
         for (const graphType in availableGraphTypes) {
             // If the graphType is null continue to the next graphType
-            if (availableGraphTypes[graphType] == null) {
+            if (availableGraphTypes[graphType]['form'] == null) {
                 continue;
             }
 
@@ -546,7 +547,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
 
         // When the graph type selector changes, set the content of the formDiv to the form parameters of the selected graph type.
         graphTypeSelector.onchange = function() {
-            formDiv.innerHTML = availableGraphTypes[this.value]['form_func'];
+            formDiv.appendChild(availableGraphTypes[this.value]['form']);
         }
 
         // Add the graph type selector label and the graph type selector to the graph type selector div
@@ -585,14 +586,14 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
 
         for (const field in instrument) {
             if (instrument[field]['field_type'] == 'text') {
-                available_fields['text'].push(instrument[field['field_name']]);
+                available_fields['text'].push(instrument[field]['field_name']);
             }
             else if (instrument[field]['field_type'] == 'checkbox') {
-                available_fields['checkbox'].push(instrument[field['field_name']]);
+                available_fields['checkbox'].push(instrument[field]['field_name']);
             }
             // If the field type is one of 'radio', 'dropdown', 'yesno', or 'truefalse' then it is a categorical field
             else if (categorical_field_types.includes(instrument[field]['field_type'])) {
-                available_fields['categorical'].push(instrument[field['field_name']]);
+                available_fields['categorical'].push(instrument[field]['field_name']);
             }
             // if none of the strings in the array non_numeric_field_names is a substring of the field name
             // and (
@@ -630,6 +631,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
             }
         }
 
+        console.log(available_fields);
+
         return available_fields;
     }
 
@@ -637,7 +640,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
     // A function that uses the data_dictionary and the report to return the parameters needed to create a bar graph.
     this.getBargraphFormParameters = function (available_fields) {
         // Get the avaiable fields for the selected instrument
-
         // If there no categorical fields, then return a div that says that there are no categorical fields available for the selected instrument so a bargraph cannot be created.
         if (available_fields['categorical'].length == 0) {
             var noCategoricalFieldsDiv = document.createElement('div');
