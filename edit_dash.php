@@ -54,7 +54,8 @@ $report_name = $module->getReportName($project_id, $report_id);
 
 // Get the report
 // $report = $module->getReport($project_id, $report_id);
-$report = $module->get_report($project_id, $report_id, array(), null, "array");
+// $report = $module->get_report($project_id, $report_id, array(), null, "array");
+$report = REDCap::getReport($report_id);
 
 // Get the report fields
 $report_fields = $module->getReportFields($project_id, $report_id);

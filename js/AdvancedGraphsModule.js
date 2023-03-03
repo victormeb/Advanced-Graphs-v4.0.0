@@ -570,7 +570,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
 
     // A function that returns the available fields for a given instrument
     this.getAvailableFields = function (instrument) {
-        var non_numeric_field_names = ['record_id', 'redcap_event_name', 'redcap_repeat_instrument', 'redcap_repeat_instance', ];
+        var non_numeric_field_names = ['record_id', 'redcap_event_name', 'redcap_repeat_instrument', 'redcap_repeat_instance', 'longitude', 'longitud', 'Longitude', 'Longitud', 'latitude', 'latitud', 'Latitude', 'Latitud'];
         var numeric_field_text_validation_types = ['number', 'integer', 'float', 'decimal'];
         var categorical_field_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
         var longitude_keywords = ['longitude', 'longitud', 'Longitude', 'Longitud'];
