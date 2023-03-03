@@ -377,7 +377,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
 
         // If there is only one instrument, then set the content of the graphSelectorDiv to the graphSelector of the only instrument.
         if (this.instrument_form_parameters.length == 1) {
-            formDiv.innerHTML = this.instrument_form_parameters[0]['form'];
+            formDiv.innerHTML = '';
+            formDiv.appendChild(this.instrument_form_parameters[0]['graph_selector']);
 
             // Return an empty div with the class instrumentSelectorDiv
             return instrumentSelectorDiv;
@@ -603,7 +604,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
             else if (!non_numeric_field_names.some(v => instrument[field]['field_name'].includes(v)) && (
                 (instrument[field]['field_type'] == 'text' && numeric_field_text_validation_types.includes(instrument[field]['text_validation_type_or_show_slider_number']))
                 || instrument[field]['field_type'] == 'calc')) {
-                available_fields['numerical'].push(instrument[field['field_name']]);
+                available_fields['numerical'].push(instrument[field]['field_name']);
             }
             // If the field type is date then it is a date field
             else if (instrument[field]['field_type'] == 'date') {
@@ -614,22 +615,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         // For the coordinates fields, loop through the available fields and check if the field name contains any of the strings in the array longitude_keywords
         // If it does, then it is a longitude field. Attempt to find the corresponding latitude field by replacing the longitude keyword with the corresponding latitude keyword.
         // If the latitude field is found, then add the longitude and latitude fields to the coordinates object.
-        for (const field in instrument) {
-            if (longitude_keywords.some(v => instrument[field]['field_name'].includes(v))) {
-                var latitude_field_name = instrument[field]['field_name'].replace(longitude_keywords[longitude_keywords.indexOf(v)], latitude_keywords[longitude_keywords.indexOf(v)]);
-                // If the instrument conatin a field with the latitude field name, then add the longitude and latitude fields to the coordinates object.
-                for (const field in instrument) {
-                    if (instrument[field]['field_name'] == latitude_field_name) {
-                        // get the common string between the longitude and latitude field names
-                        var common_string = instrument[field]['field_name'].replace(latitude_field_name, '');
-                        available_fields['coordinates'][common_string] = {
-                            'longitude': instrument[field]['field_name'],
-                            'latitude': latitude_field_name
-                        };
-                    }
-                }
-            }
-        }
+       
 
         console.log(available_fields);
 
@@ -1077,10 +1063,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report_
         noneOption.innerHTML = this.module.tt('select_a_field');
         fieldSelectorSelect.appendChild(noneOption);
 
-        for (var field in fields) {
+        for (var field of fields) {
             var fieldOption = document.createElement('option');
             fieldOption.setAttribute('value', field);
-            fieldOption.innerHTML = fields[field];
+            fieldOption.innerHTML = this.data_dictionary[field]['field_label'];
             fieldSelectorSelect.appendChild(fieldOption);
         }
 

@@ -645,6 +645,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		foreach ($report_fields as $field_name) {
 			$field = $data_dictionary[$field_name];
 
+			if (!$field)
+				continue;
+
 			if (in_array($field['form_name'], $repeat_instruments))
 				$repeat_dictionary[$field['form_name']]['fields'][] = $field;
 			else
