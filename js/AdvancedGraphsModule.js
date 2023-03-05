@@ -259,7 +259,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create the move row up button
         var moveRowUpButton = document.createElement('button');
-        moveRowUpButton.setAttribute('class', 'btn btn-primary');
+        moveRowUpButton.setAttribute('class', 'AG-editor-row-button-up');
         moveRowUpButton.innerHTML = '<i class="fa fa-arrow-up" aria-hidden="true"></i>';
 
         // Add the click event to the move row up button
@@ -278,7 +278,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create the move row down button
         var moveRowDownButton = document.createElement('button');
-        moveRowDownButton.setAttribute('class', 'btn btn-primary');
+        moveRowDownButton.setAttribute('class', 'AG-editor-row-button-down');
         moveRowDownButton.innerHTML = '<i class="fa fa-arrow-down" aria-hidden="true"></i>';
 
         // Add the click event to the move row down button
@@ -566,14 +566,14 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var buttons = [
             {
                 label: AGM.module.tt('cancel'),
-                className: 'btn btn-default',
+                className: 'AG-editor-modal-dialog-cancel-button',
                 callback: function () {
                     AGM.closeModalDialog();
                 }
             },
             {
                 label: AGM.module.tt('confirm'),
-                className: 'btn btn-primary',
+                className: 'AG-editor-modal-dialog-confirm-button',
                 callback: function () {
                     AGM.closeModalDialog();
                     action();
