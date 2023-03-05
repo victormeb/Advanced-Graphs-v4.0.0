@@ -1,4 +1,4 @@
-.AG-editor-modal-dialog {
+.modalDialog {
     position: fixed;
     top: 0;
     left: 0;
@@ -9,7 +9,7 @@
     display: block;
 }
 
-.AG-editor-modal-dialog-content {
+.modalDialogContent {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -21,38 +21,38 @@
     display: block;
 }
 
-.AG-editor-modal-dialog-title {
+.modalDialogTitle {
     background-color: #f0f0f0;
     padding: 10px;
     font-weight: bold;
     font-size: 14px;
 }
 
-.AG-editor-modal-dialog-body {
+.modalDialogBody {
     padding: 10px;
 }
 
-.AG-editor-modal-dialog-footer {
+.modalDialogFooter {
     background-color: #f0f0f0;
     padding: 10px;
     text-align: right;
 }
 
-.AG-editor-modal-dialog-cancel-button {
+.modalCancelButton {
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     padding: 5px;
     cursor: pointer;
 }
 
-.AG-editor-modal-dialog-confirm-button {
+.modalConfirmButton {
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     padding: 5px;
     cursor: pointer;
 }
 
-.AG-editor-row {
+.graphSelectorRow {
   display: grid;
   grid-template-rows: 0.1fr 1fr;
   grid-template-columns: 0.1fr 0.8fr 0.1fr;
@@ -64,7 +64,7 @@
   align-items: start;
 }
 
-.AG-editor-row-buttons {
+.graphSelectorRowButtons {
   grid-area: rowButtons;
   display: grid;
   grid-template-rows: 1fr 1fr;
@@ -75,11 +75,11 @@
   margin-left: 20px;
 }
 
-.AG-editor-row-button-up {
+.graphSelectorRowButtons .moveGraphSelectorRowUpButton {
   grid-area: upButton;
 }
 
-.AG-editor-row-button-down {
+.graphSelectorRowButtons .moveGraphSelectorRowDownButton {
   grid-area: downButton;
 }
 
@@ -88,7 +88,7 @@
   grid-area: removeButton;
 }
 
-.AG-editor-row-cells {
+.graphSelectors {
   grid-area: graphSelectors;
   display: flex;
   overflow: auto;
@@ -100,7 +100,7 @@
   justify-content: center;
 }
 
-.AG-editor-cell {
+.graphSelectorCell {
   flex: auto;
   float: left;
   display: grid;
@@ -114,7 +114,7 @@
   align-items: start;
 }
 
-.AG-editor-cell-buttons {
+.graphSelectorButtons {
   grid-area: graphSelectorButtons;
   display: inline-flex;
   justify-content: center;
@@ -124,12 +124,12 @@
   width: 100%;
 }
 
-.AG-add-cell-button {
+.graphSelectorAdderCell {
   float: left;
   margin-right: 10px;
 }
 
-.AG-editor-graph-form {
+.graphFormDiv {
   grid-area: graphFormDiv;
 }
 
