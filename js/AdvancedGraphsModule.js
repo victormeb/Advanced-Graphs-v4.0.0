@@ -493,7 +493,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add the graph types to the graph type selector
         for (var graphType in graphTypes) {
             // If the graph type cannot be created for any instrument, skip it
-            if (!graphTypes[graphType].canCreate())
+            if (!graphTypes[graphType].canCreate)
                 continue;
 
             // Create an option element for the graph type
@@ -660,6 +660,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Set the option element attributes
             option.setAttribute('value', field.field_name);
             option.innerHTML = field.field_label;
+
+            return option;
         }
 
         function addOptionRecurse(fieldObject, parentElement) {
@@ -673,7 +675,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 parentElement.appendChild(option);
 
                 // Return
-                return;
+                return parentElement;
             }
 
             // Case 1
@@ -686,7 +688,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
 
                 // Return
-                return;
+                return parentElement;
             }
 
             // Case 2
@@ -707,15 +709,14 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
 
                 // Return
-                return;
+                return parentElement;
             }
 
-            // If the fieldObject is not an object or an array, return
-            return;
+            return parentElement;
         } 
 
 
-
+        return addOptionRecurse(fieldObject, select);
 
     }
 
@@ -855,7 +856,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             graphOptionsDiv.setAttribute('class', 'AG-editor-graph-options');
 
             // Create an instrument selector
-            var instrumentSelector = instrumentSelector(graphOptionsDiv);
+            var instrumentSelector = addInstrumentSelector(graphOptionsDiv);
 
             // If parameters.instrument is specified, set the instrument selector to the specified instrument
             if (parameters.instrument) {
@@ -901,7 +902,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         AdvancedGraph.call(this, type, label, getForm, getGraph, checkReady, canCreate);
 
         // The function that creates an instrument selector
-        var instrumentSelector = function(optionsDiv) {
+        var addInstrumentSelector = function(optionsDiv) {
             var validInstruments = getValidInstruments(validateInstrument);
 
             // Create a callback function that creates a graph options div given an instrument
@@ -965,6 +966,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             leftDiv.appendChild(numericFieldSelector);
 
             // Create a right div
+
+            // Add the left div to the graph options div
+            graphOptionsDiv.appendChild(leftDiv);
+
+            // Return the graph options div
+            return graphOptionsDiv;
         }
 
         // A function that updates the graph options div given parameters
@@ -1117,7 +1124,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add the change event to the select element
         instrumentSelectorSelect.addEventListener('change', function () {
             // Call the callback function
-            callback(getInstrumentFields(this.value));
+            callback(this.value);
         });
 
         // Add the label to the div
