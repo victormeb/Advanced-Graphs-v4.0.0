@@ -89,7 +89,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         titleInputBox.setAttribute('name', 'dash-title');
 
         // Set the value of the input box to the dashboard title
-        titleInputBox.value = dashboard ? dashboard.title : 'New Dashboard';
+        titleInputBox.value = dashboard.title ? dashboard.title : module.tt('new_dashboard');
 
         titleInput.appendChild(titleInputBox);
         titleRow.appendChild(titleInput);
@@ -248,8 +248,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Create a new cell
             var newCell = createCell();
 
-            // Add the new cell to the row
-            cellsDiv.appendChild(newCell);
+            // Add the new cell to the beginning of the cells div
+            cellsDiv.insertBefore(newCell, cellsDiv.firstChild);
         });
 
         // Add the add cell button to the div
@@ -261,7 +261,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create the move row up button
         var moveRowUpButton = document.createElement('button');
-        moveRowUpButton.setAttribute('class', 'AG-editor-row-button-up');
+        moveRowUpButton.setAttribute('class', 'btn AG-editor-row-button-up');
         moveRowUpButton.innerHTML = '<i class="fa fa-arrow-up" aria-hidden="true"></i>';
 
         // Add the click event to the move row up button
@@ -280,7 +280,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create the move row down button
         var moveRowDownButton = document.createElement('button');
-        moveRowDownButton.setAttribute('class', 'AG-editor-row-button-down');
+        moveRowDownButton.setAttribute('class', 'btn AG-editor-row-button-down');
         moveRowDownButton.innerHTML = '<i class="fa fa-arrow-down" aria-hidden="true"></i>';
 
         // Add the click event to the move row down button
@@ -299,7 +299,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create the delete row button
         var deleteRowButton = document.createElement('button');
-        deleteRowButton.setAttribute('class', 'btn btn-danger');
+        deleteRowButton.setAttribute('class', 'btn AG-editor-row-button-delete');
         deleteRowButton.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
 
         // Add the click event to the delete row button
@@ -435,6 +435,23 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add the delete cell button to the div
         cellButtonsDiv.appendChild(deleteCellButton);
 
+        // Create a button that adds a new cell to the right of the current cell
+        var addCellRightButton = document.createElement('button');
+        addCellRightButton.setAttribute('class', 'btn btn-success AG-editor-cell-button-add-right');
+        addCellRightButton.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i>';
+
+        // Add the click event to the add cell right button
+        addCellRightButton.addEventListener('click', function () {
+            // Create a new cell
+            var newCell = createCell();
+
+            // Add the new cell to the right of the current cell
+            cellDiv.parentNode.insertBefore(newCell, cellDiv.nextElementSibling);
+        });
+
+        // Add the add cell right button to the div
+        cellButtonsDiv.appendChild(addCellRightButton);
+
         // Add the cell buttons div to the cell div
         cellDiv.appendChild(cellButtonsDiv);
 
@@ -476,7 +493,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add the graph types to the graph type selector
         for (var graphType in graphTypes) {
             // If the graph type cannot be created for any instrument, skip it
-            if (!graphTypes[graphType].hasValidInstruments)
+            if (!graphTypes[graphType].canCreate())
                 continue;
 
             // Create an option element for the graph type
@@ -601,8 +618,109 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         modalDialogDiv.parentNode.removeChild(modalDialogDiv);
     }
 
+    // A function that takes an object and creates a select element from it with option groups where necessary
+    // Parameters:
+    //  fieldObject: The object to create the select element from
+    //    The object should be in on of the following formats:
+    //      {
+    //          'option group 1': [{field_name: "field_1", field_label: "Field 1", ...}, {field_name: "field_2", field_label: "Field 2", ...}, ...],
+    //          'option group 2': [{field_name: "field_3", field_label: "Field 3", ...}, {field_name: "field_4", field_label: "Field 4", ...}, ...]
+    //      }
+    //      or
+    //      [
+    //         {
+    //             'option group 1': [{field_name: "field_1", field_label: "Field 1", ...}, {field_name: "field_2", field_label: "Field 2", ...}, ...],
+    //             'option group 2': [{field_name: "field_3", field_label: "Field 3", ...}, {field_name: "field_4", field_label: "Field 4", ...}, ...]
+    //         },
+    //         [{field_name: "field_5", field_label: "Field 5", ...}, {field_name: "field_6", field_label: "Field 6", ...}, ...}]
+    //      ]
+    //      or
+    //      [{field_name: "field_1", field_label: "Field 1", ...}, {field_name: "field_2", field_label: "Field 2", ...}, ...]
+    //  name: The name of the select element
+    //  label: The label of the select element
+    //  defaultOption: The default option of the select element, should be a DOM element
+    function createFieldSelector(fieldObject, name, label, defaultOption = null) {
+        // Create a select element
+        var select = document.createElement('select');
+
+        // Set the select element attributes
+        select.setAttribute('class', 'form-control');
+        select.setAttribute('name', name);
+
+        // If there is a default option, add it to the select element
+        if (defaultOption !== null) {
+            // Add the default option to the select element
+            select.appendChild(defaultOption);
+        }
+
+        function createFieldOption(field) {
+            // Create an option element
+            var option = document.createElement('option');
+
+            // Set the option element attributes
+            option.setAttribute('value', field.field_name);
+            option.innerHTML = field.field_label;
+        }
+
+        function addOptionRecurse(fieldObject, parentElement) {
+            // Base case
+            // fieldObject in an object and has the field_name and field_label properties
+            if (typeof fieldObject === 'object' && fieldObject.hasOwnProperty('field_name') && fieldObject.hasOwnProperty('field_label')) {
+                // Create an option element
+                var option = createFieldOption(fieldObject);
+
+                // Add the option to the parent element
+                parentElement.appendChild(option);
+
+                // Return
+                return;
+            }
+
+            // Case 1
+            // fieldObject is an array
+            if (Array.isArray(fieldObject)) {
+                // Loop through the array
+                for (var i = 0; i < fieldObject.length; i++) {
+                    // Recurse
+                    addOptionRecurse(fieldObject[i], parentElement);
+                }
+
+                // Return
+                return;
+            }
+
+            // Case 2
+            // fieldObject is an object
+            if (typeof fieldObject === 'object') {
+                // Loop through the object
+                for (var key in fieldObject) {
+                    // Create an optgroup element
+                    var optgroup = document.createElement('optgroup');
+                    optgroup.setAttribute('label', module.tt(key));
+                    optgroup.setAttribute('data-group', key);
+
+                    // Add the optgroup to the parent element
+                    parentElement.appendChild(optgroup);
+
+                    // Recurse
+                    addOptionRecurse(fieldObject[key], optgroup);
+                }
+
+                // Return
+                return;
+            }
+
+            // If the fieldObject is not an object or an array, return
+            return;
+        } 
+
+
+
+
+    }
+
     // The AdvancedGraph class
-    function AdvancedGraph(graphType, graphLabel, getForm, getGraph, canCreate) {
+    function AdvancedGraph(graphType, graphLabel, getForm, getGraph, checkReady, canCreate) {
         // The name of the graph type
         this.name = graphType;
 
@@ -615,121 +733,149 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // The function used to get the graph
         this.getGraph = getGraph;
 
-        // The function used to check if the graph can be created given an instrument
+        // The function used to check whether the graph is ready to be created given a form
+        this.checkReady = checkReady;
+
+        // A boolean that determines whether the graph can be created
         this.canCreate = canCreate;
 
-        // A function that returns all the instruments that can create this graph
-        this.validInstruments = function () {
-            var instruments = getInstrumentList();
-            var validInstruments = [];
 
-            for (var i = 0; i < instruments.length; i++) {
-                if (this.canCreate(instruments[i])) {
-                    validInstruments.push(instruments[i]);
+        this.generateForm = function(parameters = null) {
+            // Create the div that will hold the graph header, the graph form, a preview pane, and the graph footer
+            var graphDiv = document.createElement('div');
+            graphDiv.setAttribute('class', 'AG-editor-graph');
+
+            // Create the div that will hold the graph header
+            var graphHeaderDiv = document.createElement('div');
+            graphHeaderDiv.setAttribute('class', 'AG-editor-graph-header');
+
+            // Add the label to the graph header as a text node
+            graphHeaderDiv.appendChild(document.createTextNode(graphLabel));
+
+            // Create the div that will hold the graph form
+            var graphFormDiv = document.createElement('div');
+            graphFormDiv.setAttribute('class', 'AG-editor-graph-form');
+
+            // Create a new form
+            var form = getForm(parameters);
+
+            // Add the form to the graph form div
+            graphFormDiv.appendChild(form);
+
+            // Create the div that will hold the preview pane
+            var previewPaneDiv = document.createElement('div');
+            previewPaneDiv.setAttribute('class', 'AG-editor-preview-pane');
+
+            // Create the div that will hold the graph footer
+            var graphFooterDiv = document.createElement('div');
+            graphFooterDiv.setAttribute('class', 'AG-editor-graph-footer');
+
+            // Create a button to create the graph
+            var createGraphButton = document.createElement('button');
+            createGraphButton.setAttribute('class', 'AG-editor-create-graph-button');
+
+            // Create an event listener that toggles the create graph button when the form is changed
+            form.addEventListener('change', function () {
+                // Check whether the form is ready
+                if (checkReady(form)) {
+                    // Enable the create graph button
+                    createGraphButton.removeAttribute('disabled');
+                } else {
+                    // Disable the create graph button
+                    createGraphButton.setAttribute('disabled', 'disabled');
                 }
-            }
-
-            return validInstruments;
-        };
-
-        // A function that returns true if there is at least one valid instrument
-        this.hasValidInstruments = function () {
-            return this.validInstruments().length > 0;
-        };
-
-        // Create an instrument selector constructor given a callback function
-        this.instrumentSelector = function (callback) {
-            // Create a div to hold the instrument selector
-            var instrumentSelectorDiv = document.createElement('div');
-            instrumentSelectorDiv.setAttribute('class', 'AG-editor-instrument-selector');
-
-            // Create a label for the instrument selector
-            var instrumentSelectorLabel = document.createElement('label');
-            instrumentSelectorLabel.innerHTML = module.tt('instrument_selector_label');
-
-            // Create a select element for the instrument selector
-            var instrumentSelectorSelect = document.createElement('select');
-            instrumentSelectorSelect.setAttribute('class', 'form-control');
-
-            // Create an option element for the instrument selector
-            var instrumentSelectorOption = document.createElement('option');
-            instrumentSelectorOption.setAttribute('value', '');
-            instrumentSelectorOption.setAttribute('disabled', 'disabled');
-            instrumentSelectorOption.setAttribute('selected', 'selected');
-            instrumentSelectorOption.innerHTML = module.tt('select_an_instrument');
-
-            // Add the option element to the select element
-            instrumentSelectorSelect.appendChild(instrumentSelectorOption);
-
-            // Get the valid instruments
-            var validInstruments = this.validInstruments();
-
-            // Add the valid instruments to the select element
-            for (var i = 0; i < validInstruments.length; i++) {
-                // Create an option element for the instrument selector
-                var instrumentSelectorOption = document.createElement('option');
-                instrumentSelectorOption.setAttribute('value', validInstruments[i].form_name);
-                instrumentSelectorOption.innerHTML = validInstruments[i].form_label;
-
-                // Add the option element to the select element
-                instrumentSelectorSelect.appendChild(instrumentSelectorOption);
-            }
-
-            // Add the change event to the select element
-            instrumentSelectorSelect.addEventListener('change', function () {
-                // Call the callback function
-                callback(getInstrumentFields(this.value));
             });
 
-            // Add the label to the div
-            instrumentSelectorDiv.appendChild(instrumentSelectorLabel);
+            // Create an event listener that creates the graph when the create graph button is clicked
+            createGraphButton.addEventListener('click', function () {
+                // Check whether the form is ready
+                if (checkReady(form)) {
+                    // Serialize the form
+                    var formData = serializeForm(form);
 
-            // Add the select element to the div
-            instrumentSelectorDiv.appendChild(instrumentSelectorSelect);
+                    // Create the graph
+                    var graph = getGraph(formData);
 
-            // Return the div
-            return instrumentSelectorDiv;
+                    // Empty the preview pane
+                    previewPaneDiv.innerHTML = '';
+
+                    // Add the graph to the preview pane
+                    previewPaneDiv.appendChild(graph);
+                }
+            });
+
+            // Add the create graph button to the graph footer div
+            graphFooterDiv.appendChild(createGraphButton);
+
+            // Add the graph header div to the graph div
+            graphDiv.appendChild(graphHeaderDiv);
+
+            // Add the graph form div to the graph div
+            graphDiv.appendChild(graphFormDiv);
+
+            // Add the preview pane div to the graph div
+            graphDiv.appendChild(previewPaneDiv);
+
+            // Add the graph footer div to the graph div
+            graphDiv.appendChild(graphFooterDiv);
+
+            // Return the graph div
+            return graphDiv;
         };
+        
     }
 
     // A function constructor for the BarGraph class
+    // This class is used to create a bar graph
+    // It inherits from the AdvancedGraph class
+    // The following are what the bar graph parameters look like:
+    // {
+    //     instrument: 'instrument_name',
+    //     title: 'A title for the graph',
+    //     description: 'A description of the graph',
+    //     category: 'category_name',
+    //     numeric: 'numeric_name' or '',
+    //     is_count (optional): true,
+    //     is_percentage (optional): true,
+    //     palette_brewer (optional): ['color1', 'color2', ...],
+    //     show_which: 'graph' or 'table' or 'both' (if not specified, defaults to 'both'),
+    //     table_values: "values" or "percentages" or "both" (if not specified, defaults to "both")
+    // }
     function BarGraph() {
         var type = "bar";
         var label = module.tt('graph_type_bar');
 
         // The function used to get the form
-        var getForm = function (parameters = null) {
-            // Create a div to hold the form
-            var formDiv = document.createElement('div');
-            formDiv.setAttribute('class', 'AG-editor-form');
+        var getForm = function (parameters = {}) {
+            // Create a form
+            var form = document.createElement('form');
 
-            // Create a div the hold the graph parameters
-            var graphParametersDiv = document.createElement('div');
-            graphParametersDiv.setAttribute('class', 'AG-editor-graph-parameters');
-
-            // Create a callback function for the instrument selector
-            var callback = function (fields) {
-                // Get the categorical fields from AGM
-                var categoricalFields = getCategoricalFields(fields);
-
-                // Get the numeric fields from AGM
-                var numericFields = getNumericFields(fields);
-
-                // Add hi to the graph parameters div
-                graphParametersDiv.innerHTML = 'hi';
-            };
+            // Create a div to hold the graph options
+            var graphOptionsDiv = document.createElement('div');
+            graphOptionsDiv.setAttribute('class', 'AG-editor-graph-options');
 
             // Create an instrument selector
-            var instrumentSelector = this.instrumentSelector(callback);
+            var instrumentSelector = instrumentSelector(graphOptionsDiv);
 
-            // Add the instrument selector to the form div
-            formDiv.appendChild(instrumentSelector);
+            // If parameters.instrument is specified, set the instrument selector to the specified instrument
+            if (parameters.instrument) {
+                instrumentSelector.querySelector('select').value = parameters.instrument;
 
-            // Add the graph parameters div to the form div
-            formDiv.appendChild(graphParametersDiv);
+                // Trigger the change event
+                instrumentSelector.querySelector('select').dispatchEvent(new Event('change'));
 
-            // Return the form div
-            return formDiv;
+                // Update the graph options
+                updateGraphOptions(graphOptionsDiv, parameters);
+            }
+
+            // Add the instrument selector to the form
+            form.appendChild(instrumentSelector);
+
+            // Add the graph options div to the form
+            form.appendChild(graphOptionsDiv);
+
+            // Return the form
+            return form;
         };
 
         // The function used to get the graph
@@ -738,14 +884,107 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             return document.createElement('div');
         };
 
-        // The function used to check if the graph can be created given an instrument
-        var canCreate = function (instrument) {
+        // The function that checks if the form is ready to create the graph
+        var checkReady = function (form) {
             return true;
         };
 
-        // Call the AdvancedGraph constructor
-        AdvancedGraph.call(this, type, label, getForm, getGraph, canCreate);
+        // The function used to check if the graph can be created given an instrument
+        var validateInstrument = function (instrument) {
+            return true;
+        }
 
+        // The function used to check if the graph can be created
+        var canCreate = anyInstrumentValid(validateInstrument);
+
+        // Call the AdvancedGraph constructor
+        AdvancedGraph.call(this, type, label, getForm, getGraph, checkReady, canCreate);
+
+        // The function that creates an instrument selector
+        var instrumentSelector = function(optionsDiv) {
+            var validInstruments = getValidInstruments(validateInstrument);
+
+            // Create a callback function that creates a graph options div given an instrument
+            var graphOptionsCallback = function(instrument_name) {
+                // Get the instrument given the instrument name
+                var instrument = instrumentDictionary[instrument_name];
+
+                // Create a graph options div
+                var graphOptionsDiv = graphOptions(instrument);
+
+                // Empty the options div
+                optionsDiv.innerHTML = '';
+
+                // Add the graph options div to the options div
+                optionsDiv.appendChild(graphOptionsDiv);
+
+            };
+
+            // Return a newley created instrument selector
+            return createInstrumentSelector(validInstruments, graphOptionsCallback);
+        }
+
+        // The function that creates a graph options div given an instrument
+        var graphOptions = function(instrument) {
+            // Create a div to hold the graph options
+            var graphOptionsDiv = document.createElement('div');
+            graphOptionsDiv.setAttribute('class', 'AG-editor-graph-options');
+
+            // Create a left div
+            var leftDiv = document.createElement('div');
+            leftDiv.setAttribute('class', 'AG-editor-graph-options-left');
+
+            // Get the categorical fields
+            var categoricalFields = getCategoricalFields(instrument['fields']);
+
+            // Create a default disabled option for the categorical field selector
+            var defaultOption = document.createElement('option');
+            defaultOption.setAttribute('disabled', 'disabled');
+            defaultOption.setAttribute('selected', 'selected');
+            defaultOption.appendChild(document.createTextNode(module.tt('select_a_field')));
+
+            // Create the categorical field selector
+            var categoricalFieldSelector = createFieldSelector(categoricalFields, 'categorical_field', module.tt('categorical_field'), defaultOption);
+
+            // Add the categorical field selector to the left div
+            leftDiv.appendChild(categoricalFieldSelector);
+
+            // Get the numeric fields
+            var numericFields = getNumericFields(instrument['fields']);
+
+            // Create a default disabled option for the numeric field selector
+            var defaultOption = document.createElement('option');
+            defaultOption.setAttribute('disabled', 'disabled');
+            defaultOption.setAttribute('selected', 'selected');
+            defaultOption.appendChild(document.createTextNode(module.tt('select_a_field')));
+
+            // Create the numeric field selector
+            var numericFieldSelector = createFieldSelector(numericFields, 'numeric_field', module.tt('numeric_field'), defaultOption);
+
+            // Add the numeric field selector to the left div
+            leftDiv.appendChild(numericFieldSelector);
+
+            // Create a right div
+        }
+
+        // A function that updates the graph options div given parameters
+        var updateGraphOptions = function(graphOptionsDiv, parameters) {
+            // Get the categorical field selector
+            var categoricalFieldSelector = graphOptionsDiv.querySelector('select[name="categorical_field"]');
+
+            // Get the numeric field selector
+            var numericFieldSelector = graphOptionsDiv.querySelector('select[name="numeric_field"]');
+
+            // If parameters.categorical_field is specified, set the categorical field selector to the specified field
+            if (parameters.categorical_field) {
+                categoricalFieldSelector.value = parameters.categorical_field;
+            }
+
+            // If parameters.numeric_field is specified, set the numeric field selector to the specified field
+            if (parameters.numeric_field) {
+                numericFieldSelector.value = parameters.numeric_field;
+            }
+        }
 
     }
 
@@ -807,13 +1046,115 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return instrumentDictionary[form_name].fields;
     }
 
+    // A function that returns a list of valid instruments given a validation function
+    function getValidInstruments(validateInstrument) {
+        // Get the instrument list
+        var instrumentList = getInstrumentList();
+
+        // Create a list of valid instruments
+        var validInstruments = [];
+
+        // Check if any instrument is valid
+        for (var i = 0; i < instrumentList.length; i++) {
+            if (validateInstrument(instrumentList[i])) {
+                validInstruments.push(instrumentList[i]);
+            }
+        }
+
+        return validInstruments;
+    }
+
+    // A function that checks if any instrument is valid given a validation function
+    function anyInstrumentValid(validateInstrument) {
+        // Get the instrument list
+        var instrumentList = getInstrumentList();
+
+        // Check if any instrument is valid
+        for (var i = 0; i < instrumentList.length; i++) {
+            if (validateInstrument(instrumentList[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Create an instrument selector constructor given a callback function
+    function createInstrumentSelector(validInstruments, callback) {
+        // Create a div to hold the instrument selector
+        var instrumentSelectorDiv = document.createElement('div');
+        instrumentSelectorDiv.setAttribute('class', 'AG-editor-instrument-selector');
+
+        // Create a label for the instrument selector
+        var instrumentSelectorLabel = document.createElement('label');
+        instrumentSelectorLabel.innerHTML = module.tt('instrument_selector_label');
+
+        // Create a select element for the instrument selector
+        var instrumentSelectorSelect = document.createElement('select');
+        instrumentSelectorSelect.setAttribute('class', 'form-control');
+        instrumentSelectorSelect.setAttribute('name', 'instrument');
+
+        // Create an option element for the instrument selector
+        var instrumentSelectorOption = document.createElement('option');
+        instrumentSelectorOption.setAttribute('disabled', 'disabled');
+        instrumentSelectorOption.setAttribute('selected', 'selected');
+        instrumentSelectorOption.innerHTML = module.tt('select_an_instrument');
+
+        // Add the option element to the select element
+        instrumentSelectorSelect.appendChild(instrumentSelectorOption);
+
+        // Add the valid instruments to the select element
+        for (var i = 0; i < validInstruments.length; i++) {
+            // Create an option element for the instrument selector
+            var instrumentSelectorOption = document.createElement('option');
+            instrumentSelectorOption.setAttribute('value', validInstruments[i].form_name);
+            instrumentSelectorOption.innerHTML = validInstruments[i].form_label;
+
+            // Add the option element to the select element
+            instrumentSelectorSelect.appendChild(instrumentSelectorOption);
+        }
+
+        // Add the change event to the select element
+        instrumentSelectorSelect.addEventListener('change', function () {
+            // Call the callback function
+            callback(getInstrumentFields(this.value));
+        });
+
+        // Add the label to the div
+        instrumentSelectorDiv.appendChild(instrumentSelectorLabel);
+
+        // Add the select element to the div
+        instrumentSelectorDiv.appendChild(instrumentSelectorSelect);
+
+        // Return the div
+        return instrumentSelectorDiv;
+    };
+
+    // A function that gets a field from  the data dictionary
+    function getField(field_name) {
+        return data_dictionary[field_name];
+    }
+
+    // A function that returns whether or not a field is a radio field
+    function isRadioField(field) {
+        var radio_field_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
+
+        // If the field is a string, get the field from the data dictionary
+        if (typeof field === 'string') {
+            field = getField(field);
+        }
+
+        // Return whether or not the field is a radio field
+        return radio_field_types.includes(field.field_type);
+    }
+
     // A function that gets the radio type fields from the fields (each field is a data dictionary entry)
     function getRadioFields(fields) {
         var radio_field_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
         var radioFields = [];
 
         for (var i = 0; i < fields.length; i++) {
-            if (radio_field_types.includes(fields[i].field_type)) {
+            if (isRadioField(fields[i])) {
                 radioFields.push(fields[i]);
             }
         }
@@ -821,13 +1162,27 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return radioFields;
     }
 
+    // A function that returns whether or not a field is a checkbox field
+    function isCheckboxField(field) {
+        var checkbox_field_types = ['checkbox'];
+
+        // If the field is a string, get the field from the data dictionary
+        if (typeof field === 'string') {
+            field = getField(field);
+        }
+
+        // Return whether or not the field is a checkbox field
+        return checkbox_field_types.includes(field.field_type);
+    }
+
+
     // A function that returns the checkbox type fields from the fields (each field is a data dictionary entry)
     function getCheckboxFields(fields) {
         var checkbox_field_types = ['checkbox'];
         var checkboxFields = [];
 
         for (var i = 0; i < fields.length; i++) {
-            if (checkbox_field_types.includes(fields[i].field_type)) {
+            if (isCheckboxField(fields[i])) {
                 checkboxFields.push(fields[i]);
             }
         }
@@ -838,11 +1193,26 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     // A function that returns a dictionary of the categorical fields from the fields (each field is a data dictionary entry)
     function getCategoricalFields(fields) {
         var categoricalFields = {
-            radio: getRadioFields(fields),
-            checkbox: getCheckboxFields(fields)
+            "radiolike": getRadioFields(fields),
+            "checkbox": getCheckboxFields(fields)
         };
 
         return categoricalFields;
+    }
+
+    // A function that returns whether or not a field is a numeric field
+    function isNumericField(field) {
+        var non_numeric_field_names = ['record_id', 'redcap_event_name', 'redcap_repeat_instrument', 'redcap_repeat_instance', 'longitude', 'longitud', 'Longitude', 'Longitud', 'latitude', 'latitud', 'Latitude', 'Latitud'];
+        var numeric_field_text_validation_types = ['number', 'integer', 'float', 'decimal'];
+
+        // If field is a string get the field from the data dictionary
+        if (typeof field === 'string') {
+            field = getField(field);
+        }
+
+        return !non_numeric_field_names.some(v => field.field_name.includes(v)) && (
+            (field.field_type == 'text' && numeric_field_text_validation_types.includes(field['text_validation_type_or_show_slider_number']))
+            || field['field_type'] == 'calc');
     }
 
     // A function that returns the numeric fields from the fields (each field is a data dictionary entry)
@@ -853,15 +1223,24 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var numericFields = [];
 
         for (var i = 0; i < fields.length; i++) {
-            if (!non_numeric_field_names.some(v => fields[i].field_name.includes(v)) && (
-                (fields[i].field_type == 'text' && numeric_field_text_validation_types.includes(fields[i]['text_validation_type_or_show_slider_number']))
-                || fields[i]['field_type'] == 'calc')) {
-                    numericFields.push(fields[i]);
-                }
+            if (isNumericField(fields[i])) {
+                numericFields.push(fields[i]);
+            }
         }
 
         return numericFields;
 
     }
 
-};
+
+
+    // A function that creates a formData object from the form and turns it into an object 
+    function serializeForm(form) {
+        var formData = new FormData(form);
+        var object = {};
+        formData.forEach(function (value, key) {
+            object[key] = value;
+        });
+        return object;
+    }
+}

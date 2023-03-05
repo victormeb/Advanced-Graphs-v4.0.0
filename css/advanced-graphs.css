@@ -84,7 +84,7 @@
 }
 
 
-.graphSelectorRowButtons .removeGraphSelectorRowButton {
+.AG-editor-row-button-delete {
   grid-area: removeButton;
 }
 
