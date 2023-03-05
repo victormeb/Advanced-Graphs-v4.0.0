@@ -20,13 +20,15 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // "non_repeating": ["example_field_1", "example_field_2"]
     // }
     var instruments = instruments;
+    var instrumentList = createInstrumentList();
+    var instrumentDictionary = createInstrumentDictionary();
 
     var AGM = this;
 
     // A dictionary containing graph types with their associated constructor functions
     var graphTypes = {
         // 'likert': LikertGraph,
-        'bar': BarGraph//,
+        'bar': new BarGraph()//,
         // 'cross-bar': CrossBarGraph,
         // 'table': Table,
         // 'scatter': ScatterGraph,
@@ -376,7 +378,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             graphFormDiv.innerHTML = '';
 
             // Create a new graphType object from the graph type
-            var graphTypeObject = new AGM.module.graphTypes[graphType]();
+            var graphTypeObject = graphTypes[graphType];
 
             // Get the graph form from the graph type object
             var graphForm = graphTypeObject.getForm();
@@ -389,7 +391,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var graphTypeSelector = createGraphTypeSelector(createGraphFormFromSelectedGraphType);
 
         // Add the graph type selector to the graph form div
-        graphFormDiv.appendChild(graphTypeSelector);
+        cellButtonsDiv.appendChild(graphTypeSelector);
 
         // Create the move cell right button
         var moveCellRightButton = document.createElement('button');
@@ -465,22 +467,22 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         selectAGraphTypeOption.setAttribute('value', '');
         selectAGraphTypeOption.setAttribute('disabled', 'disabled');
         selectAGraphTypeOption.setAttribute('selected', 'selected');
-        selectAGraphTypeOption.innerHTML = AGM.module.tt('select_graph_type');
+        selectAGraphTypeOption.innerHTML = module.tt('select_graph_type');
 
         // Add the select a graph type option to the graph type selector
         graphTypeSelector.appendChild(selectAGraphTypeOption);
 
 
         // Add the graph types to the graph type selector
-        for (var graphType in AGM.graphTypes) {
+        for (var graphType in graphTypes) {
             // If the graph type cannot be created for any instrument, skip it
-            if (!AGM.graphTypes[graphType]().hasValidInstruments)
+            if (!graphTypes[graphType].hasValidInstruments)
                 continue;
 
             // Create an option element for the graph type
             var option = document.createElement('option');
             option.setAttribute('value', graphType);
-            option.innerHTML = AGM.graphTypes[graphType]().label;
+            option.innerHTML = graphTypes[graphType].label;
 
             // Add the option to the graph type selector
             graphTypeSelector.appendChild(option);
@@ -517,6 +519,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Create a modal dialogue body div
         var modalDialogBodyDiv = document.createElement('div');
         modalDialogBodyDiv.setAttribute('class', 'AG-editor-modal-dialog-body');
+
+        // Check whether content is a string or an element
+        if (typeof content === 'string') {
+            // Make content a text node
+            content = document.createTextNode(content);
+        }
 
         // Add the content to the modal dialog body div
         modalDialogBodyDiv.appendChild(content);
@@ -565,23 +573,23 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Create the buttons
         var buttons = [
             {
-                label: AGM.module.tt('cancel'),
+                label: module.tt('cancel'),
                 className: 'AG-editor-modal-dialog-cancel-button',
                 callback: function () {
-                    AGM.closeModalDialog();
+                    closeModalDialog();
                 }
             },
             {
-                label: AGM.module.tt('confirm'),
+                label: module.tt('confirm'),
                 className: 'AG-editor-modal-dialog-confirm-button',
                 callback: function () {
-                    AGM.closeModalDialog();
+                    closeModalDialog();
                     action();
                 }
             }];
 
-        // Create the modal dialog
-        var modalDialog = createModalDialog(AGM.module.tt('are_you_sure'), content, buttons);
+        // Return the modal dialog
+        return createModalDialog(module.tt('are_you_sure'), content, buttons);
     }
 
     // Create a function that closes the modal dialog
@@ -612,7 +620,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // A function that returns all the instruments that can create this graph
         this.validInstruments = function () {
-            var instruments = AGM.getInstrumentList();
+            var instruments = getInstrumentList();
             var validInstruments = [];
 
             for (var i = 0; i < instruments.length; i++) {
@@ -637,7 +645,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Create a label for the instrument selector
             var instrumentSelectorLabel = document.createElement('label');
-            instrumentSelectorLabel.innerHTML = AGM.module.tt('instrument_selector_label');
+            instrumentSelectorLabel.innerHTML = module.tt('instrument_selector_label');
 
             // Create a select element for the instrument selector
             var instrumentSelectorSelect = document.createElement('select');
@@ -648,7 +656,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             instrumentSelectorOption.setAttribute('value', '');
             instrumentSelectorOption.setAttribute('disabled', 'disabled');
             instrumentSelectorOption.setAttribute('selected', 'selected');
-            instrumentSelectorOption.innerHTML = AGM.module.tt('select_an_instrument');
+            instrumentSelectorOption.innerHTML = module.tt('select_an_instrument');
 
             // Add the option element to the select element
             instrumentSelectorSelect.appendChild(instrumentSelectorOption);
@@ -670,7 +678,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Add the change event to the select element
             instrumentSelectorSelect.addEventListener('change', function () {
                 // Call the callback function
-                callback(AGM.getInstrumentFields(this.value));
+                callback(getInstrumentFields(this.value));
             });
 
             // Add the label to the div
@@ -687,7 +695,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     // A function constructor for the BarGraph class
     function BarGraph() {
         var type = "bar";
-        var label = AGM.module.tt('graph_type_bar');
+        var label = module.tt('graph_type_bar');
 
         // The function used to get the form
         var getForm = function (parameters = null) {
@@ -702,14 +710,26 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Create a callback function for the instrument selector
             var callback = function (fields) {
                 // Get the categorical fields from AGM
-                var categoricalFields = AGM.getCategoricalFields(fields);
+                var categoricalFields = getCategoricalFields(fields);
 
                 // Get the numeric fields from AGM
-                var numericFields = AGM.getNumericFields(fields);
+                var numericFields = getNumericFields(fields);
 
                 // Add hi to the graph parameters div
                 graphParametersDiv.innerHTML = 'hi';
             };
+
+            // Create an instrument selector
+            var instrumentSelector = this.instrumentSelector(callback);
+
+            // Add the instrument selector to the form div
+            formDiv.appendChild(instrumentSelector);
+
+            // Add the graph parameters div to the form div
+            formDiv.appendChild(graphParametersDiv);
+
+            // Return the form div
+            return formDiv;
         };
 
         // The function used to get the graph
@@ -727,6 +747,64 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         AdvancedGraph.call(this, type, label, getForm, getGraph, canCreate);
 
 
+    }
+
+    // A function that gets the instrument list from the module
+    function getInstrumentList() {
+        // If instrument list is set, return it
+        if (instrumentList) {
+            return instrumentList;
+        }
+
+        // create the instrument list and return it
+        return createInstrumentList();
+    }
+
+    // A function that creates and instrument list from the instrument dictionary
+    function createInstrumentList() {
+        var instrumentList = [];
+        var instrument_names = [];
+
+        for (var instrument in instruments['repeat_instruments']) {
+            instrumeinstrumentListnts.push(instruments['repeat_instruments'][instrument]);
+            instrument_names.push(instrument['repeat_instrument'][instrument]['form_name']);
+        }
+
+        if (!instruments['non_repeats'])
+            return instrumentList;
+
+        // Create a name and label for the non-repeat instruments
+        var non_repeat_instrument_name = 'non_repeats';
+        var non_repeat_instrument_label = module.tt('non_repeat_instrument_label');
+
+        // While the non-repeat instrument name is in the instrument names, add an underscore to the end of the name
+        while (instrument_names.includes(non_repeat_instrument_name)) {
+            non_repeat_instrument_name += '_';
+        }
+
+        // Add the non-repeat instrument to the instruments
+        instrumentList.push({
+            'form_name': non_repeat_instrument_name,
+            'form_label': non_repeat_instrument_label,
+            'fields': instruments['non_repeats']
+        });
+
+        return instrumentList;
+    }
+
+    function createInstrumentDictionary() {
+        var instrumentDictionary = {};
+
+        // Make the key for each instrument the form_name for the instrument
+        for (const instrument in instrumentList) {
+            instrumentDictionary[instrumentList[instrument]['form_name']] = instrumentList[instrument];
+        }
+
+        return instrumentDictionary;
+    }
+
+    function getInstrumentFields(form_name) {
+        return instrumentDictionary[form_name].fields;
     }
 
     // A function that gets the radio type fields from the fields (each field is a data dictionary entry)
@@ -775,9 +853,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var numericFields = [];
 
         for (var i = 0; i < fields.length; i++) {
-            if (!non_numeric_field_names.some(v => field[i].field_name.includes(v)) && (
-                (field[i].field_type == 'text' && numeric_field_text_validation_types.includes(instrument[field]['text_validation_type_or_show_slider_number']))
-                || field[i]['field_type'] == 'calc')) {
+            if (!non_numeric_field_names.some(v => fields[i].field_name.includes(v)) && (
+                (fields[i].field_type == 'text' && numeric_field_text_validation_types.includes(fields[i]['text_validation_type_or_show_slider_number']))
+                || fields[i]['field_type'] == 'calc')) {
                     numericFields.push(fields[i]);
                 }
         }

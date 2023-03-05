@@ -78,11 +78,7 @@ $module->tt_transferToJavascriptModuleObject();
 <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
 
 <div id="advanced_graphs">
-    <div id="dashboard_editor">
-        <div id="dashboard_table">
-
-        </div>
-    </div>
+    
 </div>
 
 <script>
@@ -107,7 +103,7 @@ $module->tt_transferToJavascriptModuleObject();
         var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report, report_fields_by_reapeat_instrument);
 
         // Load the dashboard editor
-        AGM.loadDashboardEditor();
+        AGM.loadEditor(document.getElementById('advanced_graphs'));
 
     });
 </script>
