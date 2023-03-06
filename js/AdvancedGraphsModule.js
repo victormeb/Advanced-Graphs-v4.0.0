@@ -379,7 +379,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Create a div to hold the graph form
         var graphFormDiv = document.createElement('div');
-        graphFormDiv.setAttribute('class', 'AG-editor-graph-form');
+        graphFormDiv.setAttribute('class', 'AG-editor-graph-container');
 
         // Create a callback function to create the graph form from the selected graph type
         function createGraphFormFromSelectedGraphType(graphType) {
@@ -577,6 +577,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var modalDialogButton = function (label, className, callback) {
             // Create a button element
             var button = document.createElement('button');
+            button.type = 'button';
             button.setAttribute('class', className);
             button.innerHTML = label;
 
@@ -695,13 +696,14 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     function createHelpButton(help) {
         // Create a help button
         var helpButton = document.createElement('button');
+        helpButton.type = 'button';
         helpButton.setAttribute('class', 'AG-editor-help-button');
         helpButton.innerHTML = '<i class="fa fa-question-circle" aria-hidden="true"></i>';
 
         // Add the click event to the help button
         helpButton.addEventListener('click', function () {
             // Create the help dialogue
-            var helpDialogue = createHelpDialogue(module.tt(help['title']), help['content']);
+            var helpDialogue = createHelpDialogue(help['title'], help['content']);
 
             // Add the help dialogue to the page
             document.body.appendChild(helpDialogue);
@@ -956,19 +958,22 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 // Set the input element attributes
                 input.setAttribute('type', options[key].twin.type);
                 input.setAttribute('name', options[key].twin.name);
-                input.setAttribute('value', options[key].twin.label);
+                input.setAttribute('value', 0);
 
                 // When this radio button is selected, show the twin div
-                radio.addEventListener('change', function() {
+                div.addEventListener('change', function() {
                     input.style.display = 'none';
                     input.removeAttribute('value')
                     // If the radio button is checked
-                    if (this.checked) {
+                    if (radio.checked) {
                         // Show the twin div
                         input.style.display = 'block';
-                        input.setAttribute('value', options[key].twin.label);
+                        input.setAttribute('value', 0); // TODO: add value attribute to twin intput
                     }
                 });
+
+                // trigger the change event to show the twin div if the radio button is checked
+                div.dispatchEvent(new Event('change'));
 
 
                 // Add the input element to the twin div
@@ -1335,6 +1340,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Add the numeric field count checkbox to the left div
             leftDiv.appendChild(numericFieldCountCheckbox);
+
+            // When the form is first created, hide the aggregation function selector and the missing value radio selector
+            numericFieldCountCheckbox.checked = true;
+            aggregationFunctionParameterDiv.style.display = 'none';
+            missingValueRadioSelectorParameterDiv.style.display = 'none';
 
             // When the numeric field selector changes, if the selected field is count, hide the aggregation function selector and the missing value radio selector
             numericFieldSelector.addEventListener('change', function() {
