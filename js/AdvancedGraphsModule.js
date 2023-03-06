@@ -903,7 +903,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     // A function that creates a radio selector between dropping or replacing null values, if the selected option is replace, a text input is shown
     function createDropOrReplaceTwinSelect(name, options = {
             "drop": {"label": module.tt("drop"), "twin": null},
-            "replace": {"label": module.tt("replace"), "twin": {"type": "number", "name": "replace_value", "label": module.tt("replace_value")}}
+            "replace": {"label": module.tt("replace"), "twin": {"type": "number", "name": "na_numeric_value", "label": module.tt("replace_value")}}
         },
         defaultOption = null) {
         // Create a div element
@@ -1116,6 +1116,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //     na_category: 'keep' or 'drop',
     //     numeric: 'numeric_name' or '',
     //     is_count (optional): true,
+    //     na_numeric: 'drop' or 'replace',
+    //     na_numeric_value (optional): 0,
     //     aggregation_function: 'count' or 'sum' or 'mean' or 'median' or 'min' or 'max',
     //     is_percentage (optional): true,
     //     palette_brewer (optional): ['color1', 'color2', ...],
@@ -1161,9 +1163,100 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // The function used to get the graph
         var getGraph = function (parameters) {
-            // return an empty div
+            // Use d3 to filter the report to only include entries where redcap_repeat_instrument is equal to the instrument specified by the instrument parameter
+            var filteredReport = d3.nest()
+                .key(function (d) { return d.redcap_repeat_instrument; })
+                .rollup(function (v) { return v; })
+                .entries(report)
+                .filter(function (d) { return d.key == parameters.instrument; })[0].value;
+
+            // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
+            if (parameters.na_category == 'drop') {
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.category] != ''; });
+            }
+
+            // If is_count is present or numeric is empty
+            if (parameters.is_count || parameters.numeric == '') {
+                // If na_numeric is 'drop', filter out the rows with missing values for the field specified by the numeric parameter
+                if (parameters.na_numeric == 'drop') {
+                    filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric] != ''; });
+                }
+
+                // If na_numeric is 'replace', replace the missing values for the field specified by the numeric parameter with the value specified by the na_numeric_value parameter
+                if (parameters.na_numeric == 'replace') {
+                    filteredReport = filteredReport.map(function (d) {
+                        if (d[parameters.numeric] == '') {
+                            d[parameters.numeric] = parameters.na_numeric_value;
+                        }
+
+                        return d;
+                    });
+                }
+            }
+
+            // Use d3 to group the filtered report by the field specified by the category parameter
+            var groupedReport = d3.nest()
+                .key(function (d) { return d[parameters.category]; })
+                .rollup(function (v) { return v; })
+                .entries(filteredReport);
+
+            // If is_count is present or numeric is empty
+            if (parameters.is_count || parameters.numeric == '') {
+                // Use d3 to count the number of entries in each group
+                groupedReport = groupedReport.map(function (d) {
+                    return {
+                        key: d.key,
+                        value: d.value.length
+                    };
+                });
+            }
+
+            // If is_count is not present and numeric is not empty
+            if (!parameters.is_count && parameters.numeric != '') {
+                // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
+                groupedReport = groupedReport.map(function (d) {
+                    return {
+                        key: d.key,
+                        value: d3[parameters.aggregation_function](d.value, function (d) { return d[parameters.numeric]; })
+                    };
+                });
+            }
+
+            // If is_percentage is present
+            if (parameters.is_percentage) {
+                // Use d3 to calculate the percentage of each group
+                groupedReport = groupedReport.map(function (d) {
+                    return {
+                        key: d.key,
+                        value: d.value / groupedReport.reduce(function (a, b) { return a + b.value; }, 0)
+                    };
+                });
+            }
+
+            // If graph type is 'bar'
+            if (parameters.graph_type == 'bar') {
+                // Create a bar graph using the observable plot library
+                var graph = Plot.barY(groupedReport, {
+                    x: 'key',
+                    y: 'value',
+                    width: 600,
+                    height: 400,
+                    xLabel: parameters.category,
+                    yLabel: parameters.numeric == '' ? 'Count' : parameters.numeric,
+                });
+
+                // Return the graph
+                return graph;
+            }
+
+
+            // Return an empty div
             return document.createElement('div');
+            
         };
+
+
+
 
         // The function that checks if the form is ready to create the graph
         var checkReady = function (form) {
@@ -1418,13 +1511,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             return instrumentList;
 
         // Create a name and label for the non-repeat instruments
-        var non_repeat_instrument_name = 'non_repeats';
+        var non_repeat_instrument_name = '';
         var non_repeat_instrument_label = module.tt('non_repeat_instrument_label');
-
-        // While the non-repeat instrument name is in the instrument names, add an underscore to the end of the name
-        while (instrument_names.includes(non_repeat_instrument_name)) {
-            non_repeat_instrument_name += '_';
-        }
 
         // Add the non-repeat instrument to the instruments
         instrumentList.push({
