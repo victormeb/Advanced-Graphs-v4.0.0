@@ -992,6 +992,93 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Return the div
         return div;
     }
+
+
+
+    // A function that returns a palette brewer color selector
+    function createColorsSelector(name, defaultColors = ["#440154", "#482878", "#3E4A89", "#31688E", "#26828E", "#1F9E89", "#35B779", "#6DCD59","#B4DE2C", "#FDE725"]) {
+        // Create a div element
+        var div = document.createElement('div');
+
+        // Set the div element attributes
+        div.setAttribute('class', 'AG-editor-colors-selector');
+
+        // Create a button that will add a color to the selector
+        var addColorButton = document.createElement('button');
+        addColorButton.setAttribute('class', 'AG-editor-colors-selector-add-color');
+        addColorButton.innerHTML = '<i class="fas fa-plus"></i>';
+        addColorButton.type = 'button';
+
+        // Create a div element that will hold the color inputs
+        var colorsDiv = document.createElement('div');
+        colorsDiv.setAttribute('class', 'AG-editor-colors-selector-colors');
+
+        // A function that creates a color input
+        function createColorInput(color = null) {
+            // Create a div element
+            var colorDiv = document.createElement('div');
+
+            // Set the div element attributes
+            colorDiv.setAttribute('class', 'AG-editor-colors-selector-color');
+
+            // Create an input element
+            var input = document.createElement('input');
+
+            // Set the input element attributes
+            input.setAttribute('type', 'color');
+            input.setAttribute('name', name);
+            input.setAttribute('value', color ? color : "#ffffff");
+
+            // Create a button that will remove the color input
+            var removeColorButton = document.createElement('button');
+            removeColorButton.setAttribute('class', 'AG-editor-colors-selector-remove-color');
+            removeColorButton.innerHTML = '<i class="fas fa-times"></i>';
+            removeColorButton.type = 'button';
+
+            // When the removeColorButton is clicked, remove the color input
+            removeColorButton.addEventListener('click', function() {
+                colorDiv.remove();
+            });
+
+            // A button that adds a new color input to the right of the current color input
+            var addColorButton = document.createElement('button');
+            addColorButton.setAttribute('class', 'AG-editor-colors-selector-add-color');
+            addColorButton.innerHTML = '<i class="fas fa-plus"></i>';
+            addColorButton.type = 'button';
+
+            // When the addColorButton is clicked, add a color input to the right of the current color input
+            addColorButton.addEventListener('click', function() {
+                colorDiv.after(createColorInput());
+            });
+
+            // Add the input and buttons to the color div
+            colorDiv.appendChild(input);
+            colorDiv.appendChild(removeColorButton);
+            colorDiv.appendChild(addColorButton);
+
+            // Return the color div
+            return colorDiv;
+        }
+
+        // When the addColorButton is clicked, add a color input to the beginning of the colors div
+        addColorButton.addEventListener('click', function() {
+            colorsDiv.prepend(createColorInput());
+        });
+
+        // Add the addColorButton to the div
+        div.appendChild(addColorButton);
+
+        // Add the colors div to the div
+        div.appendChild(colorsDiv);
+
+        // Add the default colors to the colors div
+        for (var i = 0; i < defaultColors.length; i++) {
+            colorsDiv.appendChild(createColorInput(defaultColors[i]));
+        }
+
+        // Return the div
+        return div;
+    }
         
 
 
@@ -1171,6 +1258,30 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
             }
 
+            // Replace the values in the field specified by the categorical_field parameter with their respective labels
+
+            // Get the field's choices
+            var choices = parseChoicesOrCalculations(parameters.categorical_field);
+
+            // Replace the values in the field specified by the categorical_field parameter with their respective labels
+            filteredReport = filteredReport.map(function (d) {
+                d[parameters.categorical_field] = choices[d[parameters.categorical_field]];
+
+                return d;
+            });
+
+            // Replace the empty entries in the field specified by the categorical_field parameter with the value specified by NA
+            filteredReport = filteredReport.map(function (d) {
+                if (d[parameters.categorical_field] == '') {
+                    d[parameters.categorical_field] = module.tt('na');
+                }
+
+                return d;
+            });
+
+
+
+
             // If is_count is present or numeric is empty
             if (parameters.is_count || parameters.numeric_field == '') {
                 // If na_numeric is 'drop', filter out the rows with missing values for the field specified by the numeric parameter
@@ -1220,15 +1331,19 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 // Create a bar graph using the observable plot library
                 var bars = Plot.barY(groupedReportDF, 
                     {
-                x: 'key',
-                y: 'value', 
-                fill: "steelblue"
-                
-                // width: 600,
-                // height: 400,
-                // xLabel: parameters.categorical_field,
-                // yLabel: parameters.numeric_field == '' ? 'Count' : parameters.numeric,
-                    }
+                        x: 'key',
+                        y: 'value', 
+                        fill: 'key',
+                        color: 
+                            {
+                                range: parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue'],
+                                interpolate: 'hcl'
+                            }
+                        // width: 600,
+                        // height: 400,
+                        // xLabel: parameters.categorical_field,
+                        // yLabel: parameters.numeric_field == '' ? 'Count' : parameters.numeric,
+                            }
                 )
                 
                 var graph = Plot.plot({
@@ -1447,6 +1562,15 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     missingValueRadioSelectorParameterDiv.style.display = 'block';
                 }
             });
+
+            // Create a colors selector
+            var colorsSelector = createColorsSelector('palette_brewer');
+
+            // Create a parameter div for the colors selector
+            var colorsParameterDiv = createParameterDiv(colorsSelector, module.tt('bar_colors'));
+
+            // Add the colors selector to the left div
+            leftDiv.appendChild(colorsParameterDiv);
             
 
             // Create a right div
@@ -1619,6 +1743,50 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     // A function that gets a field from  the data dictionary
     function getField(field_name) {
         return data_dictionary[field_name];
+    }
+
+    // A function that parses a fields select_choices_or_calculations string
+    function parseChoicesOrCalculations(field) {
+        // If the field is a string, get the field from the data dictionary
+        if (typeof field === 'string') {
+            field = getField(field);
+        }
+
+        // If the field is not a radio field, return an empty object
+        if (!isRadioField(field)) {
+            return {};
+        }
+
+        // Get the choices or calculations string
+        var choices_or_calculations = field.select_choices_or_calculations;
+
+        // If the choices or calculations string is empty, return an empty array
+        if (!choices_or_calculations) {
+            return {};
+        }
+
+        // Split the choices or calculations string by |
+        var choices_or_calculations_array = choices_or_calculations.split('|');
+
+        // Create an array to hold the parsed choices or calculations
+        var parsed_choices_or_calculations = {};
+
+        // Parse the choices or calculations
+        for (var i = 0; i < choices_or_calculations_array.length; i++) {
+            // Split the choice or calculation by ,
+            var choice_or_calculation = choices_or_calculations_array[i].split(',');
+            var choice_or_calculation_value = choice_or_calculation[0];
+            var choice_or_calculation_label = choice_or_calculation[1];
+
+            // remove the leading and trailing spaces from the value and label
+            choice_or_calculation_value = choice_or_calculation_value.trim();
+            choice_or_calculation_label = choice_or_calculation_label.trim();
+
+            // Add the parsed choice or calculation to the array
+            parsed_choices_or_calculations[choice_or_calculation_value] = choice_or_calculation_label;
+        }
+
+        return parsed_choices_or_calculations;
     }
 
     // A function that returns whether or not a field is a radio field
