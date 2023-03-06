@@ -659,7 +659,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	}
 
 
-	function getReport($pid, $report_id) {
+	function getReport($report_id) {
 		// Retrieve report from redcap
 		$report = REDCap::getReport($report_id, 'array');
 

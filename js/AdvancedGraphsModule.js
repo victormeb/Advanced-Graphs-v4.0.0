@@ -1410,8 +1410,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var instrument_names = [];
 
         for (var instrument in instruments['repeat_instruments']) {
-            instrumeinstrumentListnts.push(instruments['repeat_instruments'][instrument]);
-            instrument_names.push(instrument['repeat_instrument'][instrument]['form_name']);
+            instrumentList.push(instruments['repeat_instruments'][instrument]);
+            instrument_names.push(instruments['repeat_instruments'][instrument]['form_name']);
         }
 
         if (!instruments['non_repeats'])
