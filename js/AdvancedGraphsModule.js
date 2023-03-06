@@ -1044,6 +1044,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Create a button to create the graph
             var createGraphButton = document.createElement('button');
             createGraphButton.setAttribute('class', 'AG-editor-create-graph-button');
+            createGraphButton.setAttribute('disabled', 'disabled');
+            createGraphButton.innerHTML = module.tt('preview');
 
             // Create an event listener that toggles the create graph button when the form is changed
             form.addEventListener('change', function () {
@@ -1209,7 +1211,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             leftDiv.setAttribute('class', 'AG-editor-graph-options-left');
 
             // Create a radio selector to select between bar and pie graphs
-            var graphTypeRadioSelector = createRadioSelector('graph_type', [{'bar': module.tt('bar')}, {'pie': module.tt('pie')}], 'bar');
+            var graphTypeRadioSelector = createRadioSelector('graph_type', [{'value': 'bar', 'label': module.tt('bar')}, {'value': 'pie', 'label': module.tt('pie')}], 'bar');
 
             // Create a help object for the graph type radio selector
             var graphTypeRadioSelectorHelp = {
@@ -1244,8 +1246,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Create a parameter div for the categorical field selector
             var categoricalFieldParameterDiv = createParameterDiv(categoricalFieldSelector, module.tt('categorical_field'), categoricalFieldHelp);
 
+            // Add the categorical field selector to the left div
+            leftDiv.appendChild(categoricalFieldParameterDiv);
+
             // Create a radio selector to select between keeping or dropping the NA category if it exists
-            var naCategoryRadioSelector = createRadioSelector('na_category', [{'keep': module.tt('keep')}, {'drop': module.tt('drop')}], 'keep');
+            var naCategoryRadioSelector = createRadioSelector('na_category', [{'value': 'keep', 'label': module.tt('keep')}, {'value': 'drop', 'label': module.tt('drop')}], 'keep');
 
             // Create a help object for the NA category radio selector
             var naCategoryRadioSelectorHelp = {
@@ -1258,9 +1263,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Add the NA category radio selector to the left div
             leftDiv.appendChild(naCategoryRadioSelectorParameterDiv);
-
-            // Add the categorical field selector to the left div
-            leftDiv.appendChild(categoricalFieldParameterDiv);
 
             // Get the numeric fields
             var numericFields = getNumericFields(instrument['fields']);
@@ -1336,8 +1338,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // When the numeric field selector changes, if the selected field is count, hide the aggregation function selector and the missing value radio selector
             numericFieldSelector.addEventListener('change', function() {
-                // Get the data-group attribute of the selected option
-                var dataGroup = numericFieldSelector.options[numericFieldSelector.selectedIndex].getAttribute('data-group');
+                // Get the data-group attribute of the selected option's option group
+                var dataGroup = numericFieldSelector.options[numericFieldSelector.selectedIndex].parentNode.getAttribute('data-group');
 
                 if (dataGroup == 'count') {
                     numericFieldCountCheckbox.checked = true;
