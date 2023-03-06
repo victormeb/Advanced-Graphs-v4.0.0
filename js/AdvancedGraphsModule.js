@@ -36,6 +36,15 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // 'network': NetworkGraph
     };
 
+    var aggegateFunctions = {
+        'count': {'label': module.tt('count'), 'd3_function': d3.count},
+        'sum': {'label': module.tt('sum'), 'd3_function': d3.sum},
+        'mean': {'label': module.tt('mean'), 'd3_function': d3.mean},
+        'median': {'label': module.tt('median'), 'd3_function': d3.median},
+        'min': {'label': module.tt('min'), 'd3_function': d3.min},
+        'max': {'label': module.tt('max'), 'd3_function': d3.max}
+    };
+
     // The function used to load and populate the dashboard editor
     this.loadEditor = function (parent) {
         // Create a div to hold dashboard options and information
@@ -381,7 +390,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var graphTypeObject = graphTypes[graphType];
 
             // Get the graph form from the graph type object
-            var graphForm = graphTypeObject.getForm();
+            var graphForm = graphTypeObject.generateForm();
 
             // Add the graph form to the graph form div
             graphFormDiv.appendChild(graphForm);
@@ -533,6 +542,20 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         modalDialogTitleDiv.setAttribute('class', 'AG-editor-modal-dialog-title');
         modalDialogTitleDiv.innerHTML = title;
 
+        // Create a close button
+        var closeButton = document.createElement('button');
+        closeButton.setAttribute('class', 'AG-editor-modal-dialog-close');
+        closeButton.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+
+        // Add the click event to the close button
+        closeButton.addEventListener('click', function () {
+            // Remove the modal dialog
+            modalDialogDiv.parentNode.removeChild(modalDialogDiv);
+        });
+
+        // Add the close button to the modal dialog title div
+        modalDialogTitleDiv.appendChild(closeButton);
+
         // Create a modal dialogue body div
         var modalDialogBodyDiv = document.createElement('div');
         modalDialogBodyDiv.setAttribute('class', 'AG-editor-modal-dialog-body');
@@ -609,6 +632,20 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return createModalDialog(module.tt('are_you_sure'), content, buttons);
     }
 
+    function createHelpDialogue(title, content) {
+        var buttons = [
+            {
+                label: module.tt('close'),
+                className: 'AG-editor-modal-dialog-cancel-button',
+                callback: function () {
+                    closeModalDialog();
+                }
+            }
+        ]
+
+        return createModalDialog(title, content, buttons);
+    }
+
     // Create a function that closes the modal dialog
     function closeModalDialog() {
         // Get the modal dialog div
@@ -617,6 +654,63 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Remove the modal dialog div
         modalDialogDiv.parentNode.removeChild(modalDialogDiv);
     }
+
+    // Create a function that creates a div that contains a parameter for a graph
+    function createParameterDiv(parameterElement, label, help = null) {
+        // Create a div to hold the parameter
+        var parameterDiv = document.createElement('div');
+        parameterDiv.setAttribute('class', 'AG-editor-parameter');
+
+        // Create a label for the parameter
+        var parameterLabel = document.createElement('label');
+        parameterLabel.setAttribute('class', 'AG-editor-parameter-label');
+        parameterLabel.innerHTML = label;
+
+        // Add the parameter label to the parameter div
+        parameterDiv.appendChild(parameterLabel);
+
+        // Add the parameter element to the parameter div
+        parameterDiv.appendChild(parameterElement);
+
+        // Add the help button to the label if help is provided
+        if (help) {
+            // Create a help button
+            var helpButton = createHelpButton(help);
+
+            // Add the help button to the parameter label
+            parameterLabel.appendChild(helpButton);
+        }
+
+        // Return the parameter div
+        return parameterDiv;
+    }
+
+    // Create a function that creates a help button
+    // Parameters:
+    //  help: An object containing the keys for the help title and content
+    //    help = {
+    //      title: 'help_title',
+    //      content: 'help_content'
+    //    }
+    function createHelpButton(help) {
+        // Create a help button
+        var helpButton = document.createElement('button');
+        helpButton.setAttribute('class', 'AG-editor-help-button');
+        helpButton.innerHTML = '<i class="fa fa-question-circle" aria-hidden="true"></i>';
+
+        // Add the click event to the help button
+        helpButton.addEventListener('click', function () {
+            // Create the help dialogue
+            var helpDialogue = createHelpDialogue(module.tt(help['title']), help['content']);
+
+            // Add the help dialogue to the page
+            document.body.appendChild(helpDialogue);
+        });
+
+        // Return the help button
+        return helpButton;
+    }
+
 
     // A function that takes an object and creates a select element from it with option groups where necessary
     // Parameters:
@@ -639,7 +733,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //  name: The name of the select element
     //  label: The label of the select element
     //  defaultOption: The default option of the select element, should be a DOM element
-    function createFieldSelector(fieldObject, name, label, defaultOption = null) {
+    function createFieldSelector(fieldObject, name, defaultOption = null) {
         // Create a select element
         var select = document.createElement('select');
 
@@ -719,6 +813,181 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return addOptionRecurse(fieldObject, select);
 
     }
+
+    function createAggregationFunctionSelector(name) {
+        // Create a select element
+        var select = document.createElement('select');
+
+        // Set the select element attributes
+        select.setAttribute('class', 'form-control');
+        select.setAttribute('name', name);
+
+        // Create a default disabled option element
+        var defaultOptionElement = document.createElement('option');
+        defaultOptionElement.setAttribute('disabled', 'disabled');
+        defaultOptionElement.setAttribute('selected', 'selected');
+        defaultOptionElement.innerHTML = module.tt('select_aggregation_function');
+
+        // Add the default option to the select element
+        select.appendChild(defaultOptionElement);
+
+        // For each aggregation function in the aggregationFunctions object
+        for (var key in aggregationFunctions) {
+            // Create an option element
+            var option = document.createElement('option');
+
+            // Set the option element attributes
+            option.setAttribute('value', key);
+            option.innerHTML = aggregationFunctions[key].label;
+
+            // Add the option to the select element
+            select.appendChild(option);
+        }
+
+        // Return the select element
+        return select;
+    }
+
+
+
+
+    function createRadioSelector(name, options, defaultOption = null) {
+        // Create a div element
+        var div = document.createElement('div');
+
+        // Set the div element attributes
+        div.setAttribute('class', 'AG-editor-radio-selector');
+
+        // Loop through the options
+        for (var i = 0; i < options.length; i++) {
+            // Create a div element
+            var optionDiv = document.createElement('div');
+
+            // Set the div element attributes
+            optionDiv.setAttribute('class', 'AG-editor-radio-selector-option');
+
+            // Create a radio element
+            var radio = document.createElement('input');
+
+            // Set the radio element attributes
+            radio.setAttribute('type', 'radio');
+            radio.setAttribute('name', name);
+            radio.setAttribute('value', options[i].value);
+
+            // If the option is the default option, set the radio element to checked
+            if (options[i].value === defaultOption) {
+                radio.setAttribute('checked', 'checked');
+            }
+
+            // Create a label element
+            var label = document.createElement('label');
+            
+            // Set the label element attributes
+            label.setAttribute('for', options[i].value);
+            label.innerHTML = options[i].label;
+
+            // Add the radio and label elements to the option div
+            optionDiv.appendChild(radio);
+            optionDiv.appendChild(label);
+
+            // Add the option div to the div
+            div.appendChild(optionDiv);
+        }
+
+        return div;
+    }
+
+    // TODO: Change this function so it takes a DOM element as a twin instead of a twin object
+    // A function that creates a radio selector between dropping or replacing null values, if the selected option is replace, a text input is shown
+    function createDropOrReplaceTwinSelect(name, options = {
+            "drop": {"label": module.tt("drop"), "twin": null},
+            "replace": {"label": module.tt("replace"), "twin": {"type": "number", "name": "replace_value", "label": module.tt("replace_value")}}
+        },
+        defaultOption = null) {
+        // Create a div element
+        var div = document.createElement('div');
+
+        // Set the div element attributes
+        div.setAttribute('class', 'AG-editor-drop-or-replace-twin-select');
+
+        // For each option in the options object
+        for (var key in options) {
+            // Create a div element
+            var optionDiv = document.createElement('div');
+
+            // Set the div element attributes
+            optionDiv.setAttribute('class', 'AG-editor-drop-or-replace-twin-select-option');
+
+            // Create a radio element
+            var radio = document.createElement('input');
+
+            // Set the radio element attributes
+            radio.setAttribute('type', 'radio');
+            radio.setAttribute('name', name);
+            radio.setAttribute('value', key);
+
+            // If the option is the default option, set the radio element to checked
+            if (key === defaultOption) {
+                radio.setAttribute('checked', 'checked');
+            }
+
+            // Create a label element
+            var label = document.createElement('label');
+
+            // Set the label element attributes
+            label.setAttribute('for', key);
+            label.innerHTML = options[key].label;
+
+            // Add the radio and label elements to the option div
+            optionDiv.appendChild(radio);
+            optionDiv.appendChild(label);
+
+            // If the option has a twin
+            if (options[key].twin !== null) {
+                // Create a div element
+                var twinDiv = document.createElement('div');
+
+                // Set the div element attributes
+                twinDiv.setAttribute('class', 'AG-editor-drop-or-replace-twin-select-twin');
+
+                // Create an input element
+                var input = document.createElement('input');
+
+                // Set the input element attributes
+                input.setAttribute('type', options[key].twin.type);
+                input.setAttribute('name', options[key].twin.name);
+                input.setAttribute('value', options[key].twin.label);
+
+                // When this radio button is selected, show the twin div
+                radio.addEventListener('change', function() {
+                    input.style.display = 'none';
+                    input.removeAttribute('value')
+                    // If the radio button is checked
+                    if (this.checked) {
+                        // Show the twin div
+                        input.style.display = 'block';
+                        input.setAttribute('value', options[key].twin.label);
+                    }
+                });
+
+
+                // Add the input element to the twin div
+                twinDiv.appendChild(input);
+
+                // Add the twin div to the option div
+                optionDiv.appendChild(twinDiv);
+            }
+
+            // Add the option div to the div
+            div.appendChild(optionDiv);
+
+
+        }
+
+
+    }
+        
+
 
     // The AdvancedGraph class
     function AdvancedGraph(graphType, graphLabel, getForm, getGraph, checkReady, canCreate) {
@@ -834,9 +1103,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //     instrument: 'instrument_name',
     //     title: 'A title for the graph',
     //     description: 'A description of the graph',
+    //     graph_type: 'bar' or 'pie',
     //     category: 'category_name',
+    //     na_category: 'keep' or 'drop',
     //     numeric: 'numeric_name' or '',
     //     is_count (optional): true,
+    //     aggregation_function: 'count' or 'sum' or 'mean' or 'median' or 'min' or 'max',
     //     is_percentage (optional): true,
     //     palette_brewer (optional): ['color1', 'color2', ...],
     //     show_which: 'graph' or 'table' or 'both' (if not specified, defaults to 'both'),
@@ -935,6 +1207,21 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var leftDiv = document.createElement('div');
             leftDiv.setAttribute('class', 'AG-editor-graph-options-left');
 
+            // Create a radio selector to select between bar and pie graphs
+            var graphTypeRadioSelector = createRadioSelector('graph_type', [{'bar': module.tt('bar')}, {'pie': module.tt('pie')}], 'bar');
+
+            // Create a help object for the graph type radio selector
+            var graphTypeRadioSelectorHelp = {
+                title: module.tt('bar_graph_type'),
+                content: module.tt('bar_graph_type_help')
+            }
+
+            // Create a parameter div for the graph type radio selector
+            var graphTypeRadioSelectorParameterDiv = createParameterDiv(graphTypeRadioSelector, module.tt('bar_graph_type'), graphTypeRadioSelectorHelp);
+
+            // Add the graph type radio selector to the left div
+            leftDiv.appendChild(graphTypeRadioSelectorParameterDiv);
+
             // Get the categorical fields
             var categoricalFields = getCategoricalFields(instrument['fields']);
 
@@ -945,13 +1232,44 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             defaultOption.appendChild(document.createTextNode(module.tt('select_a_field')));
 
             // Create the categorical field selector
-            var categoricalFieldSelector = createFieldSelector(categoricalFields, 'categorical_field', module.tt('categorical_field'), defaultOption);
+            var categoricalFieldSelector = createFieldSelector(categoricalFields, 'categorical_field', defaultOption);
+
+            // Create a help object for the categorical field selector
+            var categoricalFieldHelp = {
+                title: module.tt('categorical_field'),
+                content: module.tt('bar_categorical_field_help')
+            }
+
+            // Create a parameter div for the categorical field selector
+            var categoricalFieldParameterDiv = createParameterDiv(categoricalFieldSelector, module.tt('categorical_field'), categoricalFieldHelp);
+
+            // Create a radio selector to select between keeping or dropping the NA category if it exists
+            var naCategoryRadioSelector = createRadioSelector('na_category', [{'keep': module.tt('keep')}, {'drop': module.tt('drop')}], 'keep');
+
+            // Create a help object for the NA category radio selector
+            var naCategoryRadioSelectorHelp = {
+                title: module.tt('na_category'),
+                content: module.tt('na_category_help')
+            }
+
+            // Create a parameter div for the NA category radio selector
+            var naCategoryRadioSelectorParameterDiv = createParameterDiv(naCategoryRadioSelector, module.tt('na_category'), naCategoryRadioSelectorHelp);
+
+            // Add the NA category radio selector to the left div
+            leftDiv.appendChild(naCategoryRadioSelectorParameterDiv);
 
             // Add the categorical field selector to the left div
-            leftDiv.appendChild(categoricalFieldSelector);
+            leftDiv.appendChild(categoricalFieldParameterDiv);
 
             // Get the numeric fields
             var numericFields = getNumericFields(instrument['fields']);
+
+            var numericFieldSelectorObject = [
+                [numericFields],
+                {
+                    'count': [{'field_name': '', 'field_label': module.tt('count')}]
+                }
+            ];
 
             // Create a default disabled option for the numeric field selector
             var defaultOption = document.createElement('option');
@@ -960,10 +1278,77 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             defaultOption.appendChild(document.createTextNode(module.tt('select_a_field')));
 
             // Create the numeric field selector
-            var numericFieldSelector = createFieldSelector(numericFields, 'numeric_field', module.tt('numeric_field'), defaultOption);
+            var numericFieldSelector = createFieldSelector(numericFieldSelectorObject, 'numeric_field', defaultOption);
+
+            // Create a help object for the numeric field selector
+            var numericFieldHelp = {
+                title: module.tt('numeric_field'),
+                content: module.tt('bar_numeric_field_help')
+            }
+
+            // Create a parameter div for the numeric field selector
+            var numericFieldParameterDiv = createParameterDiv(numericFieldSelector, module.tt('numeric_field'), numericFieldHelp);
 
             // Add the numeric field selector to the left div
-            leftDiv.appendChild(numericFieldSelector);
+            leftDiv.appendChild(numericFieldParameterDiv);
+
+            // Create a radio selector to select between dropping or replacing missing values
+            var missingValueRadioSelector = createDropOrReplaceTwinSelect('na_numeric', defaultOption = 'drop');
+
+            // Create a help object for the missing value radio selector
+            var missingValueRadioSelectorHelp = {
+                title: module.tt('na_numeric'),
+                content: module.tt('na_numeric_help')
+            }
+
+            // Create a parameter div for the missing value radio selector
+            var missingValueRadioSelectorParameterDiv = createParameterDiv(missingValueRadioSelector, module.tt('na_numeric'), missingValueRadioSelectorHelp);
+
+            // Add the missing value radio selector to the left div
+            leftDiv.appendChild(missingValueRadioSelectorParameterDiv);
+
+            // Create an aggregation function selector
+            var aggregationFunctionSelector = createAggregationFunctionSelector('aggregation_function');
+
+            // Create a help object for the aggregation function selector
+            var aggregationFunctionHelp = {
+                title: module.tt('aggregation_function'),
+                content: module.tt('bar_aggregation_function_help')
+            }
+
+            // Create a parameter div for the aggregation function selector
+            var aggregationFunctionParameterDiv = createParameterDiv(aggregationFunctionSelector, module.tt('aggregation_function'), aggregationFunctionHelp);
+
+            // Add the aggregation function selector to the left div
+            leftDiv.appendChild(aggregationFunctionParameterDiv);
+
+
+            // Create an invisible checkbox to determine whether the option group of the numeric field has the data-group attribute set to count
+            var numericFieldCountCheckbox = document.createElement('input');
+            numericFieldCountCheckbox.setAttribute('type', 'checkbox');
+            numericFieldCountCheckbox.setAttribute('name', 'numeric_field_count');
+            numericFieldCountCheckbox.setAttribute('style', 'display: none;');
+            numericFieldCountCheckbox.setAttribute('value', 'is_count');
+
+            // Add the numeric field count checkbox to the left div
+            leftDiv.appendChild(numericFieldCountCheckbox);
+
+            // When the numeric field selector changes, if the selected field is count, hide the aggregation function selector and the missing value radio selector
+            numericFieldSelector.addEventListener('change', function() {
+                // Get the data-group attribute of the selected option
+                var dataGroup = numericFieldSelector.options[numericFieldSelector.selectedIndex].getAttribute('data-group');
+
+                if (dataGroup == 'count') {
+                    numericFieldCountCheckbox.checked = true;
+                    aggregationFunctionParameterDiv.style.display = 'none';
+                    missingValueRadioSelectorParameterDiv.style.display = 'none';
+                } else {
+                    numericFieldCountCheckbox.checked = false;
+                    aggregationFunctionParameterDiv.style.display = 'block';
+                    missingValueRadioSelectorParameterDiv.style.display = 'block';
+                }
+            });
+            
 
             // Create a right div
 

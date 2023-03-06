@@ -28,6 +28,11 @@
     font-size: 14px;
 }
 
+.AG-editor-modal-dialog-close {
+    float: right;
+    cursor: pointer;
+}
+
 .AG-editor-modal-dialog-body {
     padding: 10px;
 }
