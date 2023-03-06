@@ -36,7 +36,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // 'network': NetworkGraph
     };
 
-    var aggegateFunctions = {
+    var aggregationFunctions = {
         'count': {'label': module.tt('count'), 'd3_function': d3.count},
         'sum': {'label': module.tt('sum'), 'd3_function': d3.sum},
         'mean': {'label': module.tt('mean'), 'd3_function': d3.mean},
@@ -984,7 +984,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         }
 
-
+        // Return the div
+        return div;
     }
         
 
@@ -1119,7 +1120,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var label = module.tt('graph_type_bar');
 
         // The function used to get the form
-        var getForm = function (parameters = {}) {
+        var getForm = function (parameters = null) {
             // Create a form
             var form = document.createElement('form');
 
@@ -1131,7 +1132,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var instrumentSelector = addInstrumentSelector(graphOptionsDiv);
 
             // If parameters.instrument is specified, set the instrument selector to the specified instrument
-            if (parameters.instrument) {
+            if (parameters && parameters.instrument) {
                 instrumentSelector.querySelector('select').value = parameters.instrument;
 
                 // Trigger the change event
@@ -1293,7 +1294,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             leftDiv.appendChild(numericFieldParameterDiv);
 
             // Create a radio selector to select between dropping or replacing missing values
-            var missingValueRadioSelector = createDropOrReplaceTwinSelect('na_numeric', defaultOption = 'drop');
+            var missingValueRadioSelector = createDropOrReplaceTwinSelect('na_numeric', undefined,defaultOption = 'drop');
 
             // Create a help object for the missing value radio selector
             var missingValueRadioSelectorHelp = {
