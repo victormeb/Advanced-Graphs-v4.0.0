@@ -1078,7 +1078,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     previewPaneDiv.innerHTML = '';
 
                     // Add the graph to the preview pane
-                    previewPaneDiv.appendChild(graph);
+                    previewPaneDiv.append(graph);
                 }
             });
 
@@ -1112,9 +1112,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //     title: 'A title for the graph',
     //     description: 'A description of the graph',
     //     graph_type: 'bar' or 'pie',
-    //     category: 'category_name',
+    //     categorical_field: 'category_name',
     //     na_category: 'keep' or 'drop',
-    //     numeric: 'numeric_name' or '',
+    //     numeric_field: 'numeric_name' or '',
     //     is_count (optional): true,
     //     na_numeric: 'drop' or 'replace',
     //     na_numeric_value (optional): 0,
@@ -1164,85 +1164,78 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // The function used to get the graph
         var getGraph = function (parameters) {
             // Use d3 to filter the report to only include entries where redcap_repeat_instrument is equal to the instrument specified by the instrument parameter
-            var filteredReport = d3.nest()
-                .key(function (d) { return d.redcap_repeat_instrument; })
-                .rollup(function (v) { return v; })
-                .entries(report)
-                .filter(function (d) { return d.key == parameters.instrument; })[0].value;
+            var filteredReport = d3.group(report, function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
-                filteredReport = filteredReport.filter(function (d) { return d[parameters.category] != ''; });
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
             }
 
             // If is_count is present or numeric is empty
-            if (parameters.is_count || parameters.numeric == '') {
+            if (parameters.is_count || parameters.numeric_field == '') {
                 // If na_numeric is 'drop', filter out the rows with missing values for the field specified by the numeric parameter
                 if (parameters.na_numeric == 'drop') {
-                    filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric] != ''; });
+                    filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
                 }
 
                 // If na_numeric is 'replace', replace the missing values for the field specified by the numeric parameter with the value specified by the na_numeric_value parameter
                 if (parameters.na_numeric == 'replace') {
                     filteredReport = filteredReport.map(function (d) {
-                        if (d[parameters.numeric] == '') {
-                            d[parameters.numeric] = parameters.na_numeric_value;
+                        if (d[parameters.numeric_field] == '') {
+                            d[parameters.numeric_field] = parameters.na_numeric_value;
                         }
 
                         return d;
                     });
                 }
             }
-
-            // Use d3 to group the filtered report by the field specified by the category parameter
-            var groupedReport = d3.nest()
-                .key(function (d) { return d[parameters.category]; })
-                .rollup(function (v) { return v; })
-                .entries(filteredReport);
-
+            console.log('findline');
             // If is_count is present or numeric is empty
-            if (parameters.is_count || parameters.numeric == '') {
+            if (parameters.is_count || parameters.numeric_field == '') {
                 // Use d3 to count the number of entries in each group
-                groupedReport = groupedReport.map(function (d) {
-                    return {
-                        key: d.key,
-                        value: d.value.length
-                    };
-                });
+                groupedReport = d3.rollup(filteredReport, v => v.length, d => d[parameters.categorical_field]);
             }
 
             // If is_count is not present and numeric is not empty
-            if (!parameters.is_count && parameters.numeric != '') {
+            if (!parameters.is_count && parameters.numeric_field != '') {
                 // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
-                groupedReport = groupedReport.map(function (d) {
-                    return {
-                        key: d.key,
-                        value: d3[parameters.aggregation_function](d.value, function (d) { return d[parameters.numeric]; })
-                    };
-                });
+                groupedReport = d3.rollup(filteredReport, v => d3[aggregation_function](v, d => d.numeric_field), d => d.categorical_field);
             }
 
+            groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: key, value: value}));
+
             // If is_percentage is present
-            if (parameters.is_percentage) {
-                // Use d3 to calculate the percentage of each group
-                groupedReport = groupedReport.map(function (d) {
-                    return {
-                        key: d.key,
-                        value: d.value / groupedReport.reduce(function (a, b) { return a + b.value; }, 0)
-                    };
-                });
-            }
+            // if (parameters.is_percentage) {
+            //     // Use d3 to calculate the percentage of each group
+            //     groupedReport = groupedReport.map(function (d) {
+            //         return {
+            //             key: d.key,
+            //             value: d.value / groupedReport.reduce(function (a, b) { return a + b.value; }, 0)
+            //         };
+            //     });
+            // }
 
             // If graph type is 'bar'
             if (parameters.graph_type == 'bar') {
                 // Create a bar graph using the observable plot library
-                var graph = Plot.barY(groupedReport, {
-                    x: 'key',
-                    y: 'value',
-                    width: 600,
-                    height: 400,
-                    xLabel: parameters.category,
-                    yLabel: parameters.numeric == '' ? 'Count' : parameters.numeric,
+                var bars = Plot.barY(groupedReportDF, 
+                    {
+                x: 'key',
+                y: 'value', 
+                fill: "steelblue"
+                
+                // width: 600,
+                // height: 400,
+                // xLabel: parameters.categorical_field,
+                // yLabel: parameters.numeric_field == '' ? 'Count' : parameters.numeric,
+                    }
+                )
+                
+                var graph = Plot.plot({
+                    marks: 
+                    [
+                        bars
+                    ]
                 });
 
                 // Return the graph
