@@ -1251,7 +1251,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // The function used to get the graph
         var getGraph = function (parameters) {
             // Use d3 to filter the report to only include entries where redcap_repeat_instrument is equal to the instrument specified by the instrument parameter
-            var filteredReport = d3.group(report, function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
+            var filteredReport = d3.group(Array.from(report), function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
@@ -1310,7 +1310,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // If is_count is not present and numeric is not empty
             if (!parameters.is_count && parameters.numeric_field != '') {
                 // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
-                groupedReport = d3.rollup(filteredReport, v => d3[aggregation_function](v, d => d.numeric_field), d => d.categorical_field);
+                groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, d => d.numeric_field), d => d.categorical_field);
             }
 
             groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: key, value: value}));
@@ -1347,6 +1347,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 )
                 
                 var graph = Plot.plot({
+                    x: {
+                        domain: groupedReportDF.map(function (d) { return d.key; })
+                    },
                     marks: 
                     [
                         bars
