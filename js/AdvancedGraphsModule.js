@@ -1258,18 +1258,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
             }
 
-            // If is_count is present or numeric is empty
-            if ((parameters.is_count || parameters.numeric_field == '') && parameters.na_numeric == 'drop') {
-                // If na_numeric is 'drop', filter out the rows with missing values for the field specified by the numeric parameter
+            // If we are using a numeric field an na_numeric is set to drop
+            if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'drop') {
+                // Filter out the rows with missing values for the field specified by the numeric parameter
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
- 
             }
 
             var numeric_replace = function(d) {
-                if (d.numeric_field == '')
+                if (d[parameters.numeric_field] == '')
                     return parameters.na_numeric == 'replace' && parameters.na_numeric_value != undefined ? parameters.na_numeric_value : 0;
 
-                return d.numeric_field; // TODO: re-write this
+                return d[parameters.numeric_field]; // TODO: re-write this
             }
             
             // If is_count is present or numeric is empty
@@ -1281,7 +1280,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // If is_count is not present and numeric is not empty
             if (!parameters.is_count && parameters.numeric_field != '') {
                 // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
-                groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, numeric_replace), d => d.categorical_field);
+                groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, numeric_replace), d => d[parameters.categorical_field]);
             }
 
             // Get the field's choices
@@ -1289,24 +1288,13 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: choices[key] ? choices[key] : module.tt('na'), value: value}));
 
-            // If is_percentage is present
-            // if (parameters.is_percentage) {
-            //     // Use d3 to calculate the percentage of each group
-            //     groupedReport = groupedReport.map(function (d) {
-            //         return {
-            //             key: d.key,
-            //             value: d.value / groupedReport.reduce(function (a, b) { return a + b.value; }, 0)
-            //         };
-            //     });
-            // }
-            // Create a color scale to map each category to a unique color
-            
+
             // Create a function to interpolate between colors for each category
             const interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
             
             const colorScale = d3.scaleOrdinal()
             .domain(groupedReportDF.map(d => d.key))
-            .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length-1))));
+            .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
 
 
 
