@@ -1365,13 +1365,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: choices[key] ? choices[key] : module.tt('na'), value: value}));
 
 
-            // Create a function to interpolate between colors for each category
-            const interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
-            
-            const colorScale = d3.scaleOrdinal()
-            .domain(groupedReportDF.map(d => d.key))
-            .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
-
             // If unused_categories is 'keep' and there are unused categories
             if (parameters.unused_categories == 'keep' && Object.keys(choices).length > groupedReportDF.length) {
                 // Add the unused categories to the grouped report
@@ -1381,6 +1374,13 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     }
                 });
             }
+
+             // Create a function to interpolate between colors for each category
+             const interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
+            
+             const colorScale = d3.scaleOrdinal()
+             .domain(groupedReportDF.map(d => d.key))
+             .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
 
 
             // If graph type is 'bar'
