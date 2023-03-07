@@ -1842,15 +1842,15 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         if (choices_or_calculations === '') {
             if (field.field_type === 'yesno') {
                 return {
-                    '0': module.tt('no'),
-                    '1': module.tt('yes')
+                    '0': module.tt('no_val'),
+                    '1': module.tt('yes_val')
                 }
             }
 
             if (field.field_type === 'truefalse') {
                 return {
-                    '0': module.tt('false'),
-                    '1': module.tt('true')
+                    '0': module.tt('false_val'),
+                    '1': module.tt('true_val')
                 }
             }
 
