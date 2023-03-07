@@ -1360,7 +1360,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 var domain = choices.keys();
             } else {
                 // If unused_categories is set to drop, set the domain to the categories that have counts
-                var domain = Array.from(counts.keys());
+                var domain = Array.from(Object.keys(counts));
             }
 
             var barHeights = Array.from(counts, ([key, value]) => ({key: key, value: value}));
@@ -1377,7 +1377,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             if (parameters.graph_type == 'bar') {
                 // Create a bar chart
                 var bars = Plot.barY(barHeights, {
-                    x: 'key',
+                    x: d => choices[d.key],
                     y: 'value',
                     fill: d=>colorScale(d.key)
                 });
