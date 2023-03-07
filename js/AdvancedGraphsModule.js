@@ -1275,6 +1275,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //     graph_type: 'bar' or 'pie',
     //     categorical_field: 'category_name',
     //     na_category: 'keep' or 'drop',
+    //     unused_categories: 'keep' or 'drop',
     //     numeric_field: 'numeric_name' or '',
     //     is_count (optional): true,
     //     na_numeric: 'drop' or 'replace',
@@ -1371,6 +1372,15 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             .domain(groupedReportDF.map(d => d.key))
             .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
 
+            // If unused_categories is 'keep' and there are unused categories
+            if (parameters.unused_categories == 'keep' && Object.keys(choices).length > groupedReportDF.length) {
+                // Add the unused categories to the grouped report
+                Object.keys(choices).forEach(function (key) {
+                    if (!groupedReportDF.some(function (d) { return d.key == choices[key]; })) {
+                        groupedReportDF.push({key: choices[key], value: 0});
+                    }
+                });
+            }
 
 
             // If graph type is 'bar'
@@ -1514,6 +1524,21 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Add the NA category radio selector to the left div
             leftDiv.appendChild(naCategoryRadioSelectorParameterDiv);
+
+            // Create a radio selector to select between keeping or dropping unused categories
+            var unusedCategoriesRadioSelector = createRadioSelector('unused_categories', [{'value': 'keep', 'label': module.tt('keep')}, {'value': 'drop', 'label': module.tt('drop')}], 'keep');
+
+            // Create a help object for the unused categories radio selector
+            var unusedCategoriesRadioSelectorHelp = {
+                title: module.tt('unused_categories'),
+                content: module.tt('unused_categories_help')
+            }
+
+            // Create a parameter div for the unused categories radio selector
+            var unusedCategoriesRadioSelectorParameterDiv = createParameterDiv(unusedCategoriesRadioSelector, module.tt('unused_categories'), unusedCategoriesRadioSelectorHelp);
+
+            // Add the unused categories radio selector to the left div
+            leftDiv.appendChild(unusedCategoriesRadioSelectorParameterDiv);
 
             // Get the numeric fields
             var numericFields = getNumericFields(instrument['fields']);

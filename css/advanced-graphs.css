@@ -76,13 +76,14 @@
   padding: 20px;
   border: 1px solid #888;
   width: 80%;
-} 
+}
+
+.AG-editor-colors-selector-add-color {
+  margin-right: 10px;
+}
 
 .AG-editor-colors-selector {
-  display: inline-grid;
-  grid-template-columns: 1fr;
-    gap: 5px;
-  margin: 5px;
+  display: inline;
 }
 
 .AG-editor-colors-selector-colors {
@@ -90,7 +91,8 @@
 }
 
 .AG-editor-colors-selector-color {
-  display: inline;
+  display: inline-block;
+  margin-right: 10px;
 }
 
 .AG-editor-color-selector-modal-close {
