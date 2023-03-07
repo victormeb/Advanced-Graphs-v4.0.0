@@ -1099,6 +1099,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         modalDiv.setAttribute('class', 'AG-editor-color-selector-modal-modal');
         modalDiv.style.display = 'none';
 
+        // Create a div element that will hold the modal contents
+        var modalContentDiv = document.createElement('div');
+        modalContentDiv.setAttribute('class', 'AG-editor-color-selector-modal-content');
+
         // Create a div element that will hold the color selector
         var colorSelectorDiv = document.createElement('div');
         colorSelectorDiv.setAttribute('class', 'AG-editor-color-selector-modal-color-selector');
@@ -1127,8 +1131,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         modalFooterDiv.appendChild(closeModalButton);
 
         // Add the color selector div, and the modal footer div to the modal div
-        modalDiv.appendChild(colorSelectorDiv);
-        modalDiv.appendChild(modalFooterDiv);
+        modalContentDiv.appendChild(colorSelectorDiv);
+        modalContentDiv.appendChild(modalFooterDiv);
+
+        // Add the modal content div to the modal div
+        modalDiv.appendChild(modalContentDiv);
 
         // When the openModalButton is clicked, open the modal
         openModalButton.addEventListener('click', function() {
