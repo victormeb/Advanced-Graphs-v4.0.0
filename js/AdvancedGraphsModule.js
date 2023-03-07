@@ -1080,6 +1080,74 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return div;
     } 
 
+    // A function that creates a color selector modal
+    function createColorsSelectorModal(name, defaultColors = ["#440154", "#482878", "#3E4A89", "#31688E", "#26828E", "#1F9E89", "#35B779", "#6DCD59","#B4DE2C", "#FDE725"]) {
+        // Create a div element that will hold the initally hidden modal
+        var div = document.createElement('div');
+
+        // Set the div element attributes
+        div.setAttribute('class', 'AG-editor-color-selector-modal');
+
+        // Create a button that will open the modal
+        var openModalButton = document.createElement('button');
+        openModalButton.setAttribute('class', 'AG-editor-color-selector-modal-open');
+        openModalButton.innerHTML = module.tt('choose_colors');
+        openModalButton.type = 'button';
+
+        // Create a div element that will hold the modal
+        var modalDiv = document.createElement('div');
+        modalDiv.setAttribute('class', 'AG-editor-color-selector-modal-modal');
+        modalDiv.style.display = 'none';
+
+        // Create a div element that will hold the color selector
+        var colorSelectorDiv = document.createElement('div');
+        colorSelectorDiv.setAttribute('class', 'AG-editor-color-selector-modal-color-selector');
+
+        // Create a color selector
+        var colorSelector = createColorsSelector(name, defaultColors);
+
+        // Add the color selector to the color selector div
+        colorSelectorDiv.appendChild(colorSelector);
+
+        // Create a div element that will hold the modal footer
+        var modalFooterDiv = document.createElement('div');
+
+        // Create a button that will close the modal
+        var closeModalButton = document.createElement('button');
+        closeModalButton.setAttribute('class', 'AG-editor-color-selector-modal-close');
+        closeModalButton.innerHTML = module.tt('close');
+        closeModalButton.type = 'button';
+
+        // When the closeModalButton is clicked, close the modal
+        closeModalButton.addEventListener('click', function() {
+            modalDiv.style.display = 'none';
+        });
+
+        // Add the closeModalButton to the modal footer div
+        modalFooterDiv.appendChild(closeModalButton);
+
+        // Add the color selector div, and the modal footer div to the modal div
+        modalDiv.appendChild(colorSelectorDiv);
+        modalDiv.appendChild(modalFooterDiv);
+
+        // When the openModalButton is clicked, open the modal
+        openModalButton.addEventListener('click', function() {
+            modalDiv.style.display = 'block';
+        });
+
+        // Add the openModalButton to the div
+        div.appendChild(openModalButton);
+
+        // Add the modal div to the div
+        div.appendChild(modalDiv);
+
+        // Return the div
+        return div;
+    }
+
+
+
+
 
     // The AdvancedGraph class
     function AdvancedGraph(graphType, graphLabel, getForm, getGraph, checkReady, canCreate) {
@@ -1533,11 +1601,19 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
             });
 
-            // Create a colors selector
-            var colorsSelector = createColorsSelector('palette_brewer');
+            // Create a colors selector modal
+            var colorsSelectorModal = createColorsSelectorModal('palette_brewer');
+
+            // Create a help object for the colors selector modal
+            var colorsSelectorModalHelp = {
+                title: module.tt('bar_colors'),
+                content: module.tt('bar_colors_help')
+            };
+
+
 
             // Create a parameter div for the colors selector
-            var colorsParameterDiv = createParameterDiv(colorsSelector, module.tt('bar_colors'));
+            var colorsParameterDiv = createParameterDiv(colorsSelectorModal, module.tt('bar_colors'), colorsSelectorModalHelp);
 
             // Add the colors selector to the left div
             leftDiv.appendChild(colorsParameterDiv);
