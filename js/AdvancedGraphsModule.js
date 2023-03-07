@@ -1839,7 +1839,21 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var choices_or_calculations = field.select_choices_or_calculations;
 
         // If the choices or calculations string is empty, return an empty array
-        if (!choices_or_calculations) {
+        if (choices_or_calculations === '') {
+            if (field.field_type === 'yesno') {
+                return {
+                    '0': module.tt('no'),
+                    '1': module.tt('yes')
+                }
+            }
+
+            if (field.field_type === 'truefalse') {
+                return {
+                    '0': module.tt('false'),
+                    '1': module.tt('true')
+                }
+            }
+
             return {};
         }
 
