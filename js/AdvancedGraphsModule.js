@@ -1325,98 +1325,170 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // The function used to get the graph
         var getGraph = function (parameters) {
-            console.log('findline');
-            // Use d3 to filter the report to only include entries where redcap_repeat_instrument is equal to the instrument specified by the instrument parameter
-            var filteredReport = d3.group(report, function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
+            // Get a dataframe that only has entries for the instrument specified by the instrument parameter
+            var filteredReport = getFilteredReport(parameters.instrument);
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
             }
 
-            // If we are using a numeric field an na_numeric is set to drop
+            // If we are using a numeric field and na_numeric is set to drop filter out the rows with missing values for the field specified by the numeric parameter
             if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'drop') {
-                // Filter out the rows with missing values for the field specified by the numeric parameter
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
             }
 
-            var numeric_replace = function(d) {
-                if (d[parameters.numeric_field] == '')
-                    return parameters.na_numeric == 'replace' && parameters.na_numeric_value != undefined ? parameters.na_numeric_value : 0;
-
-                return d[parameters.numeric_field]; // TODO: re-write this
+            // If we are using a numeric field and na_numeric is set to replace, set the bar height function to use the na_numeric_value parameter
+            if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'replace') {
+                var barHeightFunction = function (d) { return d[parameters.numeric_field] == '' ? parameters.na_numeric_value : d[parameters.numeric_field]; };
+            } else {
+                var barHeightFunction = function (d) { return d[parameters.numeric_field]; };
             }
-            
-            // If is_count is present or numeric is empty
+
+            // If we are not using a numeric field, get the counts for each category
             if (parameters.is_count || parameters.numeric_field == '') {
-                // Use d3 to count the number of entries in each group
-                groupedReport = d3.rollup(filteredReport, v => v.length, d => d[parameters.categorical_field]);
+                var counts = d3.rollup(filteredReport, v => v.length, d => d[parameters.categorical_field]);
+            } else {
+                // If we are using a numeric field, get the aggregation function for each category
+                var counts = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, barHeightFunction), d => d[parameters.categorical_field]);
             }
 
-            // If is_count is not present and numeric is not empty
-            if (!parameters.is_count && parameters.numeric_field != '') {
-                // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
-                groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, numeric_replace), d => d[parameters.categorical_field]);
-            }
-
-            // Get the field's choices
             var choices = parseChoicesOrCalculations(parameters.categorical_field);
 
-            groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: choices[key] ? choices[key] : module.tt('na'), value: value}));
-
-
-            // If unused_categories is 'keep' and there are unused categories
-            if (parameters.unused_categories == 'keep' && Object.keys(choices).length > groupedReportDF.length) {
-                // Add the unused categories to the grouped report
-                Object.keys(choices).forEach(function (key) {
-                    if (!groupedReportDF.some(function (d) { return d.key == choices[key]; })) {
-                        groupedReportDF.push({key: choices[key], value: 0});
-                    }
-                });
+            // If unused_categories is set to keep, set the domain to all the choices
+            if (parameters.unused_categories == 'keep') {
+                var domain = choices.keys();
+            } else {
+                // If unused_categories is set to drop, set the domain to the categories that have counts
+                var domain = Array.from(counts.keys());
             }
 
-             // Create a function to interpolate between colors for each category
-             const interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
-            
-             const colorScale = d3.scaleOrdinal()
-             .domain(groupedReportDF.map(d => d.key))
-             .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
+            var barHeights = Array.from(counts, ([key, value]) => ({key: key, value: value}));
+
+            // Create a function to interpolate between colors for each category
+            var interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
+        
+            var colorScale = d3.scaleOrdinal()
+                .domain(groupedReportDF.map(d => d.key))
+                .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
 
 
-            // If graph type is 'bar'
+            // If the graph type is bar
             if (parameters.graph_type == 'bar') {
-                // Create a bar graph using the observable plot library
-                var bars = Plot.barY(groupedReportDF, 
-                    {
-                        x: 'key',
-                        y: 'value', 
-                        fill: d => colorScale(d.key)
-                        // width: 600,
-                        // height: 400,
-                        // xLabel: parameters.categorical_field,
-                        // yLabel: parameters.numeric_field == '' ? 'Count' : parameters.numeric,
-                            }
-                )
-                
+                // Create a bar chart
+                var bars = Plot.barY(barHeights, {
+                    x: 'key',
+                    y: 'value',
+                    fill: d=>colorScale(d.key)
+                });
+
                 var graph = Plot.plot({
                     x: {
-                        domain: groupedReportDF.map(function (d) { return d.key; })
+                        domain: domain,
+                        label: parameters.categorical_field
                     },
-                    marks: 
-                    [
+                    y: {
+                        label: parameters.numeric_field
+                    },
+                    marks: [
                         bars
                     ]
                 });
 
-                // Return the graph
                 return graph;
             }
-
-
-            // Return an empty div
             return document.createElement('div');
-            
         };
+
+            // console.log('findline');
+            // // Use d3 to filter the report to only include entries where redcap_repeat_instrument is equal to the instrument specified by the instrument parameter
+            // var filteredReport = d3.group(report, function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
+
+            // // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
+            // if (parameters.na_category == 'drop') {
+            //     filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
+            // }
+
+            // // If we are using a numeric field an na_numeric is set to drop
+            // if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'drop') {
+            //     // Filter out the rows with missing values for the field specified by the numeric parameter
+            //     filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
+            // }
+
+            // var numeric_replace = function(d) {
+            //     if (d[parameters.numeric_field] == '')
+            //         return parameters.na_numeric == 'replace' && parameters.na_numeric_value != undefined ? parameters.na_numeric_value : 0;
+
+            //     return d[parameters.numeric_field]; // TODO: re-write this
+            // }
+            
+            // // If is_count is present or numeric is empty
+            // if (parameters.is_count || parameters.numeric_field == '') {
+            //     // Use d3 to count the number of entries in each group
+            //     groupedReport = d3.rollup(filteredReport, v => v.length, d => d[parameters.categorical_field]);
+            // }
+
+            // // If is_count is not present and numeric is not empty
+            // if (!parameters.is_count && parameters.numeric_field != '') {
+            //     // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
+            //     groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, numeric_replace), d => d[parameters.categorical_field]);
+            // }
+
+            // // Get the field's choices
+            // var choices = parseChoicesOrCalculations(parameters.categorical_field);
+
+            // groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: choices[key] ? choices[key] : module.tt('na'), value: value}));
+
+
+            // // If unused_categories is 'keep' and there are unused categories
+            // if (parameters.unused_categories == 'keep' && Object.keys(choices).length > groupedReportDF.length) {
+            //     // Add the unused categories to the grouped report in their respective order
+            //     Object.keys(choices).forEach(function (key) {
+            //         if (!groupedReportDF.some(function (d) { return d.key == choices[key]; })) {
+            //             groupedReportDF.push({key: choices[key], value: 0});
+            //         }
+            //     });
+            // }
+
+            //  // Create a function to interpolate between colors for each category
+            //  const interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
+            
+            //  const colorScale = d3.scaleOrdinal()
+            //  .domain(groupedReportDF.map(d => d.key))
+            //  .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
+
+
+            // // If graph type is 'bar'
+            // if (parameters.graph_type == 'bar') {
+            //     // Create a bar graph using the observable plot library
+            //     var bars = Plot.barY(groupedReportDF, 
+            //         {
+            //             x: 'key',
+            //             y: 'value', 
+            //             fill: d => colorScale(d.key)
+            //             // width: 600,
+            //             // height: 400,
+            //             // xLabel: parameters.categorical_field,
+            //             // yLabel: parameters.numeric_field == '' ? 'Count' : parameters.numeric,
+            //                 }
+            //     )
+
+            //     // get the keys of choices
+                
+            //     var graph = Plot.plot({
+            //         x: {
+            //             domain: choices.keys()
+            //         },
+            //         marks: 
+            //         [
+            //             bars
+            //         ]
+            //     });
+
+            //     // Return the graph
+            //     return graph;
+            
+            // Return an empty div
 
 
 
