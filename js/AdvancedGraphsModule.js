@@ -1250,57 +1250,29 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // The function used to get the graph
         var getGraph = function (parameters) {
+            console.log('findline');
             // Use d3 to filter the report to only include entries where redcap_repeat_instrument is equal to the instrument specified by the instrument parameter
-            var filteredReport = d3.group(Array.from(report), function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
+            var filteredReport = d3.group(report, function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
             }
 
-            // Replace the values in the field specified by the categorical_field parameter with their respective labels
-
-            // Get the field's choices
-            var choices = parseChoicesOrCalculations(parameters.categorical_field);
-
-            // Replace the values in the field specified by the categorical_field parameter with their respective labels
-            filteredReport = filteredReport.map(function (d) {
-                d[parameters.categorical_field] = choices[d[parameters.categorical_field]];
-
-                return d;
-            });
-
-            // Replace the empty entries in the field specified by the categorical_field parameter with the value specified by NA
-            filteredReport = filteredReport.map(function (d) {
-                if (d[parameters.categorical_field] == '') {
-                    d[parameters.categorical_field] = module.tt('na');
-                }
-
-                return d;
-            });
-
-
-
-
             // If is_count is present or numeric is empty
-            if (parameters.is_count || parameters.numeric_field == '') {
+            if ((parameters.is_count || parameters.numeric_field == '') && parameters.na_numeric == 'drop') {
                 // If na_numeric is 'drop', filter out the rows with missing values for the field specified by the numeric parameter
-                if (parameters.na_numeric == 'drop') {
-                    filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
-                }
-
-                // If na_numeric is 'replace', replace the missing values for the field specified by the numeric parameter with the value specified by the na_numeric_value parameter
-                if (parameters.na_numeric == 'replace') {
-                    filteredReport = filteredReport.map(function (d) {
-                        if (d[parameters.numeric_field] == '') {
-                            d[parameters.numeric_field] = parameters.na_numeric_value;
-                        }
-
-                        return d;
-                    });
-                }
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
+ 
             }
-            console.log('findline');
+
+            var numeric_replace = function(d) {
+                if (d.numeric_field == '')
+                    return parameters.na_numeric == 'replace' && parameters.na_numeric_value != undefined ? parameters.na_numeric_value : 0;
+
+                return d.numeric_field; // TODO: re-write this
+            }
+            
             // If is_count is present or numeric is empty
             if (parameters.is_count || parameters.numeric_field == '') {
                 // Use d3 to count the number of entries in each group
@@ -1310,10 +1282,13 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // If is_count is not present and numeric is not empty
             if (!parameters.is_count && parameters.numeric_field != '') {
                 // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
-                groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, d => d.numeric_field), d => d.categorical_field);
+                groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, numeric_replace), d => d.categorical_field);
             }
 
-            groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: key, value: value}));
+            // Get the field's choices
+            var choices = parseChoicesOrCalculations(parameters.categorical_field);
+
+            groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: choices[key] ? choices[key] : module.tt('na'), value: value}));
 
             // If is_percentage is present
             // if (parameters.is_percentage) {
