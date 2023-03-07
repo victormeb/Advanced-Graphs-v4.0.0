@@ -9,14 +9,14 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     // insruments is an object with the following structure:
     // {
-        // "repeating": [
-            // {"form_name": "example_name",
+        // "repeating": {
+            // example_name: {"form_name": "example_name",
             // "form_label": "Example Label",
             // "fields": ["example_field_1", "example_field_2"]},
-            // {"form_name": "example_name_2",
+            // example_name_2: {"form_name": "example_name_2",
             // "form_label": "Example Label 2",
             // "fields": ["example_field_1", "example_field_2"]}
-        // ],
+        // },
         // "non_repeating": ["example_field_1", "example_field_2"]
     // }
     var instruments = instruments;
@@ -1078,8 +1078,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Return the div
         return div;
-    }
-        
+    } 
 
 
     // The AdvancedGraph class
@@ -1300,6 +1299,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             //         };
             //     });
             // }
+            // Create a color scale to map each category to a unique color
+            
+            // Create a function to interpolate between colors for each category
+            const interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
+            
+            const colorScale = d3.scaleOrdinal()
+            .domain(groupedReportDF.map(d => d.key))
+            .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length-1))));
+
+
 
             // If graph type is 'bar'
             if (parameters.graph_type == 'bar') {
@@ -1308,12 +1317,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     {
                         x: 'key',
                         y: 'value', 
-                        fill: 'key',
-                        color: 
-                            {
-                                range: parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue'],
-                                interpolate: 'hcl'
-                            }
+                        fill: d => colorScale(d.key)
                         // width: 600,
                         // height: 400,
                         // xLabel: parameters.categorical_field,
@@ -1870,9 +1874,19 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     function serializeForm(form) {
         var formData = new FormData(form);
         var object = {};
-        formData.forEach(function (value, key) {
+        for (const key of formData.keys()) {
+            const value = formData.getAll(key);
+
+            if (!value.length)
+                continue;
+
+            if (value.length == 1) {
+                object[key] = value[0];
+                continue;
+            }
+
             object[key] = value;
-        });
+        }
         return object;
     }
 }

@@ -638,7 +638,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 		// get the repeating instruments
 		foreach ($repeat_instruments as $instrument) {
-			$repeat_dictionary[$instrument] = array("form_label" => REDCap::getInstrumentNames($instrument, $project_id), "fields" => array());
+			$repeat_dictionary[$instrument] = array("form_name" => $instrument, "form_label" => REDCap::getInstrumentNames($instrument, $project_id), "fields" => array());
 		}
 
 		// get the fields for each repeating instrument
