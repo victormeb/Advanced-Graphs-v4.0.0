@@ -1326,7 +1326,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // The function used to get the graph
         var getGraph = function (parameters) {
             // Get a dataframe that only has entries for the instrument specified by the instrument parameter
-            var filteredReport = getFilteredReport(parameters.instrument);
+            var filteredReport = report.filter(function (d) { return d['redcap_repeat_instrument'] == parameters.instrument; });
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
