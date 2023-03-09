@@ -1283,7 +1283,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //     aggregation_function: 'count' or 'sum' or 'mean' or 'median' or 'min' or 'max',
     //     -- More Options --
     //     show_legend: true,
+    //     bottom_margin: 80,
+    //     x_title_offset: 45,
     //     x_title_size: 15,
+    //     left_margin: 45,
+    //     y_title_offset: 45,
     //     x_label_size: 10,
     //     y_label_size: 10,
     //     max_label_width: 100,
@@ -1433,7 +1437,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 const xAxisTitle = Plot.axisX({
                     domain: domain,
                     type: 'band',
-                    label: getFieldLabel(parameters.categorical_field),
+                    label: parameters.x_title_offset ? x_title_offset : getFieldLabel(parameters.categorical_field),
                     labelOffset: maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + 40,
                     tick: null,
                     tickFormat: null,
@@ -1445,7 +1449,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 const yAxisTitle = Plot.axisY({
                     label: parameters.numeric_field ? getFieldLabel(parameters.numeric_field) : module.tt('count'),
                     labelAnchor: 'center',
-                    labelOffset: -20,
+                    labelOffset: parameters.y_title_offset ? parameters.y_title_offset : 45,
                     fontSize: yAxisTitleSize,
                     tick: null,
                     tickFormat: null
@@ -1470,8 +1474,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                         xAxisLabels,
                         bars
                     ],
-                    marginLeft: 40,
-                    marginBottom: maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + xAxisTitleSize + 40
+                    marginLeft: parameters.left_margin ? parameters.left_margin : 80,
+                    marginBottom: parameters.bottom_margin ? parameters.bottom_margin : maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + xAxisTitleSize + 40
                 });
 
                 return graph;
@@ -1846,6 +1850,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Return the graph options div
             return graphOptionsDiv;
+        }
+
+        var moreOtions = function() {
+            
         }
 
         // A function that updates the graph options div given parameters
