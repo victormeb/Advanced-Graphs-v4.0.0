@@ -1445,6 +1445,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 const yAxisTitle = Plot.axisY({
                     label: parameters.numeric_field ? getFieldLabel(parameters.numeric_field) : module.tt('count'),
                     labelAnchor: 'center',
+                    labelOffset: -20,
                     fontSize: yAxisTitleSize,
                     tick: null,
                     tickFormat: null
@@ -1469,6 +1470,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                         xAxisLabels,
                         bars
                     ],
+                    marginLeft: 40,
                     marginBottom: maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + xAxisTitleSize + 40
                 });
 
