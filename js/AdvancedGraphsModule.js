@@ -4,8 +4,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     var module = module;
     var dashboard = dashboard;
-    var data_dictionary = data_dictionary;
-    var report = report;
+    const data_dictionary = data_dictionary;
+    const report = report;
 
     // insruments is an object with the following structure:
     // {
@@ -1281,6 +1281,13 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //     na_numeric: 'drop' or 'replace',
     //     na_numeric_value (optional): 0,
     //     aggregation_function: 'count' or 'sum' or 'mean' or 'median' or 'min' or 'max',
+    //     -- More Options --
+    //     show_legend: true,
+    //     x_title_size: 15,
+    //     x_label_size: 10,
+    //     y_label_size: 10,
+    //     max_label_width: 100,
+    //     rotate: 0,
     //     is_percentage (optional): true,
     //     palette_brewer (optional): ['color1', 'color2', ...],
     //     show_which: 'graph' or 'table' or 'both' (if not specified, defaults to 'both'),
@@ -1328,6 +1335,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             console.log("findline");
             // Get the choices for the category
             var choices = parseChoicesOrCalculations(parameters.categorical_field);
+
+            // If the category is a checkbox field, get a checkbox field report
+            if (isCheckboxField(parameters.categorical_field)) {
+                var report = getCheckboxFieldReport(parameters.categorical_field);
+            }
 
             // Get a dataframe that only has entries for the instrument specified by the instrument parameter
             var filteredReport = report.filter(function (d) { return d['redcap_repeat_instrument'] == parameters.instrument; });
@@ -1419,11 +1431,21 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 const xAxisTitle = Plot.axisX({
                     domain: domain,
                     type: 'band',
-                    label: parameters.categorical_field,
+                    label: getFieldLabel(parameters.categorical_field),
                     labelOffset: maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + 40,
                     tick: null,
                     tickFormat: null,
                     fontSize: xAxisTitleSize
+                });
+
+                const yAxisTitleSize = parameters.y_title_size ? parameters.y_title_size : 15;
+                
+                const yAxisTitle = Plot.axisY({
+                    label: parameters.numeric_field ? getFieldLabel(parameters.numeric_field) : module.tt('count'),
+                    labelAnchor: 'center',
+                    fontSize: yAxisTitleSize,
+                    tick: null,
+                    tickFormat: null
                 });
 
                 // Create a bar chart
@@ -1439,10 +1461,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                         domain: domain,
                         type: 'band'
                     },
-                    y: {
-                        label: parameters.numeric_field
-                    },
                     marks: [
+                        yAxisTitle,
                         xAxisTitle,
                         xAxisLabels,
                         bars
@@ -1667,6 +1687,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Add the unused categories radio selector to the left div
             leftDiv.appendChild(unusedCategoriesRadioSelectorParameterDiv);
 
+            // Create a right div
+            var rightDiv = document.createElement('div');
+            rightDiv.setAttribute('class', 'AG-editor-graph-options-right');
+
             // Get the numeric fields
             var numericFields = getNumericFields(instrument['fields']);
 
@@ -1695,8 +1719,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Create a parameter div for the numeric field selector
             var numericFieldParameterDiv = createParameterDiv(numericFieldSelector, module.tt('numeric_field'), numericFieldHelp);
 
-            // Add the numeric field selector to the left div
-            leftDiv.appendChild(numericFieldParameterDiv);
+            // Add the numeric field selector to the right div
+            rightDiv.appendChild(numericFieldParameterDiv);
 
             // Create a radio selector to select between dropping or replacing missing values
             var missingValueRadioSelector = createDropOrReplaceTwinSelect('na_numeric', undefined,defaultOption = 'drop');
@@ -1711,7 +1735,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var missingValueRadioSelectorParameterDiv = createParameterDiv(missingValueRadioSelector, module.tt('na_numeric'), missingValueRadioSelectorHelp);
 
             // Add the missing value radio selector to the left div
-            leftDiv.appendChild(missingValueRadioSelectorParameterDiv);
+            rightDiv.appendChild(missingValueRadioSelectorParameterDiv);
 
             // Create an aggregation function selector
             var aggregationFunctionSelector = createAggregationFunctionSelector('aggregation_function');
@@ -1726,7 +1750,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var aggregationFunctionParameterDiv = createParameterDiv(aggregationFunctionSelector, module.tt('aggregation_function'), aggregationFunctionHelp);
 
             // Add the aggregation function selector to the left div
-            leftDiv.appendChild(aggregationFunctionParameterDiv);
+            rightDiv.appendChild(aggregationFunctionParameterDiv);
 
 
             // Create an invisible checkbox to determine whether the option group of the numeric field has the data-group attribute set to count
@@ -1737,7 +1761,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             numericFieldCountCheckbox.setAttribute('value', 'is_count');
 
             // Add the numeric field count checkbox to the left div
-            leftDiv.appendChild(numericFieldCountCheckbox);
+            rightDiv.appendChild(numericFieldCountCheckbox);
 
             // When the form is first created, hide the aggregation function selector and the missing value radio selector
             numericFieldCountCheckbox.checked = true;
@@ -1759,6 +1783,34 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     missingValueRadioSelectorParameterDiv.style.display = 'block';
                 }
             });
+
+            // Create a more options div
+            var moreOptionsDiv = document.createElement('div');
+            moreOptionsDiv.setAttribute('class', 'AG-editor-graph-options-more-options');
+
+            // Create a details element for the more options div
+            var moreOptionsDetails = document.createElement('details');
+
+            // Create a summary element for the more options details element
+            var moreOptionsSummary = document.createElement('summary');
+            moreOptionsSummary.appendChild(document.createTextNode(module.tt('more_options')));
+
+            // Create a div for the more options details element that will contain more input elements
+            var moreOptionsInputs = document.createElement('div');
+            moreOptionsInputs.setAttribute('class', 'AG-editor-graph-options-more-options-inputs');
+
+            // Create a checkbox to determine whether to show the legend
+            var showLegendCheckbox = createCheckbox('show_legend', module.tt('show_legend'), module.tt('show_legend_help'));
+
+            // Add the show legend checkbox to the more options inputs div
+            moreOptionsInputs.appendChild(showLegendCheckbox);
+
+
+
+            // Add the summary element to the details element
+            moreOptionsDetails.appendChild(moreOptionsSummary);
+
+            // Create a div for the more options details element that will contain more input elements
 
             // Create a colors selector modal
             var colorsSelectorModal = createColorsSelectorModal('palette_brewer');
@@ -1782,6 +1834,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Add the left div to the graph options div
             graphOptionsDiv.appendChild(leftDiv);
+
+            // Add the right div to the graph options div
+            graphOptionsDiv.appendChild(rightDiv);
+
+
 
             // Return the graph options div
             return graphOptionsDiv;
@@ -1950,6 +2007,63 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return data_dictionary[field_name];
     }
 
+    // A function that returns the field label give a field name
+    function getFieldLabel(field_name) {
+        return getField(field_name).field_label;
+    }
+
+    // A function that takes a checkbox field name and returns a report that has been transformed into a longer format
+    function getCheckboxReport(report, checkbox_field) {
+        // If the field is a string, get the field from the data dictionary
+        if (typeof checkbox_field === 'string') {
+            checkbox_field = getField(checkbox_field);
+        }
+
+        // If the field is not a checkbox field, return the report
+        if (!isCheckboxField(checkbox_field)) {
+            return report;
+        }
+
+        var checkbox_fields = Object.keys(report[0]).filter(function (field) {
+            // The field matches regex `checkbox_field_name___[0-9]+\b`
+            return field.match(new RegExp('^' + checkbox_field.field_name + '___[0-9]+\\b'));
+        });
+
+        var longer_report = report.flatMap(function (row) {
+            var new_rows = [];
+
+            for (var i = 0; i < checkbox_fields.length; i++) {
+                // Get the numerical portion of the checkbox field name
+                var checkbox_field_name = checkbox_fields[i];
+                var checkbox_field_name_number = checkbox_field_name.split('___')[1];
+
+                // Get the checkbox field value
+                var checkbox_field_value = row[checkbox_field_name];
+
+                // If the checkbox field is checked, add a new row to the report
+                if (checkbox_field_value === '1') {
+                    var new_row = Object.assign({}, row);
+
+                    // Remove all the checkbox fields from the new row
+                    for (var j = 0; j < checkbox_fields.length; j++) {
+                        delete new_row[checkbox_fields[j]];
+                    }
+
+                    // Add the checkbox field value to the new row
+                    new_row[checkbox_field_name] = checkbox_field_name_number;
+
+                    // Add the new row to the new rows
+                    new_rows.push(new_row);
+                }
+            }
+
+            return new_rows;
+        });
+
+        return longer_report;
+    }
+                    
+
     // A function that parses a fields select_choices_or_calculations string
     function parseChoicesOrCalculations(field) {
         // If the field is a string, get the field from the data dictionary
@@ -1983,6 +2097,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             return {};
         }
+
 
         // Split the choices or calculations string by |
         var choices_or_calculations_array = choices_or_calculations.split('|');
