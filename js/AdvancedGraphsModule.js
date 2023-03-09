@@ -4,8 +4,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     var module = module;
     var dashboard = dashboard;
-    const data_dictionary = data_dictionary;
-    const report = report;
+    var data_dictionary = data_dictionary;
+    var report = report;
 
     // insruments is an object with the following structure:
     // {
@@ -1336,13 +1336,15 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Get the choices for the category
             var choices = parseChoicesOrCalculations(parameters.categorical_field);
 
+            var this_report = report;
+
             // If the category is a checkbox field, get a checkbox field report
             if (isCheckboxField(parameters.categorical_field)) {
-                var report = getCheckboxFieldReport(parameters.categorical_field);
+                this_report = getCheckboxFieldReport(parameters.categorical_field);
             }
 
             // Get a dataframe that only has entries for the instrument specified by the instrument parameter
-            var filteredReport = report.filter(function (d) { return d['redcap_repeat_instrument'] == parameters.instrument; });
+            var filteredReport = this_report.filter(function (d) { return d['redcap_repeat_instrument'] == parameters.instrument; });
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
@@ -1800,10 +1802,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             moreOptionsInputs.setAttribute('class', 'AG-editor-graph-options-more-options-inputs');
 
             // Create a checkbox to determine whether to show the legend
-            var showLegendCheckbox = createCheckbox('show_legend', module.tt('show_legend'), module.tt('show_legend_help'));
+            // var showLegendCheckbox = createCheckbox('show_legend', module.tt('show_legend'), module.tt('show_legend_help'));
 
             // Add the show legend checkbox to the more options inputs div
-            moreOptionsInputs.appendChild(showLegendCheckbox);
+            // moreOptionsInputs.appendChild(showLegendCheckbox);
 
 
 
