@@ -1325,6 +1325,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // The function used to get the graph
         var getGraph = function (parameters) {
+            console.log("findline");
+            // Get the choices for the category
+            var choices = parseChoicesOrCalculations(parameters.categorical_field);
+
             // Get a dataframe that only has entries for the instrument specified by the instrument parameter
             var filteredReport = report.filter(function (d) { return d['redcap_repeat_instrument'] == parameters.instrument; });
 
@@ -1332,6 +1336,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             if (parameters.na_category == 'drop') {
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
             }
+
+            // If there are some NA entries for the category in the filtered report
+            if (filteredReport.some(d => d[parameters.categorical_field] == ""))
+                // Add an NA category to choices
+                choices[""] = module.tt("na");
 
             // If we are using a numeric field and na_numeric is set to drop filter out the rows with missing values for the field specified by the numeric parameter
             if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'drop') {
@@ -1353,14 +1362,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 var counts = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, barHeightFunction), d => d[parameters.categorical_field]);
             }
 
-            var choices = parseChoicesOrCalculations(parameters.categorical_field);
-
             // If unused_categories is set to keep, set the domain to all the choices
             if (parameters.unused_categories == 'keep') {
-                var domain = choices.keys();
+                var domain = Object.keys(choices);
             } else {
                 // If unused_categories is set to drop, set the domain to the categories that have counts
-                var domain = Array.from(Object.keys(counts));
+                var domain = Array.from(counts, ([key, value]) => key);
             }
 
             var barHeights = Array.from(counts, ([key, value]) => ({key: key, value: value}));
@@ -1369,15 +1376,60 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
         
             var colorScale = d3.scaleOrdinal()
-                .domain(groupedReportDF.map(d => d.key))
-                .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
+                .domain(domain)
+                .range(domain.map((d, i) => interpolateColors(i / (domain.length > 1 ? domain.length-1: 1))));
 
 
             // If the graph type is bar
             if (parameters.graph_type == 'bar') {
+            
+                // Get the tick labels for each domain value
+                const labels = domain.map(value => choices[value]);
+                
+                // Calculate the max label width using the actual character widths
+                const xLabelSize = parameters.x_labels_size ? parameters.x_labels_size : 10;
+                const maxLabelWidth = parameters.max_label_width ? parameters.max_label_width : Math.max(...labels.map(label => measureText(label, xLabelSize)));
+                
+                // Calculate the optimal tick spacing based on the max label width
+                const labelPadding = 4;
+                const tickSize = 4;
+                const tickPadding = 4;
+                const availableWidth = 640;
+                const barWidth = Math.ceil(availableWidth / (labels.length - 1));
+                //const tickSpacing = Math.max(maxLabelWidth + tickPadding, barWidth);
+
+                // Determine the optimal label rotation angle
+                const labelRotate = parameters.rotate ? parameters.rotate : maxLabelWidth > barWidth ? 90 : 0;
+
+                // Create the axis object with the calculated properties
+                const xAxisLabels = Plot.axisX(domain, {
+                    domain: domain,
+                    type: 'band',
+                    tickSize: tickSize,
+                    tickPadding: tickPadding,
+                    // tickSpacing: tickSpacing,
+                    tickFormat: d => choices[d],
+                    tickRotate:  labelRotate,
+                    fontSize: xLabelSize,
+                    lineWidth: maxLabelWidth   
+                });
+
+                const xAxisTitleSize = parameters.x_title_size ? parameters.x_title_size : 15;
+
+                const xAxisTitle = Plot.axisX({
+                    domain: domain,
+                    type: 'band',
+                    label: parameters.categorical_field,
+                    labelOffset: maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + 40,
+                    tick: null,
+                    tickFormat: null,
+                    fontSize: xAxisTitleSize
+                });
+
                 // Create a bar chart
-                var bars = Plot.barY(barHeights, {
-                    x: d => choices[d.key],
+                const bars = Plot.barY(barHeights, {
+                    domain: domain,
+                    x: d => d.key,
                     y: 'value',
                     fill: d=>colorScale(d.key)
                 });
@@ -1385,14 +1437,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 var graph = Plot.plot({
                     x: {
                         domain: domain,
-                        label: parameters.categorical_field
+                        type: 'band'
                     },
                     y: {
                         label: parameters.numeric_field
                     },
                     marks: [
+                        xAxisTitle,
+                        xAxisLabels,
                         bars
-                    ]
+                    ],
+                    marginBottom: maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + xAxisTitleSize + 40
                 });
 
                 return graph;
@@ -2050,7 +2105,15 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     }
 
+    // A function that measures the length a string of text
+    function measureText(str, fontSize) {
+        const widths = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.2796875,0.2765625,0.3546875,0.5546875,0.5546875,0.8890625,0.665625,0.190625,0.3328125,0.3328125,0.3890625,0.5828125,0.2765625,0.3328125,0.2765625,0.3015625,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.2765625,0.2765625,0.584375,0.5828125,0.584375,0.5546875,1.0140625,0.665625,0.665625,0.721875,0.721875,0.665625,0.609375,0.7765625,0.721875,0.2765625,0.5,0.665625,0.5546875,0.8328125,0.721875,0.7765625,0.665625,0.7765625,0.721875,0.665625,0.609375,0.721875,0.665625,0.94375,0.665625,0.665625,0.609375,0.2765625,0.3546875,0.2765625,0.4765625,0.5546875,0.3328125,0.5546875,0.5546875,0.5,0.5546875,0.5546875,0.2765625,0.5546875,0.5546875,0.221875,0.240625,0.5,0.221875,0.8328125,0.5546875,0.5546875,0.5546875,0.5546875,0.3328125,0.5,0.2765625,0.5546875,0.5,0.721875,0.5,0.5,0.5,0.3546875,0.259375,0.353125,0.5890625]
+        const avg = 0.5279276315789471
 
+        return Array.from(str).reduce(
+          (acc, cur) => acc + (widths[cur.charCodeAt(0)] ?? avg), 0
+        ) * fontSize
+      }
 
     // A function that creates a formData object from the form and turns it into an object 
     function serializeForm(form) {
