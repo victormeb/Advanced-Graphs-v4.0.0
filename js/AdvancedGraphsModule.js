@@ -993,6 +993,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return div;
     }
 
+    // A function that creates an input given an object containing attribute - value pairs
+    function createInput(attributes) {
+        var inputElement = document.createElement('input');
+
+        for (var attribute in attributes) {
+            inputElement.setAttribute(attribute, attributes[attribute]);
+        }
+
+        return inputElement;
+    }
+
     // A function that takes a dom element and returns an object with a checkbox that adds or removes the dom element from the div
     function createOptionalInput(domElement, label, help = null) {
         // Create a div element
@@ -1201,7 +1212,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     }
 
 
+    // A function that takes an array of dom elements and returns a div containing them all
+    function fillDiv(domElements, className) {
+        var div = document.createElement("div");
+        div.setAttribute('class', className);
 
+        for (var element of domElements) {
+            div.append(element);
+        }
+
+        return div;
+    }
 
 
     // The AdvancedGraph class
@@ -1491,8 +1512,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 const xAxisTitle = Plot.axisX({
                     domain: domain,
                     type: 'band',
-                    label: parameters.x_title_offset ? x_title_offset : getFieldLabel(parameters.categorical_field),
-                    labelOffset: maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + 40,
+                    label:  getFieldLabel(parameters.categorical_field),
+                    labelOffset: parameters.x_title_offset ? parameters.x_title_offset : maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + 40,
                     tick: null,
                     tickFormat: null,
                     fontSize: xAxisTitleSize
@@ -1536,98 +1557,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             }
             return document.createElement('div');
         };
-
-            // console.log('findline');
-            // // Use d3 to filter the report to only include entries where redcap_repeat_instrument is equal to the instrument specified by the instrument parameter
-            // var filteredReport = d3.group(report, function (d) { return d.redcap_repeat_instrument; }).get(parameters.instrument);
-
-            // // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
-            // if (parameters.na_category == 'drop') {
-            //     filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
-            // }
-
-            // // If we are using a numeric field an na_numeric is set to drop
-            // if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'drop') {
-            //     // Filter out the rows with missing values for the field specified by the numeric parameter
-            //     filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
-            // }
-
-            // var numeric_replace = function(d) {
-            //     if (d[parameters.numeric_field] == '')
-            //         return parameters.na_numeric == 'replace' && parameters.na_numeric_value != undefined ? parameters.na_numeric_value : 0;
-
-            //     return d[parameters.numeric_field]; // TODO: re-write this
-            // }
-            
-            // // If is_count is present or numeric is empty
-            // if (parameters.is_count || parameters.numeric_field == '') {
-            //     // Use d3 to count the number of entries in each group
-            //     groupedReport = d3.rollup(filteredReport, v => v.length, d => d[parameters.categorical_field]);
-            // }
-
-            // // If is_count is not present and numeric is not empty
-            // if (!parameters.is_count && parameters.numeric_field != '') {
-            //     // Use d3 to aggregate the values in the field specified by the numeric parameter using the aggregation function specified by the aggregation_function parameter
-            //     groupedReport = d3.rollup(filteredReport, v => d3[parameters.aggregation_function](v, numeric_replace), d => d[parameters.categorical_field]);
-            // }
-
-            // // Get the field's choices
-            // var choices = parseChoicesOrCalculations(parameters.categorical_field);
-
-            // groupedReportDF = Array.from(groupedReport, ([key, value]) => ({key: choices[key] ? choices[key] : module.tt('na'), value: value}));
-
-
-            // // If unused_categories is 'keep' and there are unused categories
-            // if (parameters.unused_categories == 'keep' && Object.keys(choices).length > groupedReportDF.length) {
-            //     // Add the unused categories to the grouped report in their respective order
-            //     Object.keys(choices).forEach(function (key) {
-            //         if (!groupedReportDF.some(function (d) { return d.key == choices[key]; })) {
-            //             groupedReportDF.push({key: choices[key], value: 0});
-            //         }
-            //     });
-            // }
-
-            //  // Create a function to interpolate between colors for each category
-            //  const interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
-            
-            //  const colorScale = d3.scaleOrdinal()
-            //  .domain(groupedReportDF.map(d => d.key))
-            //  .range(groupedReportDF.map((d, i) => interpolateColors(i / (groupedReportDF.length > 1 ? groupedReportDF.length-1: 1))));
-
-
-            // // If graph type is 'bar'
-            // if (parameters.graph_type == 'bar') {
-            //     // Create a bar graph using the observable plot library
-            //     var bars = Plot.barY(groupedReportDF, 
-            //         {
-            //             x: 'key',
-            //             y: 'value', 
-            //             fill: d => colorScale(d.key)
-            //             // width: 600,
-            //             // height: 400,
-            //             // xLabel: parameters.categorical_field,
-            //             // yLabel: parameters.numeric_field == '' ? 'Count' : parameters.numeric,
-            //                 }
-            //     )
-
-            //     // get the keys of choices
-                
-            //     var graph = Plot.plot({
-            //         x: {
-            //             domain: choices.keys()
-            //         },
-            //         marks: 
-            //         [
-            //             bars
-            //         ]
-            //     });
-
-            //     // Return the graph
-            //     return graph;
-            
-            // Return an empty div
-
-
 
 
         // The function that checks if the form is ready to create the graph
@@ -1695,7 +1624,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // When the value of graph_type changes, set the moreOptionsDiv to the appropriate div
             graphTypeRadioSelector.addEventListener('change', function() {
                 // If the radio option 'bar' is selected
-                if (graphTypeRadioSelector.value == 'bar') {
+                if (graphTypeRadioSelector.querySelector('input[value="bar"]').checked) {
                     // Set the moreOptionsDiv to the barMoreOptionsDiv
                     moreOptionsDiv.innerHTML = '';
                     var barMoreOptionsDiv = moreOptions([
@@ -2070,6 +1999,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Add the right div to the graph options div
             graphOptionsDiv.appendChild(rightDiv);
 
+            // Add the more options div to the graph options div
+            graphOptionsDiv.appendChild(moreOptionsDiv);
 
 
             // Return the graph options div
