@@ -1494,9 +1494,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 x_tick_format = d => wrapString(choices[d], x_label_length);
             }
             
-            const x_rotate = parameters.x_rotate ? parameters.x_rotate : parameters.x_label_length * x_label_size * 1.2 > 640 / domain.length ? 45 : 0;
-            const x_title_offset = parameters.x_title_offset ? parameters.x_title_offset : x_label_width * Math.sin(x_rotate * Math.PI / 180) + x_title_size + 10;
-            const bottom_margin = parameters.bottom_margin ? parameters.bottom_margin : x_label_width * Math.sin(x_rotate * Math.PI / 180) + x_title_size * 2 + 10;
+            const x_rotate = parameters.x_rotate ? parameters.x_rotate : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 45 : 0;
+            const x_title_offset = parameters.x_title_offset ? parameters.x_title_offset : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) + x_title_size + 10;
+            const bottom_margin = parameters.bottom_margin ? parameters.bottom_margin : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) + x_title_size * 2 + 10;
+            
             const y_title_size = parameters.y_title_size ? parameters.y_title_size : 15;
             const y_title_limit = parameters.y_title_limit ? parameters.y_title_limit : null;
             const y_title_length = parameters.y_title_length ? parameters.y_title_length : 0;
