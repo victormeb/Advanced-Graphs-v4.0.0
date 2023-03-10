@@ -1022,7 +1022,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         var labelElement = document.createElement('label');
 
         // Set the label element attributes
-        labelElement.setAttribute('for', 'AG-editor-optional-input-checkbox');
         labelElement.innerHTML = label;
 
         // When the checkbox changes, remove or add the dom element to the div
@@ -1037,6 +1036,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Add the checkbox and label elements to the div
         div.appendChild(checkbox);
         div.appendChild(labelElement);
+        div.appendChild(document.createElement('br'));
 
         // If the help parameter is not null
         if (help !== null) {
@@ -1363,9 +1363,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     //     x_rotate: 0,
     //     left_margin: 45,
     //     y_title_offset: 45,
-    //     y_title_size: 15
+    //     y_title_size: 15,
+    //     y_title_limit: "wrap" or "truncate",
+    //     y_title_length: 40,
     //     y_label_size: 10,
-    //     y_label_length: 100,
+    //     y_label_length: "wrap" or "truncate"
+    //     y_label_width: 100,
     //     y_rotate: 0,
     //     is_percentage (optional): true,
     //     palette_brewer (optional): ['color1', 'color2', ...],
@@ -1472,51 +1475,78 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 .domain(domain)
                 .range(domain.map((d, i) => interpolateColors(i / (domain.length > 1 ? domain.length-1: 1))));
 
+            const x_title_size = parameters.x_title_size ? parameters.x_title_size : 15;
+            const x_title_limit = parameters.x_title_limit ? parameters.x_title_limit : null;
+            const x_title_length = parameters.x_title_length ? parameters.x_title_length : 0;
+            const x_label_size = parameters.x_label_size ? parameters.x_label_size : 10;
+            const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
+            const x_label_length = parameters.x_label_length ? parameters.x_label_length : Math.max(...domain.map(d => choices[d].length));
+            
+            // Get the x tick format
+            var x_tick_format = d => choices[d];
+
+            // If x_label_limit is set to truncate, truncate the labels
+            if (x_label_limit == 'truncate') {
+                x_tick_format = d => truncateString(choices[d], x_label_length);
+            }
+            // If x_label_limit is set to wrap, wrap the labels
+            if (x_label_limit == 'wrap') {
+                x_tick_format = d => wrapString(choices[d], x_label_length);
+            }
+            
+            const x_rotate = parameters.x_rotate ? parameters.x_rotate : parameters.x_label_length * x_label_size * 1.2 > 640 / domain.length ? 45 : 0;
+            const x_title_offset = parameters.x_title_offset ? parameters.x_title_offset : x_label_width * Math.sin(x_rotate * Math.PI / 180) + x_title_size + 10;
+            const bottom_margin = parameters.bottom_margin ? parameters.bottom_margin : x_label_width * Math.sin(x_rotate * Math.PI / 180) + x_title_size * 2 + 10;
+            const y_title_size = parameters.y_title_size ? parameters.y_title_size : 15;
+            const y_title_limit = parameters.y_title_limit ? parameters.y_title_limit : null;
+            const y_title_length = parameters.y_title_length ? parameters.y_title_length : 0;
+            const y_label_size = parameters.y_label_size ? parameters.y_label_size : 10;
+            const y_label_limit = parameters.y_label_limit ? parameters.y_label_limit : null;
+            const y_label_length = parameters.y_label_length ? parameters.y_label_length : Math.max(...barHeights.map(d => d.value.toString().length));
+            
+            // Get the y tick format
+            var y_tick_format = d => d;
+
+            // If y_label_limit is set to truncate, truncate the labels
+            if (y_label_limit == 'truncate') {
+                y_tick_format = d => truncateString(d, y_label_length);
+            }
+            // If y_label_limit is set to wrap, wrap the labels
+            if (y_label_limit == 'wrap') {
+                y_tick_format = d => wrapString(d, y_label_length);
+            }
+
+            // If y_label_limit is a string and not truncate or wrap, use it as the tick format
+            if (y_label_limit != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
+                y_tick_format = d => d3.format(y_label_limit)(d);
+            }
+
+
+            const y_rotate = parameters.y_rotate ? parameters.y_rotate : 0;
+            const y_title_offset = parameters.y_title_offset ? parameters.y_title_offset : 45;
+            const left_margin = parameters.left_margin ? parameters.left_margin : 80;
 
             // If the graph type is bar
-            if (parameters.graph_type == 'bar') {
-            
-                // Get the tick labels for each domain value
-                const labels = domain.map(value => choices[value]);
-                
-                // Calculate the max label width using the actual character widths
-                const xLabelSize = parameters.x_labels_size ? parameters.x_labels_size : 10;
-                const maxLabelWidth = parameters.max_label_width ? parameters.max_label_width : Math.max(...labels.map(label => measureText(label, xLabelSize)));
-                
-                // Calculate the optimal tick spacing based on the max label width
-                const labelPadding = 4;
-                const tickSize = 4;
-                const tickPadding = 4;
-                const availableWidth = 640;
-                const barWidth = Math.ceil(availableWidth / (labels.length - 1));
-                //const tickSpacing = Math.max(maxLabelWidth + tickPadding, barWidth);
-
-                // Determine the optimal label rotation angle
-                const labelRotate = parameters.rotate ? parameters.rotate : maxLabelWidth > barWidth ? 90 : 0;
+            if (parameters.graph_type == 'bar') {      
 
                 // Create the axis object with the calculated properties
                 const xAxisLabels = Plot.axisX(domain, {
                     domain: domain,
                     type: 'band',
-                    tickSize: tickSize,
-                    tickPadding: tickPadding,
-                    // tickSpacing: tickSpacing,
-                    tickFormat: d => choices[d],
-                    tickRotate:  labelRotate,
-                    fontSize: xLabelSize,
-                    lineWidth: maxLabelWidth   
+                    tickFormat: x_tick_format,
+                    tickRotate:  x_rotate,
+                    fontSize: x_label_size, 
                 });
 
-                const xAxisTitleSize = parameters.x_title_size ? parameters.x_title_size : 15;
 
                 const xAxisTitle = Plot.axisX({
                     domain: domain,
                     type: 'band',
                     label:  getFieldLabel(parameters.categorical_field),
-                    labelOffset: parameters.x_title_offset ? parameters.x_title_offset : maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + 40,
+                    labelOffset: x_title_offset,
                     tick: null,
                     tickFormat: null,
-                    fontSize: xAxisTitleSize
+                    fontSize: x_title_size
                 });
 
                 const yAxisTitleSize = parameters.y_title_size ? parameters.y_title_size : 15;
@@ -1524,8 +1554,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 const yAxisTitle = Plot.axisY({
                     label: parameters.numeric_field ? getFieldLabel(parameters.numeric_field) : module.tt('count'),
                     labelAnchor: 'center',
-                    labelOffset: parameters.y_title_offset ? parameters.y_title_offset : 45,
-                    fontSize: yAxisTitleSize,
+                    labelOffset: y_label_offset,
+                    fontSize: y_title_size,
                     tick: null,
                     tickFormat: null
                 });
@@ -1550,7 +1580,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                         bars
                     ],
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
-                    marginBottom: parameters.bottom_margin ? parameters.bottom_margin : maxLabelWidth * Math.sin(labelRotate * Math.PI / 180) + xAxisTitleSize + 40
+                    marginBottom: bottom_margin
                 });
 
                 return graph;
@@ -1628,18 +1658,25 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     // Set the moreOptionsDiv to the barMoreOptionsDiv
                     moreOptionsDiv.innerHTML = '';
                     var barMoreOptionsDiv = moreOptions([
-                        createInput({
-                            'name': 'show_legend',
-                            'label': module.tt('show_legend'),
-                            'type': 'checkbox',
-                            'value': true,
-                            'checked': true
-                        }),
+                        fillDiv([
+                            (function () {
+                                var label = document.createElement('label');
+                                label.innerHTML = module.tt('show_legend');
+                                return label;
+                            })(),
+                            createInput({
+                                'name': 'show_legend',
+                                'type': 'checkbox',
+                                'value': true,
+                                'checked': true
+                            })
+                        ]),
                         fillDiv([
                             fillDiv([
                                 (function () {
                                     var label = document.createElement('label');
                                     label.innerHTML = module.tt('x_axis_options');
+                                    label.style.fontSize = '1.2em';
                                     return label;
                                 })(),
                                 createOptionalInput(createInput({
@@ -1726,6 +1763,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                                 (function () {
                                     var label = document.createElement('label');
                                     label.innerHTML = module.tt('y_axis_options');
+                                    label.style.fontSize = '1.2em';
                                     return label;
                                 })(),
                                 createOptionalInput(
@@ -2436,7 +2474,42 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
     }
 
+    // A function that wraps a string given a max width
+    function wrapString(str, maxWidth) {
+        var newLineStr = "\n";
+        var done = false;
+        var res = '';
+        while (str.length > maxWidth) {
+            var found = false;
+            // Inserts new line at first whitespace of the line
+            for (var i = maxWidth - 1; i >= 0; i--) {
+                if (testWhite(str.charAt(i))) {
+                    res = res + [str.slice(0, i), newLineStr].join('');
+                    str = str.slice(i + 1);
+                    found = true;
+                    break;
+                }
+            }
+            // Inserts new line at maxWidth position, the word is too long to wrap
+            if (!found) {
+                res += [str.slice(0, maxWidth), newLineStr].join('');
+                str = str.slice(maxWidth);
+            }
+        }
+        return res + str;
+    }
+
+    // A function that truncates a string given a max width
+    function truncateString(str, maxWidth) {
+        if (str.length > maxWidth) {
+            return str.slice(0, maxWidth - 3) + '...';
+        } else {
+            return str;
+        }
+    }
+
     // A function that measures the length a string of text
+    //https://stackoverflow.com/a/48172630
     function measureText(str, fontSize) {
         const widths = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.2796875,0.2765625,0.3546875,0.5546875,0.5546875,0.8890625,0.665625,0.190625,0.3328125,0.3328125,0.3890625,0.5828125,0.2765625,0.3328125,0.2765625,0.3015625,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.5546875,0.2765625,0.2765625,0.584375,0.5828125,0.584375,0.5546875,1.0140625,0.665625,0.665625,0.721875,0.721875,0.665625,0.609375,0.7765625,0.721875,0.2765625,0.5,0.665625,0.5546875,0.8328125,0.721875,0.7765625,0.665625,0.7765625,0.721875,0.665625,0.609375,0.721875,0.665625,0.94375,0.665625,0.665625,0.609375,0.2765625,0.3546875,0.2765625,0.4765625,0.5546875,0.3328125,0.5546875,0.5546875,0.5,0.5546875,0.5546875,0.2765625,0.5546875,0.5546875,0.221875,0.240625,0.5,0.221875,0.8328125,0.5546875,0.5546875,0.5546875,0.5546875,0.3328125,0.5,0.2765625,0.5546875,0.5,0.721875,0.5,0.5,0.5,0.3546875,0.259375,0.353125,0.5890625]
         const avg = 0.5279276315789471
