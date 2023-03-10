@@ -287,10 +287,10 @@
   grid-gap: 5px;
 }
 
-.AG-editor-graph-options-axis-options-x-axis {
+.AG-editor-graph-options-x-axis-options {
   grid-area: x-axis;
 }
 
-.AG-editor-graph-options-axis-options-y-axis {
+.AG-editor-graph-options-y-axis-options {
   grid-area: y-axis;
 }
