@@ -1637,6 +1637,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                         }),
                         fillDiv([
                             fillDiv([
+                                (function () {
+                                    var label = document.createElement('label');
+                                    label.innerHTML = module.tt('x_axis_options');
+                                    return label;
+                                })(),
                                 createOptionalInput(createInput({
                                     'name': 'x_title_offset',
                                     'label': module.tt('x_title_offset'),
@@ -1718,6 +1723,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                             ], 'AG-editor-graph-options-x-axis-options'),
 
                             fillDiv([
+                                (function () {
+                                    var label = document.createElement('label');
+                                    label.innerHTML = module.tt('y_axis_options');
+                                    return label;
+                                })(),
                                 createOptionalInput(
                                     createInput({
                                         'name': 'y_title_offset',

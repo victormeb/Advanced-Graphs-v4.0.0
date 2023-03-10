@@ -276,3 +276,21 @@
   color: blue;
   cursor: pointer;
 }
+
+.AG-editor-graph-options-axis-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas: 
+    "x-axis y-axis"
+    "x-axis y-axis";
+  grid-gap: 5px;
+}
+
+.AG-editor-graph-options-axis-options-x-axis {
+  grid-area: x-axis;
+}
+
+.AG-editor-graph-options-axis-options-y-axis {
+  grid-area: y-axis;
+}
