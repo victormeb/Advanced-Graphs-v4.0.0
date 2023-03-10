@@ -993,6 +993,54 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return div;
     }
 
+    // A function that takes a dom element and returns an object with a checkbox that adds or removes the dom element from the div
+    function createOptionalInput(domElement, label, help = null) {
+        // Create a div element
+        var div = document.createElement('div');
+
+        // Set the div element attributes
+        div.setAttribute('class', 'AG-editor-optional-input');
+
+        // Create a checkbox element
+        var checkbox = document.createElement('input');
+
+        // Set the checkbox element attributes
+        checkbox.setAttribute('type', 'checkbox');
+
+        // Create a label element
+        var labelElement = document.createElement('label');
+
+        // Set the label element attributes
+        labelElement.setAttribute('for', 'AG-editor-optional-input-checkbox');
+        labelElement.innerHTML = label;
+
+        // When the checkbox changes, remove or add the dom element to the div
+        checkbox.addEventListener('change', function() {
+            if (checkbox.checked) {
+                div.appendChild(domElement);
+            } else {
+                div.removeChild(domElement);
+            }
+        });
+
+        // Add the checkbox and label elements to the div
+        div.appendChild(checkbox);
+        div.appendChild(labelElement);
+
+        // If the help parameter is not null
+        if (help !== null) {
+            // Create a help element
+            var helpButton = createHelpButton(help);
+
+            // Add the help element to the label element
+            labelElement.appendChild(helpButton);
+        }
+
+        // Return the div
+        return div;
+    }
+
+
 
 
     // A function that returns a palette brewer color selector
@@ -1626,6 +1674,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var leftDiv = document.createElement('div');
             leftDiv.setAttribute('class', 'AG-editor-graph-options-left');
 
+            // Create a div to hold the more options
+            var moreOptionsDiv = document.createElement('div');
+
             // Create a radio selector to select between bar and pie graphs
             var graphTypeRadioSelector = createRadioSelector('graph_type', [{'value': 'bar', 'label': module.tt('bar')}, {'value': 'pie', 'label': module.tt('pie')}], 'bar');
 
@@ -1634,6 +1685,199 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 title: module.tt('bar_graph_type'),
                 content: module.tt('bar_graph_type_help')
             }
+
+            // When the value of graph_type changes, set the moreOptionsDiv to the appropriate div
+            graphTypeRadioSelector.addEventListener('change', function() {
+                // If the radio option 'bar' is selected
+                if (graphTypeRadioSelector.value == 'bar') {
+                    // Set the moreOptionsDiv to the barMoreOptionsDiv
+                    moreOptionsDiv.innerHTML = '';
+                    var barMoreOptionsDiv = moreOptions([
+                        createInput({
+                            'name': 'show_legend',
+                            'label': module.tt('show_legend'),
+                            'type': 'checkbox',
+                            'value': true,
+                            'checked': true
+                        }),
+                        fillDiv([
+                            fillDiv([
+                                createOptionalInput(createInput({
+                                    'name': 'x_title_offset',
+                                    'label': module.tt('x_title_offset'),
+                                    'type': 'number',
+                                    'value': 80
+                                }), 
+                                module.tt('x_title_offset'),
+                                {
+                                    title: module.tt('x_title_offset'),
+                                    content: module.tt('x_title_offset_help')}
+                                ),
+                                
+                                createOptionalInput(createInput({
+                                    'name': 'x_title_size',
+                                    'label': module.tt('x_title_size'),
+                                    'type': 'number',
+                                    'value': 0
+                                }), 
+                                module.tt('x_title_size'),
+                                {
+                                    title: module.tt('x_title_size'),
+                                    content: module.tt('x_title_size_help')}
+                                ),
+
+                                createOptionalInput(fillDiv([
+                                    createRadioSelector('x_title_limit', [{'value': 'wrap', 'label': module.tt('wrap')}, {'value': 'truncate', 'label': module.tt('truncate')}], 'wrap'),
+                                    createInput({
+                                        'name': 'x_title_length',
+                                        'label': module.tt('x_title_length'),
+                                        'type': 'number',
+                                        'value': 40
+                                    })
+                                ]), 
+                                module.tt('x_title_length'),
+                                {
+                                    title: module.tt('x_title_length'),
+                                    content: module.tt('x_title_length_help')}
+                                ),
+
+                                createOptionalInput(
+                                    createInput({
+                                        'name': 'x_label_size',
+                                        'label': module.tt('x_label_size'),
+                                        'type': 'number',
+                                        'value': 12
+                                    }), 
+                                    module.tt('x_label_size'),
+                                    {
+                                        title: module.tt('x_label_size'),
+                                        content: module.tt('x_label_size_help')
+                                    }),
+
+                                createOptionalInput(fillDiv([
+                                    createRadioSelector('x_label_limit', [{'value': 'wrap', 'label': module.tt('wrap')}, {'value': 'truncate', 'label': module.tt('truncate')}], 'wrap'),
+                                    createInput({
+                                        'name': 'x_label_length',
+                                        'label': module.tt('x_label_length'),
+                                        'type': 'number',
+                                        'value': 20
+                                    })
+                                ]),
+                                module.tt('x_label_length'),
+                                {
+                                    title: module.tt('x_label_length'),
+                                    content: module.tt('x_label_length_help')
+                                }),
+
+                                createOptionalInput(createInput({
+                                    'name': 'x_label_rotation',
+                                    'label': module.tt('x_label_rotation'),
+                                    'type': 'number',
+                                    'value': 0
+                                }), 
+                                module.tt('x_label_rotation'),
+                                {
+                                    title: module.tt('x_label_rotation'),
+                                    content: module.tt('x_label_rotation_help')
+                                })
+                            ], 'AG-editor-graph-options-x-axis-options'),
+
+                            fillDiv([
+                                createOptionalInput(
+                                    createInput({
+                                        'name': 'y_title_offset',
+                                        'label': module.tt('y_title_offset'),
+                                        'type': 'number',
+                                        'value': 80
+                                    }), 
+                                    module.tt('y_title_offset'),
+                                    {
+                                        title: module.tt('y_title_offset'),
+                                        content: module.tt('y_title_offset_help')
+                                    }),
+                                createOptionalInput(
+                                    createInput({
+                                        'name': 'y_title_size',
+                                        'label': module.tt('y_title_size'),
+                                        'type': 'number',
+                                        'value': 0
+                                    }), 
+                                    module.tt('y_title_size'),
+                                    {
+                                        title: module.tt('y_title_size'),
+                                        content: module.tt('y_title_size_help')
+                                    }),
+                                createOptionalInput(
+                                    fillDiv([
+                                        createRadioSelector('y_title_limit', [{'value': 'wrap', 'label': module.tt('wrap')}, {'value': 'truncate', 'label': module.tt('truncate')}], 'wrap'),
+                                        createInput({
+                                            'name': 'y_title_length',
+                                            'label': module.tt('y_title_length'),
+                                            'type': 'number',
+                                            'value': 40
+                                        })
+                                    ]), 
+                                    module.tt('y_title_length'),
+                                    {
+                                        title: module.tt('y_title_length'),
+                                        content: module.tt('y_title_length_help')
+                                    }),
+                                createOptionalInput(
+                                    createInput({
+                                        'name': 'y_label_size',
+                                        'label': module.tt('y_label_size'),
+                                        'type': 'number',
+                                        'value': 12
+                                    }), 
+                                    module.tt('y_label_size'),
+                                    {
+                                        title: module.tt('y_label_size'),
+                                        content: module.tt('y_label_size_help')
+                                    }),
+                                createOptionalInput(fillDiv([
+                                    createRadioSelector('y_label_limit', [{'value': 'wrap', 'label': module.tt('wrap')}, {'value': 'truncate', 'label': module.tt('truncate')}], 'wrap'),
+                                    createInput({
+                                        'name': 'y_label_length',
+                                        'label': module.tt('y_label_length'),
+                                        'type': 'number',
+                                        'value': 20
+                                    })
+                                ]),
+                                module.tt('y_label_length'),
+                                {
+                                    title: module.tt('y_label_length'),
+                                    content: module.tt('y_label_length_help')
+                                }),
+                                createOptionalInput(createInput({
+                                    'name': 'y_label_rotation',
+                                    'label': module.tt('y_label_rotation'),
+                                    'type': 'number',
+                                    'value': 0
+                                }), 
+                                module.tt('y_label_rotation'),
+                                {
+                                    title: module.tt('y_label_rotation'),
+                                    content: module.tt('y_label_rotation_help')
+                                })
+                            ], 'AG-editor-graph-options-y-axis-options'),
+                        ], 'AG-editor-graph-options-axis-options')
+                    ]);
+
+                    moreOptionsDiv.appendChild(barMoreOptionsDiv);
+                }
+                // If the radio option 'pie' is selected
+                else if (graphTypeRadioSelector.value == 'pie') {
+                    // Set the moreOptionsDiv to the pieMoreOptionsDiv
+                    moreOptionsDiv.innerHTML = '';
+                    var pieMoreOptionsDiv = moreOptions([
+                        document.createTextNode("TEST")
+                    ]);
+
+                    moreOptionsDiv.appendChild(pieMoreOptionsDiv);
+                }
+            });
+
+
 
             // Create a parameter div for the graph type radio selector
             var graphTypeRadioSelectorParameterDiv = createParameterDiv(graphTypeRadioSelector, module.tt('bar_graph_type'), graphTypeRadioSelectorHelp);
@@ -1792,32 +2036,6 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
             });
 
-            // Create a more options div
-            var moreOptionsDiv = document.createElement('div');
-            moreOptionsDiv.setAttribute('class', 'AG-editor-graph-options-more-options');
-
-            // Create a details element for the more options div
-            var moreOptionsDetails = document.createElement('details');
-
-            // Create a summary element for the more options details element
-            var moreOptionsSummary = document.createElement('summary');
-            moreOptionsSummary.appendChild(document.createTextNode(module.tt('more_options')));
-
-            // Create a div for the more options details element that will contain more input elements
-            var moreOptionsInputs = document.createElement('div');
-            moreOptionsInputs.setAttribute('class', 'AG-editor-graph-options-more-options-inputs');
-
-            // Create a checkbox to determine whether to show the legend
-            // var showLegendCheckbox = createCheckbox('show_legend', module.tt('show_legend'), module.tt('show_legend_help'));
-
-            // Add the show legend checkbox to the more options inputs div
-            // moreOptionsInputs.appendChild(showLegendCheckbox);
-
-
-
-            // Add the summary element to the details element
-            moreOptionsDetails.appendChild(moreOptionsSummary);
-
             // Create a div for the more options details element that will contain more input elements
 
             // Create a colors selector modal
@@ -1852,8 +2070,47 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             return graphOptionsDiv;
         }
 
-        var moreOtions = function() {
-            
+        // A function that creates additional options for the graph
+        var moreOptions = function(parameters) {
+            // Create a div for the more options
+            var moreOptionsDiv = document.createElement('div');
+
+            // Create a details element for the more options div
+            var moreOptionsDetails = document.createElement('details');
+
+            // Create a summary element for the more options details element
+            var moreOptionsSummary = document.createElement('summary');
+
+            // Create a text node for the summary element
+            var moreOptionsSummaryText = document.createTextNode(module.tt('more_options'));
+
+            // Add the text node to the summary element
+            moreOptionsSummary.appendChild(moreOptionsSummaryText);
+
+            // Create a div for the more options details element that will contain more input elements
+            var moreOptionsInputs = document.createElement('div');
+            moreOptionsInputs.setAttribute('class', 'AG-editor-graph-options-more-options-inputs');
+
+            // For each parameter in parameters
+            for (var key in parameters) {
+                // If the more option is not null
+                if (parameters[key]) {
+                    // Add the more option to the more options inputs div
+                    moreOptionsInputs.appendChild(parameters[key]);
+                }
+            }
+
+            // Add the summary element to the details element
+            moreOptionsDetails.appendChild(moreOptionsSummary);
+
+            // Add the more options inputs div to the details element
+            moreOptionsDetails.appendChild(moreOptionsInputs);
+
+            // Add the details element to the more options div
+            moreOptionsDiv.appendChild(moreOptionsDetails);
+
+            // Return the more options div
+            return moreOptionsDiv;
         }
 
         // A function that updates the graph options div given parameters
