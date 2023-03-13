@@ -1530,7 +1530,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // If the graph type is bar
             if (parameters.graph_type == 'bar') {      
 
-                // Create the axis object with the calculated properties
+                // Create x axis labels
                 const xAxisLabels = Plot.axisX(domain, {
                     domain: domain,
                     type: 'band',
@@ -1539,7 +1539,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     fontSize: x_label_size, 
                 });
 
-
+                // Create x axis title
                 const xAxisTitle = Plot.axisX({
                     domain: domain,
                     type: 'band',
@@ -1550,8 +1550,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     fontSize: x_title_size
                 });
 
-                const yAxisTitleSize = parameters.y_title_size ? parameters.y_title_size : 15;
-                
+                // Create y axis labels
+                const yAxisLabels = Plot.axisY(barHeights, {
+                    domain: domain,
+                    type: 'band',
+                    tickFormat: y_tick_format,
+                    tickRotate: y_rotate,
+                    fontSize: y_label_size
+                });
+
+                // Create y axis title
                 const yAxisTitle = Plot.axisY({
                     label: parameters.numeric_field ? getFieldLabel(parameters.numeric_field) : module.tt('count'),
                     labelAnchor: 'center',
@@ -1576,6 +1584,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     },
                     marks: [
                         yAxisTitle,
+                        yAxisLabels,
                         xAxisTitle,
                         xAxisLabels,
                         bars
