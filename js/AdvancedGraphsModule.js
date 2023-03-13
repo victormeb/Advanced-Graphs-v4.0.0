@@ -1386,7 +1386,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Create a div to hold the graph options
             var graphOptionsDiv = document.createElement('div');
-            graphOptionsDiv.setAttribute('class', 'AG-editor-graph-options');
+            graphOptionsDiv.setAttribute('class', 'AG-editor-graph-options-div');
 
             // Create an instrument selector
             var instrumentSelector = addInstrumentSelector(graphOptionsDiv);
@@ -1475,12 +1475,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 .domain(domain)
                 .range(domain.map((d, i) => interpolateColors(i / (domain.length > 1 ? domain.length-1: 1))));
 
-            const x_title_size = parameters.x_title_size ? parameters.x_title_size : 15;
+            const x_title_size = parameters.x_title_size ? Number(parameters.x_title_size) : 15;
             const x_title_limit = parameters.x_title_limit ? parameters.x_title_limit : null;
-            const x_title_length = parameters.x_title_length ? parameters.x_title_length : 0;
-            const x_label_size = parameters.x_label_size ? parameters.x_label_size : 10;
-            const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
-            const x_label_length = parameters.x_label_length ? parameters.x_label_length : Math.max(...domain.map(d => choices[d].length));
+            const x_title_length = parameters.x_title_length ? Number(parameters.x_title_length) : 0;
+            const x_label_size = parameters.x_label_size ? Number(parameters.x_label_size) : 10;
+            const x_label_limit = parameters.x_label_limit ? Number(parameters.x_label_limit) : null;
+            const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...domain.map(d => choices[d].length));
             
             // Get the x tick format
             var x_tick_format = d => choices[d];
@@ -1494,16 +1494,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 x_tick_format = d => wrapString(choices[d], x_label_length);
             }
             
-            const x_rotate = parameters.x_rotate ? parameters.x_rotate : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 45 : 0;
-            const x_title_offset = parameters.x_title_offset ? parameters.x_title_offset : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) + x_title_size + 10;
-            const bottom_margin = parameters.bottom_margin ? parameters.bottom_margin : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) + x_title_size * 2 + 10;
+            const x_rotate = parameters.x_rotate ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
+            const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) + x_title_size + 20;
+            const bottom_margin = parameters.bottom_margin ? Number(parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) + x_title_size * 2 + 20;
             
-            const y_title_size = parameters.y_title_size ? parameters.y_title_size : 15;
+            const y_title_size = parameters.y_title_size ? Number(parameters.y_title_size) : 15;
             const y_title_limit = parameters.y_title_limit ? parameters.y_title_limit : null;
-            const y_title_length = parameters.y_title_length ? parameters.y_title_length : 0;
-            const y_label_size = parameters.y_label_size ? parameters.y_label_size : 10;
-            const y_label_limit = parameters.y_label_limit ? parameters.y_label_limit : null;
-            const y_label_length = parameters.y_label_length ? parameters.y_label_length : Math.max(...barHeights.map(d => d.value.toString().length));
+            const y_title_length = parameters.y_title_length ? Number(parameters.y_title_length) : 0;
+            const y_label_size = parameters.y_label_size ? Number(parameters.y_label_size) : 10;
+            const y_label_limit = parameters.y_label_limit ? Number(parameters.y_label_limit) : null;
+            const y_label_length = parameters.y_label_length ? Number(parameters.y_label_length) : Math.max(...barHeights.map(d => d.value.toString().length));
             
             // Get the y tick format
             var y_tick_format = d => d;
@@ -1523,9 +1523,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             }
 
 
-            const y_rotate = parameters.y_rotate ? parameters.y_rotate : 0;
-            const y_title_offset = parameters.y_title_offset ? parameters.y_title_offset : 45;
-            const left_margin = parameters.left_margin ? parameters.left_margin : 80;
+            const y_rotate = parameters.y_rotate ? Number(parameters.y_rotate) : 0;
+            const y_title_offset = parameters.y_title_offset ? Number(parameters.y_title_offset) : 45;
+            const left_margin = parameters.left_margin ? Number(parameters.left_margin) : 80;
 
             // If the graph type is bar
             if (parameters.graph_type == 'bar') {      
@@ -1555,7 +1555,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 const yAxisTitle = Plot.axisY({
                     label: parameters.numeric_field ? getFieldLabel(parameters.numeric_field) : module.tt('count'),
                     labelAnchor: 'center',
-                    labelOffset: y_label_offset,
+                    labelOffset: y_title_offset,
                     fontSize: y_title_size,
                     tick: null,
                     tickFormat: null
@@ -1642,6 +1642,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
             // Create a div to hold the more options
             var moreOptionsDiv = document.createElement('div');
+            moreOptionsDiv.setAttribute('class', 'AG-editor-more-options');
 
             // Create a radio selector to select between bar and pie graphs
             var graphTypeRadioSelector = createRadioSelector('graph_type', [{'value': 'bar', 'label': module.tt('bar')}, {'value': 'pie', 'label': module.tt('pie')}], 'bar');
@@ -1684,7 +1685,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                                     'name': 'x_title_offset',
                                     'label': module.tt('x_title_offset'),
                                     'type': 'number',
-                                    'value': 80
+                                    'value': 40
                                 }), 
                                 module.tt('x_title_offset'),
                                 {
@@ -1696,7 +1697,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                                     'name': 'x_title_size',
                                     'label': module.tt('x_title_size'),
                                     'type': 'number',
-                                    'value': 0
+                                    'value': 15
                                 }), 
                                 module.tt('x_title_size'),
                                 {
@@ -1860,6 +1861,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     moreOptionsDiv.appendChild(pieMoreOptionsDiv);
                 }
             });
+
+             // Trigger the change event on the graph type radio selector
+             graphTypeRadioSelector.dispatchEvent(new Event('change'));
+            
 
 
 

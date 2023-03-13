@@ -211,8 +211,27 @@
   grid-area: graph-form-header;
 }
 
-.AG-editor-graph-form {
+.AG-editor-graph-options {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    "graph-options-left graph-options-right"
+    "more-options more-options";
   grid-area: graph-form;
+}
+
+.AG-editor-graph-options-left {
+  grid-area: graph-options-left;
+}
+
+.AG-editor-graph-options-right {
+  grid-area: graph-options-right;
+}
+
+.AG-editor-more-options {
+  grid-area: more-options;
 }
 
 .AG-editor-preview-pane {
