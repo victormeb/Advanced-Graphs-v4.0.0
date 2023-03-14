@@ -23,6 +23,13 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     var instrumentList = createInstrumentList();
     var instrumentDictionary = createInstrumentDictionary();
 
+    var links = {
+        'edit': module.getUrl('edit_dash.php'),
+        'view': module.getUrl('view_dash.php'),
+        'dash_list': module.getUrl('advanced_graphs.php'),
+        'public': module.getUrl('public_dash.php', true)
+    };
+
     var AGM = this;
 
     // A dictionary containing graph types with their associated constructor functions
@@ -70,6 +77,175 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Add the container to the parent
         parent.append(buttonContainer);
+    }
+
+    // A function used to create a table showing all the created dashboards
+    this.loadDashList = function (parent) {
+        var project_id = module.getUrlParameter('pid');
+
+        // If the pid is not set, then we are not in a project context
+        if (project_id === null) {
+            // Display an error message
+            var error = document.createElement('div');
+            error.setAttribute('class', 'alert alert-danger');
+            error.innerHTML = module.tt('project_context_error');
+            parent.append(error);
+        }
+
+        // Get the dashboards from the server
+        var dashboards = getDashboards(project_id);
+
+        // If the dashboards are null, then there was an error
+        if (dashboards === null) {
+            // Display an error message
+            var error = document.createElement('div');
+            error.setAttribute('class', 'alert alert-danger');
+            error.innerHTML = module.tt('dashboard_list_load_error');
+            parent.append(error);
+        }
+
+        // Render the dashboard list
+        var table = renderDashboardList(dashboards);
+
+        // Add the table to the parent
+        parent.append(table);
+    }
+
+    function getPublicLink(dashboardId) {
+        // Replace this with your actual URL generation logic
+        return "#";
+    }
+    
+    function viewDashboard(dashboardId) {
+        console.log("View dashboard:", dashboardId);
+    }
+    
+    function editDashboard(dashboardId) {
+        console.log("Edit dashboard:", dashboardId);
+    }
+    
+    function deleteDashboard(dashboardId) {
+        console.log("Delete dashboard:", dashboardId);
+    }
+
+    async function getDashboards(project_id) {
+        // Get the dashboards from the server
+        try {
+            var dashboards = await module.ajax('getDashboards', project_id);
+            return dashboards;
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+    }
+
+    async function getReportName(reportId) {
+        // Replace this with your actual AJAX request to fetch the report name
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve("Report " + reportId);
+            }, 200);
+        });
+    }
+    
+    async function renderDashboardList(dashboards) {
+        // Create a table to hold the dashboards
+        var table = document.createElement('table');
+        table.className = 'table table-striped';
+        table.style.width = '100%';
+    
+        // Create the table header
+        var thead = document.createElement('thead');
+        var headerRow = document.createElement('tr');
+        var headers = [
+            module.tt('dashboard_title'),
+            module.tt('report_name'),
+            '',
+            module.tt('public_link'),
+            module.tt('view'),
+            module.tt('edit'),
+            module.tt('delete')
+        ];
+    
+        // Create the table header cells
+        headers.forEach(function(header) {
+            var th = document.createElement('th');
+            th.innerText = header;
+            headerRow.appendChild(th);
+        });
+    
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+    
+        // Create the table body
+        var tbody = document.createElement('tbody');
+    
+        // Create a row for each dashboard
+        for (const dashboard of dashboards) {
+            var tr = document.createElement('tr');
+    
+            // Create the cells for the row
+            var tdTitle = document.createElement('td');
+            tdTitle.innerText = dashboard.title;
+            tr.appendChild(tdTitle);
+    
+            var tdReportName = document.createElement('td');
+            tdReportName.innerText = await getReportName(dashboard.report_id);
+            tr.appendChild(tdReportName);
+    
+            var tdSeparator = document.createElement('td');
+            tr.appendChild(tdSeparator);
+    
+            var tdPublicLink = document.createElement('td');
+            if (dashboard.is_public) {
+                var publicLink = document.createElement('a');
+                publicLink.href = getPublicLink(dashboard.dash_id);
+                publicLink.innerText = module.tt('public_link_href');
+                tdPublicLink.appendChild(publicLink);
+            }
+            tr.appendChild(tdPublicLink);
+    
+            var tdView = document.createElement('td');
+            var viewButton = document.createElement('button');
+            viewButton.className = 'btn btn-primary';
+            viewButton.innerText = module.tt('view_button');
+            viewButton.onclick = function() {
+                viewDashboard(dashboard.dash_id);
+            };
+            tdView.appendChild(viewButton);
+            tr.appendChild(tdView);
+    
+            var tdEdit = document.createElement('td');
+            var editButton = document.createElement('button');
+            editButton.className = 'btn btn-warning';
+            editButton.innerText = module.tt('edit_button');
+            editButton.onclick = function() {
+                editDashboard(dashboard.dash_id);
+            };
+            tdEdit.appendChild(editButton);
+            tr.appendChild(tdEdit);
+    
+            var tdDelete = document.createElement('td');
+            var deleteButton = document.createElement('button');
+            deleteButton.className = 'btn btn-danger';
+            deleteButton.innerText = module.tt('delete_button');
+            deleteButton.onclick = function() {
+                let deleteSuccess = deleteDashboard(dashboard.dash_id);
+                if (deleteSuccess) {
+                    tr.remove();
+                } else {
+                    alert(module.tt('delete_error'));
+                }
+            };
+            tdDelete.appendChild(deleteButton);
+            tr.appendChild(tdDelete);
+    
+            tbody.appendChild(tr);
+        }
+    
+        table.appendChild(tbody);
+    
+        return table;
     }
 
     // The function used to create the dashboard options div
@@ -2703,7 +2879,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         });
     }
 
-    
+
 
 
 
