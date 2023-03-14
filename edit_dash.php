@@ -10,11 +10,6 @@ $project_id = $_GET['pid'];
 // Get the dash ID from the URL
 $dash_id = $_GET['dash_id'];
 
-// Get the dashboard from
-$dashboard = $module->getDashboards($project_id, $dash_id);
-
-// Get the dashboard name
-$dash_name = $module->getDashboardName($project_id, $dash_id);
 
 // Get the associated report ID from the dashboard
 if (isset($dashboard['report_id'])) {
@@ -48,6 +43,15 @@ if ($report_id == null) {
     include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
     exit;
 }
+
+// Get the dashboard from
+if ($dash_id == 0) {
+    $dashboard = array();
+} else {
+    $dashboard = $module->getDashboards($project_id, $dash_id);
+    $dash_name = $module->getDashboardName($project_id, $dash_id);
+}
+
 
 // Get the report name
 $report_name = $module->getReportName($project_id, $report_id);
@@ -89,10 +93,8 @@ $module->tt_transferToJavascriptModuleObject();
         var report_name = "<?php echo $report_name; ?>";
         var dash_id = <?php echo $dash_id; ?>;
         var dash_name = "<?php echo $dash_name; ?>";
-        var project_id = <?php echo $project_id; ?>;
         var report = <?php echo json_encode($report); ?>;
         var dashboard = <?php echo json_encode($dashboard); ?>;
-        var report_fields = <?php echo json_encode($report_fields); ?>;
         var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
         var report_fields_by_reapeat_instrument = <?php echo json_encode($report_fields_by_reapeat_instrument); ?>;
 

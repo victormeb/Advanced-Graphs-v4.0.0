@@ -2542,40 +2542,34 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         ) * fontSize
       }
 
-    // A function that serializes the dashboard and saves it to the server
-    function saveDashboard() {
-        var dashboard = dashboard ? dashboard : {};
-
-        // If the dashboard is empty
-        if (Object.keys(dashboard).length === 0 && dashboard.constructor === Object) {
-            var returnFlag = true;
-            
-            // Create a new dashboard
-            module.ajax('newDashboard', getUrlParameter('report_id')).then(function (result) {
-                dashboard = JSON.parse(result);
-                returnFlag = false;
-            }).catch(function (error) {
-                // Create a modal telling the user that the dashboard could not be saved
-                var errorModal = createModalDialog(module.tt('error'), module.tt('error_saving_dashboard'), [
-                    {
-                        label: module.tt('ok'),
-                        className: 'btn btn-primary',
-                        callback: function () {
-                            closeModalDialog();
-                        }
+    async function newDashboard() {
+        try {
+            var result = await module.ajax('newDashboard', module.getUrlParameter('report_id'));
+            return JSON.parse(result);
+        } catch (error) {
+            // Create a modal telling the user that the dashboard could not be saved
+            var errorModal = createModalDialog(module.tt('error'), module.tt('error_saving_dashboard'), [
+                {
+                    label: module.tt('ok'),
+                    className: 'btn btn-primary',
+                    callback: function () {
+                        closeModalDialog();
                     }
-                ]);
+                }
+            ]);
 
-                // Show the modal
-                document.body.appendChild(errorModal);
-            });
-
-            // If the dashboard could not be created, return
-            if (returnFlag) {
-                return;
-            }
+            document.body.append(errorModal);
+        }
+    }
+    // A function that serializes the dashboard and saves it to the server
+    async function saveDashboard() {
+        // If the dashboard is empty
+        if (Object.keys(dashboard).length === 0 || dashboard.length === 0) {
+            // Create a new dashboard
+            dashboard = await newDashboard();
         }
 
+        console.log(dashboard);
 
         // Get the div that holds the dahsboard options
         var dashboard_options = document.getElementById('AG-dashboard-options');
@@ -2640,10 +2634,12 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             // Add the serialized row to the dashboard
             dashboard.body.push(serialized_row);
         }
-
+        console.log(dashboard);
         // Send the dashboard to the server
-        module.ajax('save_dashboard', dashboard).then(function (result) {
+        module.ajax('saveDashboard', dashboard).then(function (result) {
             // If the dashboard was saved successfully
+            console.log(result);
+            console.log("tried to save");
             if (result) {
                 result = JSON.parse(result);
                 // Create a modal telling the user that the dashboard was saved successfully
@@ -2672,6 +2668,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                         }
                     }
                 ]);
+
+                document.body.append(successModal);
             } else {
                 // Create a modal telling the user that the dashboard could not be saved
                 var errorModal = createModalDialog(module.tt('error'), module.tt('error_saving_dashboard'), [
@@ -2688,6 +2686,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 document.body.appendChild(errorModal);
             }
         }).catch(function (error) {
+            console.log(error);
             // Create a modal telling the user that the dashboard could not be saved
             var errorModal = createModalDialog(module.tt('error'), module.tt('error_saving_dashboard'), [
                 {

@@ -19,6 +19,10 @@
 		"institution": "IECS"
 	}],
     "no-auth-pages": ["view_dash_public", "advanced_graphs_ajax_public"],
+	"auth-ajax-actions": [
+		"newDashboard",
+		"saveDashboard"
+	 ],
 	"links": {
 		"control-center": [
 			{

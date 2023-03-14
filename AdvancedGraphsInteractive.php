@@ -83,6 +83,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 	function redcap_module_system_enable($version) {
 		// Do stuff, e.g. create DB table
+		$dashboard_table_name = $this->dashboard_table_name;
 		try {
 			$result = $this->query("CREATE TABLE if not exists $dashboard_table_name (
 				dash_id INT(10) AUTO_INCREMENT PRIMARY KEY,
@@ -91,7 +92,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 				title TEXT,
 				body LONGTEXT,
 				dash_order INT(3),
-				is_public tinyint(1) DEFAULT 0 NOT NULL"
+				is_public tinyint(1) DEFAULT 0 NOT NULL)"
 			, []);
 			$this->log("Created new $dashboard_table_name table (if one did not already exist)");
 		} catch (\Throwable $e) {
@@ -123,6 +124,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// }
 
 	function delete_advanced_graphs_table() {
+		$dashboard_table_name = $this->dashboard_table_name;
 		try {
 			$this->query("DROP TABLE IF EXISTS $dashboard_table_name", []);
 			$this->log("Deleted $dashboard_table_name table");
@@ -247,19 +249,20 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 	function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeat_instance, $survey_hash, $response_id, $survey_queue_hash, $page, $page_full, $user_id, $group_id){
         if($action === 'newDashboard'){
-            return json_encode(newDash($project_id, $payload));
+            return json_encode($this->newDash($project_id, $payload));
         }
 		else if($action === 'saveDashboard'){
 			$result = array(
-				"view_url" => $this->getUrl("view_dash.php", true, true) . "&dash_id=" . $payload["dash_id"] . "&report_id=" . $payload["report_id"],
-				"dash_list_url" => $this->getUrl("advanced_graphs.php", true, true);
+				"view_url" => "#", //$this->getUrl("view_dash.php", true, true) . "&dash_id=" . $payload["dash_id"] . "&report_id=" . $payload["report_id"],
+				"dash_list_url" => "#" //$this->getUrl("advanced_graphs.php", true, true)
 			);
 
-			if (saveDash($payload)) {
+			$newDash = $this->saveDash($payload);
+			if ($newDash) {
 				return json_encode($result);
 			}
 
-			return false;
+			return "error man";
 		}
 		else {
 			return false;
@@ -1281,6 +1284,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 	// A function that creates a new dashboard and returns the corresponding dashboard object
 	public function newDash($pid, $report_id) {
+		$dashboard_table_name = $this->dashboard_table_name;
 		// Get next dash_order number
 		$q = $this->query("select max(dash_order) from $dashboard_table_name where project_id = ?", [$pid]);
 		$new_dash_order = $q->fetch_assoc();
@@ -1289,18 +1293,18 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 		// Create new dashboard
 		$errno = 0;
-		$this->query("START TRANSACTION")
+		$this->query("START TRANSACTION", []);
 		// Insert
 		$sql = "insert into $dashboard_table_name 
 				(project_id, report_id, title, body, dash_order, is_public)
-				values (?, ?, ?, ?, ?, ?, ?)";
-		$params = [$pid, $report_id, $this->tt("new_dashboard"), "[]", 0, $new_dash_order, 0];
+				values (?, ?, ?, ?, ?, ?)";
+		$params = [$pid, $report_id, $this->tt("new_dashboard"), "[]", $new_dash_order, 0];
 
 		$query = $this->query($sql, $params);
 		if (!$query) $errno += 1;
 
 		// Get the new dashboard id
-		$result = $this->query("SELECT LAST_INSERT_ID() as last_id");
+		$result = $this->query("SELECT LAST_INSERT_ID() as last_id", []);
 		
 		if (!$result) $errno += 1;
 		
@@ -1308,19 +1312,20 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$last_id = $row['last_id'];
 
 		// Commit
-		$this->query("COMMIT");
+		$this->query("COMMIT", []);
 
 		if ($errno > 0) {
-			$this->query("ROLLBACK");
+			$this->query("ROLLBACK", []);
 			return [];
 		}
 
 		// Return the new dashboard
-		return $this->getDashboards($pid, $last_id);
+		return $this->getDashboards($pid, $last_id)[0];
 	}
 
 	// A function that takes a dashboard and saves it to the database
 	public function saveDash($dashboard) {
+		$dashboard_table_name = $this->dashboard_table_name;
 		// extract($GLOBALS);
 		// echo json_encode($dashboard);
 		// return;
@@ -1336,17 +1341,17 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 		// Report title
 		$title = decode_filter_tags($dashboard['title']);
-		$bodybody = json_encode($dashboard['bodybody']);
+		$body = json_encode($dashboard['body']);
 
 		$is_public =  $dashboard['is_public'];
 
 		// Update dashboard
 		$sql = "update $dashboard_table_name set 
 				title = ?, 
-				bodybody = ?, 
+				body = ?, 
 				is_public = ?
 				where dash_id = ?";
-		$params = [$title, $bodybody, $is_public, $dash_id];
+		$params = [$title, $body, $is_public, $dash_id];
 
 		$query = $this->query($sql, $params);
 		if (!$query) $errors += 1;
@@ -1358,6 +1363,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// Return all dashboards (unless one is specified explicitly) as an array of their attributes
 	public function getDashboards($project_id, $dash_id=null)
 	{
+
+		$dashboard_table_name = $this->dashboard_table_name;
 		// Get all dashboards
 		$sql = "select * from $dashboard_table_name where project_id = ?";
 		$params = [$project_id];
@@ -1377,6 +1384,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// Obtain a dashboard's title/name
 	public function getDashboardName($pid, $dash_id)
 	{
+		$dashboard_table_name = $this->dashboard_table_name;
 		// Delete report
 		$sql = "select title from $dashboard_table_name where project_id = ".$pid." and dash_id = $dash_id";
 		$q = $this->query($sql, []);
@@ -1387,6 +1395,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// getDashReportId
 	public function getDashReportId($pid, $dash_id)
 	{
+		$dashboard_table_name = $this->dashboard_table_name;
 		// Delete report
 		$sql = "select report_id from $dashboard_table_name where project_id = ".$pid." and dash_id = $dash_id";
 		$q = $this->query($sql, []);
