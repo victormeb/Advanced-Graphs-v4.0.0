@@ -77,6 +77,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Create the div that will hold the dashboard options
         var dashboardOptions = document.createElement('div');
 
+        // Set the id of the dashboard options div
+        dashboardOptions.setAttribute('id', 'AG-dashboard-options');
+
         // Create a table to hold the dashboard options
         var table = document.createElement('table');
         table.setAttribute('class', 'AG-dashboard-options');
@@ -95,7 +98,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         titleInput.setAttribute('class', 'labelrc');
         var titleInputBox = document.createElement('input');
         titleInputBox.setAttribute('type', 'text');
-        titleInputBox.setAttribute('name', 'dash-title');
+        titleInputBox.setAttribute('name', 'dash_title');
 
         // Set the value of the input box to the dashboard title
         titleInputBox.value = dashboard.title ? dashboard.title : module.tt('new_dashboard');
@@ -154,6 +157,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Create a div to hold the rows of the editor
         var tableDiv = document.createElement('div');
         tableDiv.setAttribute('class', 'AG-editor-table');
+        // set the id of the table div
+        tableDiv.setAttribute('id', 'AG-editor-table');
 
         // If the dashboard is null, return the table div
         if (!dashboard) {
@@ -206,7 +211,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // Add the click event to the save button
         saveButton.addEventListener('click', function () {
-            // do nothing
+            // Call the function to save the dashboard
+            saveDashboard();
         });
 
         // Add the save button to the container
@@ -2535,6 +2541,174 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
           (acc, cur) => acc + (widths[cur.charCodeAt(0)] ?? avg), 0
         ) * fontSize
       }
+
+    // A function that serializes the dashboard and saves it to the server
+    function saveDashboard() {
+        var dashboard = dashboard ? dashboard : {};
+
+        // If the dashboard is empty
+        if (Object.keys(dashboard).length === 0 && dashboard.constructor === Object) {
+            var returnFlag = true;
+            
+            // Create a new dashboard
+            module.ajax('newDashboard', getUrlParameter('report_id')).then(function (result) {
+                dashboard = JSON.parse(result);
+                returnFlag = false;
+            }).catch(function (error) {
+                // Create a modal telling the user that the dashboard could not be saved
+                var errorModal = createModalDialog(module.tt('error'), module.tt('error_saving_dashboard'), [
+                    {
+                        label: module.tt('ok'),
+                        className: 'btn btn-primary',
+                        callback: function () {
+                            closeModalDialog();
+                        }
+                    }
+                ]);
+
+                // Show the modal
+                document.body.appendChild(errorModal);
+            });
+
+            // If the dashboard could not be created, return
+            if (returnFlag) {
+                return;
+            }
+        }
+
+
+        // Get the div that holds the dahsboard options
+        var dashboard_options = document.getElementById('AG-dashboard-options');
+
+        // Get the dashboard title by getting the value of the input with the name dash_title
+        dashboard.title = dashboard_options.querySelector('input[name="dash_title"]').value;
+
+        // Get the dashboard is_public option by getting the checked attribute of the checkbox with the name is_public
+        dashboard.is_public = dashboard_options.querySelector('input[name="is_public"]').checked;
+
+
+
+        // Clear the dashboard rows
+        dashboard.body = [];
+
+        // Get the div that holds the rows
+        var table = document.getElementById('AG-editor-table');
+
+        // Get the divs with the class AG-editor-row
+        var rows = table.getElementsByClassName('AG-editor-row');
+
+        // Loop through the rows
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+
+            var serialized_row = [];
+
+            // Get the cells div from the row (the div with the calss AG-editor-row-cells)
+            var cells = row.getElementsByClassName('AG-editor-row-cells')[0];
+
+            // For each cell in the row
+            for (var j = 0; j < cells.children.length; j++) {
+                // Get the graph container from the cell
+                var graph_container = cells.children[j].getElementsByClassName('AG-editor-graph-container')[0];
+
+                // Get the graph type selector from the cell
+                var graph_type_selector = cells.children[j].getElementsByClassName('AG-editor-graph-type-selector')[0];
+
+                // Get the value of the select element in the graph type selector
+                var graph_type = graph_type_selector.getElementsByTagName('select')[0].value;
+
+                // If the graph type is not a string
+                if (typeof graph_type !== 'string') {
+                    // Add an empty object to the serialized row
+                    serialized_row.push({});
+                    continue;
+                }
+
+                // Get the form element from the graph container
+                var form = graph_container.getElementsByTagName('form')[0];
+
+                // Serialize the form
+                var serialized_form = form ? serializeForm(form) : {};
+
+                // Add the cell with it's type and parameters to the serialized row
+                serialized_row.push({
+                    type: graph_type,
+                    parameters: serialized_form
+                });
+            }
+
+            // Add the serialized row to the dashboard
+            dashboard.body.push(serialized_row);
+        }
+
+        // Send the dashboard to the server
+        module.ajax('save_dashboard', dashboard).then(function (result) {
+            // If the dashboard was saved successfully
+            if (result) {
+                result = JSON.parse(result);
+                // Create a modal telling the user that the dashboard was saved successfully
+                var successModal = createModalDialog(module.tt('success'), module.tt('dashboard_saved_successfully', result.name), [
+                    {
+                        label: module.tt('view_dashboard'),
+                        className: 'btn btn-primary',
+                        callback: function () {
+                            closeModalDialog();
+                            window.location.href = result.view_url;
+                        }
+                    },
+                    {
+                        label: module.tt('return_to_dashboards'),
+                        className: 'btn btn-primary',
+                        callback: function () {
+                            closeModalDialog();
+                            window.location.href = result.dash_list_url;
+                        }
+                    },
+                    {
+                        label: module.tt('continue_editing'),
+                        className: 'btn btn-primary',
+                        callback: function () {
+                            closeModalDialog();
+                        }
+                    }
+                ]);
+            } else {
+                // Create a modal telling the user that the dashboard could not be saved
+                var errorModal = createModalDialog(module.tt('error'), module.tt('error_saving_dashboard'), [
+                    {
+                        label: module.tt('ok'),
+                        className: 'btn btn-primary',
+                        callback: function () {
+                            closeModalDialog();
+                        }
+                    }
+                ]);
+            
+                // Show the modal
+                document.body.appendChild(errorModal);
+            }
+        }).catch(function (error) {
+            // Create a modal telling the user that the dashboard could not be saved
+            var errorModal = createModalDialog(module.tt('error'), module.tt('error_saving_dashboard'), [
+                {
+                    label: module.tt('ok'),
+                    className: 'btn btn-primary',
+                    callback: function () {
+                        closeModalDialog();
+                    }
+                }
+            ]);
+
+            // Show the modal
+            document.body.appendChild(errorModal);
+        });
+    }
+
+    
+
+
+
+
 
     // A function that creates a formData object from the form and turns it into an object 
     function serializeForm(form) {
