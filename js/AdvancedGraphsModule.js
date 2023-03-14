@@ -1545,15 +1545,14 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     type: 'band',
                     label:  getFieldLabel(parameters.categorical_field),
                     labelOffset: x_title_offset,
-                    tick: null,
+                    ticks: null,
                     tickFormat: null,
                     fontSize: x_title_size
                 });
 
                 // Create y axis labels
-                const yAxisLabels = Plot.axisY(barHeights, {
-                    domain: domain,
-                    type: 'band',
+                const yAxisLabels = Plot.axisY({
+                    label: null,
                     tickFormat: y_tick_format,
                     tickRotate: y_rotate,
                     fontSize: y_label_size
@@ -1566,7 +1565,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     labelOffset: y_title_offset,
                     fontSize: y_title_size,
                     tick: null,
-                    tickFormat: null
+                    tickFormat: d=>''
                 });
 
                 // Create a bar chart
@@ -1581,6 +1580,9 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                     x: {
                         domain: domain,
                         type: 'band'
+                    },
+                    y: {
+                        type: 'linear'
                     },
                     marks: [
                         yAxisTitle,
