@@ -267,6 +267,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		else if ($action === 'getDashboards') {
 			return json_encode($this->getDashboards($project_id));
 		}
+		else if ($action === 'deleteDashboard') {
+			return json_encode($this->deleteDash($payload["project_id"], $payload["dash_id"]));
+		}
 		else {
 			return false;
 		}
@@ -1588,13 +1591,13 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	{
 		$title = $this->getDashboardName($pid, $dash_id);
 		// Delete report
-		$sql = "delete from $dashboard_table_name where project_id = ".$pid." and dash_id = $dash_id";
-		$q = $this->query($sql, []);
+		$sql = "delete from $dashboard_table_name where project_id = ? and dash_id = ?";
+		$params = array($pid, $dash_id);
+		$q = $this->query($sql, $params);
 		if (!$q) return false;
 		// Fix ordering of reports (if needed) now that this report has been removed
-		$this->checkDashOrder();
-		// Logging
-		Logging::logEvent($sql, "$dashboard_table_name", "MANAGE", $dash_id, "dash_id = $dash_id", "Delete project dashboard" . " - \"$title\"");
+		$this->checkDashOrder($pid);
+
 		// Return success
 		return true;
 	}
@@ -1662,37 +1665,37 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	}
 
 	// Checks for errors in the dashboard order of all dashboards (in case their numbering gets off)
-	public function checkDashOrder()
+	public function checkDashOrder($pid)
 	{
 		// Do a quick compare of the field_order by using Arithmetic Series (not 100% reliable, but highly reliable and quick)
 		// and make sure it begins with 1 and ends with field order equal to the total field count.
 		$sql = "select sum(dash_order) as actual, round(count(1)*(count(1)+1)/2) as ideal,
 				min(dash_order) as min, max(dash_order) as max, count(1) as dash_count
-				from $dashboard_table_name where project_id = " . PROJECT_ID;
+				from $dashboard_table_name where project_id = " . $pid;
 		$q = $this->query($sql, []);
 		$row = $q->fetch_assoc();
 		db_free_result($q);
 		if ( ($row['actual'] != $row['ideal']) || ($row['min'] != '1') || ($row['max'] != $row['dash_count']) )
 		{
-			return $this->fixDashOrder();
+			return $this->fixDashOrder($pid);
 		}
 	}
 
 	// Fixes the dashboard order of all dashboards (if somehow their numbering gets off)
-	public function fixDashOrder()
+	public function fixDashOrder($pid)
 	{
 		// Set all dash_orders to null
 		$sql = "select @n := 0";
 		$this->query($sql, []);
 		// Reset field_order of all fields, beginning with "1"
 		$sql = "update $dashboard_table_name
-				set dash_order = @n := @n + 1 where project_id = ".PROJECT_ID."
+				set dash_order = @n := @n + 1 where project_id = ".$pid."
 				order by dash_order, dash_id";
 		if (!$this->query($sql, []))
 		{
 			// If unique key prevented easy fix, then do manually via looping
 			$sql = "select dash_id from $dashboard_table_name
-					where project_id = ".PROJECT_ID."
+					where project_id = ".$pid."
 					order by dash_order, dash_id";
 			$q = $this->query($sql, []);
 			$dash_order = 1;

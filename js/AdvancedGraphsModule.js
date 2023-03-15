@@ -111,21 +111,38 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         parent.append(table);
     }
 
-    function getPublicLink(dashboardId) {
-        // Replace this with your actual URL generation logic
+    function getPublicLink(dashboard) {
+        // If the dashboard is public, then return the public link
+        if (dashboard.public) {
+            return links.public + '&pid=' + dashboard.project_id + '&report_id=' + dashboard.report_id + '&dash_id=' + dashboard.dash_id;
+        }
+
         return "#";
     }
     
-    function viewDashboard(dashboardId) {
-        console.log("View dashboard:", dashboardId);
+    function viewDashboard(dashboard) {
+        var url = links.view + '&pid=' + dashboard.project_id + '&report_id=' + dashboard.report_id + '&dash_id=' + dashboard.dash_id;
+
+        // Open the dashboard in a new tab
+        window.open(url, '_blank');
     }
     
-    function editDashboard(dashboardId) {
-        console.log("Edit dashboard:", dashboardId);
+    function editDashboard(dashboard) {
+        var url = links.edit + '&pid=' + dashboard.project_id + '&report_id=' + dashboard.report_id + '&dash_id=' + dashboard.dash_id;
+
+        // Open the dashboard in a new tab
+        window.open(url, '_blank');
     }
     
-    function deleteDashboard(dashboardId) {
-        console.log("Delete dashboard:", dashboardId);
+    async function deleteDashboard(dashboard) {
+        try {
+            var result = await module.ajax('deleteDashboard', dashboard);
+            return result;
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+        return false;
     }
 
     async function getDashboards(project_id) {
@@ -190,7 +207,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             tr.appendChild(tdTitle);
     
             var tdReportName = document.createElement('td');
-            tdReportName.innerText = await getReportName(dashboard.report_id);
+            tdReportName.innerText = await getReportName(dashboard);
             tr.appendChild(tdReportName);
     
             var tdSeparator = document.createElement('td');
@@ -199,7 +216,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var tdPublicLink = document.createElement('td');
             if (dashboard.is_public) {
                 var publicLink = document.createElement('a');
-                publicLink.href = getPublicLink(dashboard.dash_id);
+                publicLink.href = getPublicLink(dashboard);
                 publicLink.innerText = module.tt('public_link_href');
                 tdPublicLink.appendChild(publicLink);
             }
@@ -210,7 +227,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             viewButton.className = 'btn btn-primary';
             viewButton.innerText = module.tt('view_button');
             viewButton.onclick = function() {
-                viewDashboard(dashboard.dash_id);
+                viewDashboard(dashboard);
             };
             tdView.appendChild(viewButton);
             tr.appendChild(tdView);
@@ -220,7 +237,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             editButton.className = 'btn btn-warning';
             editButton.innerText = module.tt('edit_button');
             editButton.onclick = function() {
-                editDashboard(dashboard.dash_id);
+                editDashboard(dashboard);
             };
             tdEdit.appendChild(editButton);
             tr.appendChild(tdEdit);
@@ -229,10 +246,22 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var deleteButton = document.createElement('button');
             deleteButton.className = 'btn btn-danger';
             deleteButton.innerText = module.tt('delete_button');
-            deleteButton.onclick = function() {
-                let deleteSuccess = deleteDashboard(dashboard.dash_id);
+            deleteButton.onclick = async function() {
+                let deleteSuccess = await deleteDashboard(dashboard);
                 if (deleteSuccess) {
-                    tr.remove();
+                    // Animate the row out of the table
+                    tr.style.transition = 'all 0.5s ease';
+                    tr.style.opacity = 0;
+                    tr.style.height = 0;
+                    tr.style.padding = 0;
+                    tr.style.margin = 0;
+                    tr.style.border = 0;
+                    tr.style.overflow = 'hidden';
+
+                    // Remove the row from the table after the animation completes
+                    setTimeout(function() {
+                        tr.remove();
+                    }, 500);
                 } else {
                     alert(module.tt('delete_error'));
                 }
