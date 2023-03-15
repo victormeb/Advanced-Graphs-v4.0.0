@@ -80,7 +80,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
     }
 
     // A function used to create a table showing all the created dashboards
-    this.loadDashList = function (parent) {
+    this.loadDashboardList = async function (parent) {
         var project_id = module.getUrlParameter('pid');
 
         // If the pid is not set, then we are not in a project context
@@ -93,7 +93,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         }
 
         // Get the dashboards from the server
-        var dashboards = getDashboards(project_id);
+        var dashboards = await getDashboards(project_id);
 
         // If the dashboards are null, then there was an error
         if (dashboards === null) {
@@ -105,7 +105,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         }
 
         // Render the dashboard list
-        var table = renderDashboardList(dashboards);
+        var table = await renderDashboardList(dashboards);
 
         // Add the table to the parent
         parent.append(table);
@@ -132,7 +132,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Get the dashboards from the server
         try {
             var dashboards = await module.ajax('getDashboards', project_id);
-            return dashboards;
+            return JSON.parse(dashboards);
         } catch (error) {
             console.log(error);
             return null;

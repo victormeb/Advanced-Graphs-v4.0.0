@@ -264,6 +264,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 			return "error man";
 		}
+		else if ($action === 'getDashboards') {
+			return json_encode($this->getDashboards($project_id));
+		}
 		else {
 			return false;
 		}

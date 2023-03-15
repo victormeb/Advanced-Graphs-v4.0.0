@@ -21,7 +21,8 @@
     "no-auth-pages": ["view_dash_public", "advanced_graphs_ajax_public"],
 	"auth-ajax-actions": [
 		"newDashboard",
-		"saveDashboard"
+		"saveDashboard",
+		"getDashboards"
 	 ],
 	"links": {
 		"control-center": [

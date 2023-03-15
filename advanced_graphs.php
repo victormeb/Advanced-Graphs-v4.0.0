@@ -13,11 +13,13 @@
 
 	$module->loadJS('js/AdvancedGraphsModule.js');
 	$module->loadCSS('css/advanced-graphs.css');
-	$module->renderSetupPage();
 
 	$js_module = $module->initializeJavascriptModuleObject();
 	$module->tt_transferToJavascriptModuleObject();
 ?>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
 
 <div id="advanced_graphs">
     
