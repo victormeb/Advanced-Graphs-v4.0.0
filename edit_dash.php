@@ -10,9 +10,20 @@ $project_id = $_GET['pid'];
 // Get the dash ID from the URL
 $dash_id = $_GET['dash_id'];
 
+// Get the dashboard from
+if ($dash_id == 0) {
+    $dashboard = array();
+} else {
+    $dashboard = $module->getDashboards($project_id, $dash_id)[0];
+    $dash_name = $module->getDashboardName($project_id, $dash_id);
+}
+
+echo json_encode($dashboard);
+echo "<br>proof: ".$dashboard['report_id'];
 
 // Get the associated report ID from the dashboard
 if (isset($dashboard['report_id'])) {
+    echo "<br>isset";
     $report_id = $dashboard['report_id'];
 } else {
     // Get the reffering URL
@@ -44,13 +55,7 @@ if ($report_id == null) {
     exit;
 }
 
-// Get the dashboard from
-if ($dash_id == 0) {
-    $dashboard = array();
-} else {
-    $dashboard = $module->getDashboards($project_id, $dash_id);
-    $dash_name = $module->getDashboardName($project_id, $dash_id);
-}
+
 
 
 // Get the report name

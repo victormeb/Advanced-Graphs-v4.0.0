@@ -371,14 +371,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         tableDiv.setAttribute('id', 'AG-editor-table');
 
         // If the dashboard is null, return the table div
-        if (!dashboard) {
+        if (!dashboard.body) {
             return tableDiv;
         }
 
+        var dashRows = JSON.parse(dashboard.body);
+
         // For each row in the dashboard, create a row
-        for (var i = 0; i < dashboard.body.length; i++) {
+        for (var i = 0; i < dashRows.length; i++) {
             // Create a row
-            var row = createRow(dashboard.body[i]);
+            var row = createRow(dashRows[i]);
 
             // Add the row to the table div
             tableDiv.appendChild(row);
@@ -715,7 +717,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var selectElement = graphTypeSelector.querySelector('select');
 
             // Set the value of the select element to the graph type
-            selectElement.value = graphType;
+            for (let i = 0; i < selectElement.children.length; i++) {
+                if (selectElement.children[i].value == graphType) {
+                    selectElement.children[i].setAttribute("selected", "selected");
+                }
+            }
 
             // Remove the current graph form
             graphFormDiv.innerHTML = '';
@@ -730,6 +736,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             graphFormDiv.appendChild(graphForm);
 
         }
+
+        return cellDiv;
     }
 
     // Create a graph type selector
@@ -1281,12 +1289,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         // Set the label element attributes
         labelElement.innerHTML = label;
 
+        // Add the domElement to the div
+        div.appendChild(domElement);
+
         // When the checkbox changes, remove or add the dom element to the div
         checkbox.addEventListener('change', function() {
             if (checkbox.checked) {
-                div.appendChild(domElement);
+                domElement.removeAttribute("hidden");
             } else {
-                div.removeChild(domElement);
+                domElement.setAttribute("hidden", "hidden");
+                domElement.value = null;
             }
         });
 
@@ -1551,6 +1563,8 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 }
             });
 
+            form.dispatchEvent(new Event('change'));
+
             // Create an event listener that creates the graph when the create graph button is clicked
             createGraphButton.addEventListener('click', function () {
                 // Check whether the form is ready
@@ -1649,14 +1663,22 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             var instrumentSelector = addInstrumentSelector(graphOptionsDiv);
 
             // If parameters.instrument is specified, set the instrument selector to the specified instrument
-            if (parameters && parameters.instrument) {
-                instrumentSelector.querySelector('select').value = parameters.instrument;
+            if (parameters &&  Object.keys(parameters).includes('instrument')) {
+                var instrumentSelectorSelect = instrumentSelector.querySelector('select');
+
+                for (let i = 0; i < instrumentSelectorSelect.children.length; i++) {
+                    if (instrumentSelectorSelect.children[i].value == parameters.instrument) {
+                        instrumentSelectorSelect.children[i].setAttribute("selected", "selected");
+                    }
+                }
 
                 // Trigger the change event
                 instrumentSelector.querySelector('select').dispatchEvent(new Event('change'));
 
                 // Update the graph options
                 updateGraphOptions(graphOptionsDiv, parameters);
+
+                graphOptionsDiv.dispatchEvent(new Event('change'));
             }
 
             // Add the instrument selector to the form
@@ -2407,6 +2429,10 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                         // Set the value of the text input to the parameter value
                         inputElements[i].value = parameters[key];
                     }
+                }
+
+                if (!inputElements.length) {
+
                 }
             }
         }           
