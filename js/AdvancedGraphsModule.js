@@ -161,7 +161,7 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
         return new Promise(resolve => {
             setTimeout(() => {
                 resolve("Report " + reportId);
-            }, 200);
+            }, 1);
         });
     }
     

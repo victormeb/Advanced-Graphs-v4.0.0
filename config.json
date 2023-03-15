@@ -22,7 +22,8 @@
 	"auth-ajax-actions": [
 		"newDashboard",
 		"saveDashboard",
-		"getDashboards"
+		"getDashboards",
+		"deleteDashboard"
 	 ],
 	"links": {
 		"control-center": [

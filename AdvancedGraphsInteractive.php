@@ -1589,7 +1589,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// Delete a report
 	public function deleteDash($pid, $dash_id)
 	{
-		$title = $this->getDashboardName($pid, $dash_id);
+		$dashboard_table_name = $this->dashboard_table_name;
+		// $title = $this->getDashboardName($pid, $dash_id);
 		// Delete report
 		$sql = "delete from $dashboard_table_name where project_id = ? and dash_id = ?";
 		$params = array($pid, $dash_id);
@@ -1605,6 +1606,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// Copy the report and return the new dash_id
 	public function copyDash($pid, $dash_id)
 	{
+		$dashboard_table_name = $this->dashboard_table_name;
 		// Set up all actions as a transaction to ensure everything is done here
 		$this->query("SET AUTOCOMMIT=0");
 		$this->query("BEGIN");
@@ -1667,6 +1669,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// Checks for errors in the dashboard order of all dashboards (in case their numbering gets off)
 	public function checkDashOrder($pid)
 	{
+		$dashboard_table_name = $this->dashboard_table_name;	
 		// Do a quick compare of the field_order by using Arithmetic Series (not 100% reliable, but highly reliable and quick)
 		// and make sure it begins with 1 and ends with field order equal to the total field count.
 		$sql = "select sum(dash_order) as actual, round(count(1)*(count(1)+1)/2) as ideal,
@@ -1684,6 +1687,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	// Fixes the dashboard order of all dashboards (if somehow their numbering gets off)
 	public function fixDashOrder($pid)
 	{
+		$dashboard_table_name = $this->dashboard_table_name;
 		// Set all dash_orders to null
 		$sql = "select @n := 0";
 		$this->query($sql, []);
