@@ -250,6 +250,11 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
                 let deleteSuccess = await deleteDashboard(dashboard);
                 if (deleteSuccess) {
                     // Animate the row out of the table
+
+                    // Hilights the row red before removing it
+                    tr.style.backgroundColor = '#ffcccc';
+
+                    // Set the transition properties
                     tr.style.transition = 'all 0.5s ease';
                     tr.style.opacity = 0;
                     tr.style.height = 0;
@@ -370,8 +375,17 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             return tableDiv;
         }
 
-        return tableDiv;
+        // For each row in the dashboard, create a row
+        for (var i = 0; i < dashboard.body.length; i++) {
+            // Create a row
+            var row = createRow(dashboard.body[i]);
 
+            // Add the row to the table div
+            tableDiv.appendChild(row);
+        }
+
+        // Return the table div
+        return tableDiv;
     }
 
     // The function used to create the add row button
@@ -554,7 +568,16 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             return rowDiv;
         }
 
-        // Todo: Add the cells to the row
+        // For each cell in the row
+        for (var i = 0; i < row.length; i++) {
+            // Create a new cell
+            var newCell = createCell(row[i]);
+
+            // Add the new cell to the cells div
+            cellsDiv.appendChild(newCell);
+        }
+
+        // Return the row div
         return rowDiv;
     }
 
@@ -683,7 +706,30 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
             return cellDiv;
         }
 
-        // Todo: Fill the cell with the cell data
+        // Get the graph type from the cell
+        var graphType = cell.type;
+
+        // If the graph type is not null
+        if (graphType) {
+            // Get the select element from the graph type selector
+            var selectElement = graphTypeSelector.querySelector('select');
+
+            // Set the value of the select element to the graph type
+            selectElement.value = graphType;
+
+            // Remove the current graph form
+            graphFormDiv.innerHTML = '';
+
+            // Create a new graphType object from the graph type
+            var graphTypeObject = graphTypes[graphType];
+
+            // Get the graph form from the graph type object
+            var graphForm = graphTypeObject.generateForm(cell.parameters);
+
+            // Add the graph form to the graph form div
+            graphFormDiv.appendChild(graphForm);
+
+        }
     }
 
     // Create a graph type selector
@@ -2328,22 +2374,42 @@ var AdvancedGraphsModule = function (module, dashboard, data_dictionary, report,
 
         // A function that updates the graph options div given parameters
         var updateGraphOptions = function(graphOptionsDiv, parameters) {
-            // Get the categorical field selector
-            var categoricalFieldSelector = graphOptionsDiv.querySelector('select[name="categorical_field"]');
+            // For each parameter in parameters
+            for (var key in parameters) {
+                // Find the input element(s) with the name of the parameter
+                var inputElements = graphOptionsDiv.querySelectorAll('[name="' + key + '"]');
 
-            // Get the numeric field selector
-            var numericFieldSelector = graphOptionsDiv.querySelector('select[name="numeric_field"]');
-
-            // If parameters.categorical_field is specified, set the categorical field selector to the specified field
-            if (parameters.categorical_field) {
-                categoricalFieldSelector.value = parameters.categorical_field;
+                // For each input element
+                for (var i = 0; i < inputElements.length; i++) {
+                    // If the input element is a checkbox
+                    if (inputElements[i].getAttribute('type') == 'checkbox') {
+                        // Check the checkbox if the value of this input element is in the parameter value
+                        if (parameters[key].indexOf(inputElements[i].value) > -1) {
+                            inputElements[i].checked = true;
+                        } else {
+                            inputElements[i].checked = false;
+                        }
+                    // If tje input element is a radio button
+                    } else if (inputElements[i].getAttribute('type') == 'radio') {
+                        // Check the radio button if the value of this input element is equal to the parameter value
+                        if (inputElements[i].value == parameters[key]) {
+                            inputElements[i].checked = true;
+                        } else {
+                            inputElements[i].checked = false;
+                        }
+                    // If the input element is a select element
+                    } else if (inputElements[i].tagName == 'SELECT') {
+                        // Set the value of the select element to the parameter value
+                        inputElements[i].value = parameters[key];
+                    }
+                    // If the input element is a text input
+                    else {
+                        // Set the value of the text input to the parameter value
+                        inputElements[i].value = parameters[key];
+                    }
+                }
             }
-
-            // If parameters.numeric_field is specified, set the numeric field selector to the specified field
-            if (parameters.numeric_field) {
-                numericFieldSelector.value = parameters.numeric_field;
-            }
-        }
+        }           
 
     }
 
