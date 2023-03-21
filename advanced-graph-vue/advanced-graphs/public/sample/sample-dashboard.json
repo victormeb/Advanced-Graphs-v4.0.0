@@ -1,0 +1,9 @@
+{
+    "dash_id": 76,
+    "project_id": 326,
+    "report_id": 546,
+    "title": "Dashboard 1",
+    "body": "[[{\"type\":\"bar_pie\",\"parameters\":{\"instrument\":\"\",\"graph_type\":\"pie\",\"categorical_field\":\"city_bc\",\"na_category\":\"drop\",\"unused_categories\":\"drop\",\"palette_brewer\":[\"#ec1313\",\"#14e6c3\",\"#32e10e\"],\"numeric_field\":\"\",\"na_numeric\":\"drop\",\"na_numeric_value\":\"\",\"is_count\":true,\"show_legend\":\"true\",\"redcap_csrf_token\":\"b9b2acea3b11dbfae88eee2e5adbaa49453c5951\"}},{\"type\":\"bar_pie\",\"parameters\":{\"instrument\":\"\",\"graph_type\":\"bar\",\"categorical_field\":\"city_bc\",\"na_category\":\"keep\",\"unused_categories\":\"drop\",\"palette_brewer\":[\"#561bde\",\"#f000bc\",\"#0db8e3\"],\"numeric_field\":\"weight\",\"na_numeric\":\"drop\",\"na_numeric_value\":\"\",\"aggregation_function\":\"mean\",\"show_legend\":\"true\",\"redcap_csrf_token\":\"b9b2acea3b11dbfae88eee2e5adbaa49453c5951\"}}]]",
+    "dash_order": 1,
+    "is_public": 0
+}

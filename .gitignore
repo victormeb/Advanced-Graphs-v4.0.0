@@ -4,3 +4,5 @@ gittoken
 *.html
 .Rhistory
 .RData
+
+.DS_Store

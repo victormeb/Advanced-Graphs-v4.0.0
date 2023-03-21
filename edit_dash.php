@@ -93,24 +93,42 @@ $module->tt_transferToJavascriptModuleObject();
 <script>
     // in an anonymous function to avoid polluting the global namespace
     $(document).ready(function() {
-        var module = <?=ExternalModules::getJavascriptModuleObjectName($module)?>;
-        var report_id = <?php echo $report_id; ?>;
-        var report_name = "<?php echo $report_name; ?>";
-        var dash_id = <?php echo $dash_id; ?>;
-        var dash_name = "<?php echo $dash_name; ?>";
-        var report = <?php echo json_encode($report); ?>;
+        // Get the module object
+        var module = <?=$module->getJavascriptModuleObjectName()?>;
         var dashboard = <?php echo json_encode($dashboard); ?>;
         var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
+        var report = <?php echo json_encode($report); ?>;
         var report_fields_by_reapeat_instrument = <?php echo json_encode($report_fields_by_reapeat_instrument); ?>;
 
-        console.log(data_dictionary);
-        console.log(report_fields_by_reapeat_instrument);
-        
-        // Initialize the module from AdvancedGraphsModule.js
-        var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report, report_fields_by_reapeat_instrument);
+        new Vue({
+            el: '#advanced_graphs',
+            provide: {
+                module: module,
+                dashboard: dashboard,
+                data_dictionary: data_dictionary,
+                report: report,
+                report_fields_by_reapeat_instrument: report_fields_by_reapeat_instrument
+            },
+            components: {
+                DashboardEditor,
+                DashboardList,
+                DashboardViewer,
+                PublicDashboardViewer,
+            },
+        });
+        // var report_id = <?php echo $report_id; ?>;
+        // var report_name = "<?php echo $report_name; ?>";
+        // var dash_id = <?php echo $dash_id; ?>;
+        // var dash_name = "<?php echo $dash_name; ?>";
 
-        // Load the dashboard editor
-        AGM.loadEditor(document.getElementById('advanced_graphs'));
+        // console.log(data_dictionary);
+        // console.log(report_fields_by_reapeat_instrument);
+        
+        // // Initialize the module from AdvancedGraphsModule.js
+        // var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report, report_fields_by_reapeat_instrument);
+
+        // // Load the dashboard editor
+        // AGM.loadEditor(document.getElementById('advanced_graphs'));
 
     });
 </script>
