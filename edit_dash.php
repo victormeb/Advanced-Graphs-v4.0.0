@@ -18,12 +18,12 @@ if ($dash_id == 0) {
     $dash_name = $module->getDashboardName($project_id, $dash_id);
 }
 
-echo json_encode($dashboard);
-echo "<br>proof: ".$dashboard['report_id'];
+// echo json_encode($dashboard);
+// echo "<br>proof: ".$dashboard['report_id'];
 
 // Get the associated report ID from the dashboard
 if (isset($dashboard['report_id'])) {
-    echo "<br>isset";
+    // echo "<br>isset";
     $report_id = $dashboard['report_id'];
 } else {
     // Get the reffering URL
@@ -75,16 +75,23 @@ $data_dictionary = $module->getDataDictionary($project_id);
 // Get the report fields by the repeating instruments
 $report_fields_by_reapeat_instrument = $module->getReportFieldsByRepeatInstrument($project_id, $report_id);
 
-$module->loadJS('js/AdvancedGraphsModule.js');
-$module->loadCSS('css/advanced-graphs.css');
+// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-vendors.js');
+// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-common.js');
+// $module->loadCSS('advanced-graph-vue/advanced-graphs/dist/css/chunk-vendors.css');
 
 $js_module = $module->initializeJavascriptModuleObject();
 
 $module->tt_transferToJavascriptModuleObject();
 ?>
-
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+
+<?php 
+$module->loadJS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.umd.js');
+$module->loadCSS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.css');
+
+?>
 
 <div id="advanced_graphs">
     
@@ -100,36 +107,8 @@ $module->tt_transferToJavascriptModuleObject();
         var report = <?php echo json_encode($report); ?>;
         var report_fields_by_reapeat_instrument = <?php echo json_encode($report_fields_by_reapeat_instrument); ?>;
 
-        new Vue({
-            el: '#advanced_graphs',
-            provide: {
-                module: module,
-                dashboard: dashboard,
-                data_dictionary: data_dictionary,
-                report: report,
-                report_fields_by_reapeat_instrument: report_fields_by_reapeat_instrument
-            },
-            components: {
-                DashboardEditor,
-                DashboardList,
-                DashboardViewer,
-                PublicDashboardViewer,
-            },
-        });
-        // var report_id = <?php echo $report_id; ?>;
-        // var report_name = "<?php echo $report_name; ?>";
-        // var dash_id = <?php echo $dash_id; ?>;
-        // var dash_name = "<?php echo $dash_name; ?>";
-
-        // console.log(data_dictionary);
-        // console.log(report_fields_by_reapeat_instrument);
-        
-        // // Initialize the module from AdvancedGraphsModule.js
-        // var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report, report_fields_by_reapeat_instrument);
-
-        // // Load the dashboard editor
-        // AGM.loadEditor(document.getElementById('advanced_graphs'));
-
+        var app = AdvancedGraphs.createDashboardEditorApp(module, dashboard, report, data_dictionary, report_fields_by_reapeat_instrument);
+        app.mount('#advanced_graphs');
     });
 </script>
 

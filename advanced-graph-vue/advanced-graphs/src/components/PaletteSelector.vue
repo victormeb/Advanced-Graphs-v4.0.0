@@ -40,6 +40,9 @@
         showModal: false,
       };
     },
+    mounted() {
+      this.$emit('update:modelValue', this.colors);
+    },
     watch: {
       colors() {
         this.$emit('update:modelValue', this.colors);

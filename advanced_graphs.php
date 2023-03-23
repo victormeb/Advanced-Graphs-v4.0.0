@@ -8,11 +8,11 @@
 	$project_id = $_GET['pid'];
 
 	// Get the data dictionary
-	$data_dictionary = REDCap::getDataDictionary($project_id);
+	$dashboards = $module->getDashboards($project_id);
 
 
-	$module->loadJS('js/AdvancedGraphsModule.js');
-	$module->loadCSS('css/advanced-graphs.css');
+	$module->loadJS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.umd.js');
+	$module->loadCSS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.css');
 
 	$js_module = $module->initializeJavascriptModuleObject();
 	$module->tt_transferToJavascriptModuleObject();
@@ -29,15 +29,11 @@
 	    // in an anonymous function to avoid polluting the global namespace
 		$(document).ready(function() {
 			var module = <?=ExternalModules::getJavascriptModuleObjectName($module)?>;
-			var dashboard = {};
-			var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
-			var report = {};
-			var report_fields_by_reapeat_instrument = {};
+			var dashboards = <?php echo json_encode($dashboards); ?>;
 
 			// Initialize the module from AdvancedGraphsModule.js
-			var AGM = new AdvancedGraphsModule(module, dashboard, data_dictionary, report, report_fields_by_reapeat_instrument);
+			var app = AdvancedGraphs.createDashboardListApp(module, dashboards);
 
-			// Load the dashboard list
-			AGM.loadDashboardList(document.getElementById('advanced_graphs'));
+			app.mount('#advanced_graphs');
 		});
 </script>

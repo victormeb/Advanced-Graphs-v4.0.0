@@ -11,4 +11,5 @@ import BarGraph from './BarGraph.vue';
 
 export default {
     'bar_pie': {form: BarGraphForm, graph: BarGraph},
+    'likert': {form: LikertForm, graph: Likert}
 };

@@ -23,7 +23,8 @@
 		"newDashboard",
 		"saveDashboard",
 		"getDashboards",
-		"deleteDashboard"
+		"deleteDashboard",
+		"getReportName"
 	 ],
 	"links": {
 		"control-center": [

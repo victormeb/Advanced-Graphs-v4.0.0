@@ -180,8 +180,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 	//and report_id is in QUERY_STRING
     function redcap_module_link_check_display($project_id, $link)
     {		
-		$current_page_is_this_module = strpos($_SERVER["PHP_SELF"],"/ExternalModules/") > -1 && strpos($_SERVER["QUERY_STRING"],"prefix=" . $this->PREFIX) > -1;
-		$current_page_is_this_page = strpos($_SERVER["PHP_SELF"],"/ExternalModules/") > -1 && strpos($_SERVER["QUERY_STRING"],"page=edit_dash") > -1;
+		$current_page_is_this_module = strpos($_SERVER["QUERY_STRING"],"prefix=" . $this->PREFIX) > -1;
+		$current_page_is_this_page = strpos($_SERVER["QUERY_STRING"],"page=edit_dash") > -1;
 		$current_page_is_export_report = strpos($_SERVER["PHP_SELF"],"/DataExport/") > -1 && strpos($_SERVER["QUERY_STRING"],"&report_id=") > -1 && strpos($_SERVER["QUERY_STRING"],"&addedit") <= -1;
 
 		$report_id = $_GET['report_id'];
@@ -269,6 +269,9 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		}
 		else if ($action === 'deleteDashboard') {
 			return json_encode($this->deleteDash($payload["project_id"], $payload["dash_id"]));
+		}
+		else if ($action === 'getReportName') {
+			return $this->getReportName($payload["project_id"], $payload["report_id"]);
 		}
 		else {
 			return false;
@@ -665,8 +668,11 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 		// get the repeating instruments
 		foreach ($repeat_instruments as $instrument) {
-			$repeat_dictionary[$instrument] = array("form_name" => $instrument, "form_label" => REDCap::getInstrumentNames($instrument, $project_id), "fields" => array());
+			$repeat_dictionary[$instrument] = array("form_name" => $instrument, "label" => REDCap::getInstrumentNames($instrument, $project_id), "fields" => array());
 		}
+
+		$repeat_dictionary[""] = array("form_name" => "", "label" => $this->tt('non_repeat_instrument_label'), "fields" => array());
+
 
 		// get the fields for each repeating instrument
 		foreach ($report_fields as $field_name) {
@@ -678,11 +684,14 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 			if (in_array($field['form_name'], $repeat_instruments))
 				$repeat_dictionary[$field['form_name']]['fields'][] = $field;
 			else
-				$non_repeats[] = $field;
+				$repeat_dictionary[""]['fields'][] = $field;
 		}
 
+		if (!count($repeat_dictionary[""]['fields']))
+			unset($repeat_dictionary[""]);
+
 		// return an array of repeating instruments and non repeating fields
-		return array("repeat_instruments" => $repeat_dictionary, "non_repeats" => $non_repeats);
+		return $repeat_dictionary;
 	}
 
 

@@ -19,11 +19,14 @@ export default {
     },
     data() {
         return {
-            graph: null
+            graph: null,
+            module: this.module, 
+            data_dictionary: this.data_dictionary,
+            report: this.report,
         };
     },
     mounted() {
-        this.graph = this.getGraph(this.parameters);
+        this.graph = this.getGraph.bind(this)(this.parameters);
         this.$refs.graphContainer.appendChild(this.graph);
     },
     methods: {

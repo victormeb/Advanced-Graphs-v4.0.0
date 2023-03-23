@@ -1,8 +1,12 @@
 <!-- DashboardEditor.vue -->
-<template>
+  <template>
     <div>
       <h1>Dashboard Editor</h1>
-      <DashboardOptions />
+      <DashboardOptions 
+      :title="title" 
+      :isPublic="isPublic" 
+      @updateTitle="updateTitle($event)"
+      @updatePublic="updatePublic($event)"/>
       <editor-table
         :rows="body"
         @moveRowUp="moveRowUp($event)"
@@ -51,9 +55,16 @@
               JSON.parse(this.dashboard.body).map(row => row.map(cell => ({ ...cell, id: getUuid() }))): 
               [],
             ),
+            localDashboard: this.dashboard,
         }
     },
     methods: {
+      updateTitle(new_title) {
+        this.title = new_title;
+      },
+      updatePublic(new_public) {
+        this.isPublic = new_public;
+      },
         moveRowUp(index) {
             if (index > 0) {
                 const row = this.body[index];
@@ -78,9 +89,26 @@
         addDashboardRow() {
             this.body.push([]);
         },
-      saveDashboard() {
-        // TODO: Save dashboard
+      async saveDashboard() {
+        this.localDashboard = this.localDashboard && this.localDashboard.body ? this.localDashboard : await this.newDashboard();
+        this.localDashboard.body = this.body;
+        this.localDashboard.title = this.title;
+        this.localDashboard.is_public = this.isPublic;
+        this.module.ajax('saveDashboard', this.localDashboard).then(function (result) {
+          console.log(result);
+        }).catch(function (error) {
+          console.log(error);
+        });
       },
+      async newDashboard() {
+        try {
+            var result = await this.module.ajax('newDashboard', this.module.getUrlParameter('report_id'));
+            console.log('new_dashboard', result);
+            return JSON.parse(result);
+        } catch (error) {
+            console.log(error);
+        }
+    }
     },
     watch: {
       body: {

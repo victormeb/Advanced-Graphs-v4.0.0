@@ -1,6 +1,7 @@
-const { defineConfig } = require('@vue/cli-service')
+// vue.config.js
+const { defineConfig } = require('@vue/cli-service');
+
 module.exports = defineConfig({
-  transpileDependencies: true,
   filenameHashing: false,
   pages: {
     testingEditor: {
@@ -10,13 +11,16 @@ module.exports = defineConfig({
       title: 'Testing Editor',
       chunks: ['chunk-vendors', 'chunk-common', 'testingEditor'],
     },
-    editor: {
-      entry: 'src/edit-dash.js',
-      output: {
-        filename: 'editor.js',
-        path: 'dist',
-        chunks: ['chunk-vendors', 'chunk-common', 'editor'],
-      }
-    }
+    editor: './src/edit-dash.js'
   },
-})
+  // configureWebpack: {
+  //   entry: {
+  //     editor: './src/edit-dash.js'
+  //   },
+  //   output: {
+  //     library: 'AdvancedGraphs',
+  //     libraryExport: ['default', 'createDashboardEditorApp'],
+  //     libraryTarget: 'umd',
+  //   }
+  // },
+});
