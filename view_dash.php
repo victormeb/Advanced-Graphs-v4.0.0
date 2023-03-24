@@ -2,54 +2,124 @@
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
 
-$dash_id = $_GET['dash_id'];
-$pid = $_GET['pid'];
-
-$dash_title = $module->getDashboardName($pid, $dash_id);
-
-// // Header
 include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->loadJS("dash-builder.js");
-$module->loadJS("htmlwidgets.js", "mapdependencies/htmlwidgets-1.5.4");
-$module->loadCSS("leaflet.css", "mapdependencies/leaflet-1.3.1");
-$module->loadJS("leaflet.js", "mapdependencies/leaflet-1.3.1");
-$module->loadCSS("leafletfix.css", "mapdependencies/leafletfix-1.0.0");
-$module->loadJS("proj4.min.js", "mapdependencies/proj4-2.6.2");
-$module->loadJS("proj4leaflet.js", "mapdependencies/Proj4Leaflet-1.0.1");
-$module->loadCSS("rstudio_leaflet.css", "mapdependencies/rstudio_leaflet-1.3.1");
-$module->loadJS("leaflet.js", "mapdependencies/leaflet-binding-2.1.1");
-$module->loadCSS("MarkerCluster.css", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadCSS("MarkerCluster.Default.css", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadJS("leaflet.markercluster.js", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadJS("leaflet.markercluster.freezable.js", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadJS("leaflet.markercluster.layersupport.js", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadCSS("advanced-graphs.css");
 
-echo "<center><h1>$dash_title</h1></center><div id=\"advanced_graphs\"><h2>Loading your dashboard...</h1><h2>Please Wait</h2></div>";
-$dashboard = $module->getDashboards($pid, $dash_id);
+// Get the project ID
+$project_id = $_GET['pid'];
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+// Get the dash ID from the URL
+$dash_id = $_GET['dash_id'];
+
+// Get the dashboard from
+if ($dash_id == 0) {
+    $dashboard = array();
+} else {
+    $dashboard = $module->getDashboards($project_id, $dash_id)[0];
+    $dash_name = $module->getDashboardName($project_id, $dash_id);
+}
+
+// echo json_encode($dashboard);
+// echo "<br>proof: ".$dashboard['report_id'];
+
+// Get the associated report ID from the dashboard
+if (isset($dashboard['report_id'])) {
+    // echo "<br>isset";
+    $report_id = $dashboard['report_id'];
+} else {
+    // Get the reffering URL
+    $referring_url = $_SERVER['HTTP_REFERER'];
+    
+    // parse the URL
+    $url_parts = parse_url($referring_url);
+
+    // Get the query string
+    $query_string = $url_parts['query'];
+
+    // Parse the query string
+    parse_str($query_string, $query_parts);
+
+    // Get the report ID if there is one
+    if (isset($query_parts['report_id'])) {
+        $report_id = $query_parts['report_id'];
+    } else {
+        $report_id = null;
+    }
+
+}
+
+// If the report ID is null, then we need to alert the user that they need to create a report first.
+if ($report_id == null) {
+    echo "<h1>You need to create a report before you can create a dashboard.</h1>";
+    // Header
+    include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+    exit;
+}
 
 
-$url = $_SERVER["HTTP_REFERER"];
-$parts = parse_url($url, PHP_URL_QUERY);
-parse_str($parts, $query);
 
-$original_params = json_encode($query);
 
+// Get the report name
+$report_name = $module->getReportName($project_id, $report_id);
+
+// Get the report
+// $report = $module->getReport($project_id, $report_id);
+// $report = $module->get_report($project_id, $report_id, array(), null, "array");
+$report = $module->getReport($report_id);
+
+// Get the report fields
+$report_fields = $module->getReportFields($project_id, $report_id);
+
+// Get the data dictionary
+$data_dictionary = $module->getDataDictionary($project_id);
+
+// Get the report fields by the repeating instruments
+$report_fields_by_reapeat_instrument = $module->getReportFieldsByRepeatInstrument($project_id, $report_id);
+
+// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-vendors.js');
+// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-common.js');
+// $module->loadCSS('advanced-graph-vue/advanced-graphs/dist/css/chunk-vendors.css');
+
+$js_module = $module->initializeJavascriptModuleObject();
+
+$module->tt_transferToJavascriptModuleObject();
+?>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+
+<?php 
+$module->loadJS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.umd.js');
+$module->loadCSS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.css');
 
 ?>
+
+<div id="advanced_graphs">
+    
+</div>
+
 <script>
-    var report_object = <?php echo $dashboard['body'];?>;
-    var live_filters = <?php echo $dashboard['live_filters'];?>;
-    var pid = <?php echo $pid;?>;
-    var report_id = "<?php echo $dashboard['report_id'];?>";
-    var refferer_parameters = <?php echo $original_params;?>;
-    // Urls to other pages
-    var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax.php");?>" + "&pid=" + pid;
-    var edit_dash_url = "<?php echo  $module->getUrl("edit_dash.php");?>";
-    var dash_list_url = "<?php echo  $module->getUrl("advanced_graphs.php");?>";
-    var view_dash_url = "<?php echo  $module->getUrl("view_dash.php");?>";
-    console.log(report_object);
-    generate_graphs();
+    // in an anonymous function to avoid polluting the global namespace
+    $(document).ready(function() {
+        // Get the module object
+        var module = <?=$module->getJavascriptModuleObjectName()?>;
+        var dashboard = <?php echo json_encode($dashboard); ?>;
+        var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
+        var report = <?php echo json_encode($report); ?>;
+        var report_fields_by_reapeat_instrument = <?php echo json_encode($report_fields_by_reapeat_instrument); ?>;
+
+        var app = AdvancedGraphs.createDashboardViewerApp(module, dashboard, report, data_dictionary, report_fields_by_reapeat_instrument);
+        app.mount('#advanced_graphs');
+    });
 </script>
+
+
+
+
+
+
+
+
+<?php
+// Footer
+include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+?>

@@ -26,8 +26,12 @@ export default {
         };
     },
     mounted() {
-        this.graph = this.getGraph.bind(this)(this.parameters);
-        this.$refs.graphContainer.appendChild(this.graph);
+        try {
+            this.graph = this.getGraph.bind(this)(this.parameters);
+            this.$refs.graphContainer.appendChild(this.graph);
+        } catch (e) {
+            console.error(e);
+        }
     },
     methods: {
         getGraph(parameters) {
