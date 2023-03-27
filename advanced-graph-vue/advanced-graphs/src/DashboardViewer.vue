@@ -5,8 +5,6 @@
       <div
         v-for="(graph, index) in row"
         :key="index"
-        class="col-md-{{ 12 / row.length }}"
-        :style="{ minWidth: '200px' }"
       >
         <div class="card">
           <component
@@ -56,5 +54,10 @@
   display: flex;
   flex-direction: row;
   overflow: auto;
+}
+
+.AG-viewer-col {
+  min-width: 400px;
+  margin-right: 1rem;
 }
 </style>
