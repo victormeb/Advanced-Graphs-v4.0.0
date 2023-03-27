@@ -1,7 +1,7 @@
 <template>
   <div>
     <div 
-      v-for="(row, index) in rows" :key="index" class="AG-viewer-row" style="display: flex; flex-wrap: wrap;">
+      v-for="(row, index) in rows" :key="index" class="AG-viewer-row">
       <div
         v-for="(graph, index) in row"
         :key="index"
@@ -49,3 +49,12 @@
     }
   };
 </script>
+
+<style scoped>
+.AG-viewer-row {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  overflow: auto;
+}
+</style>
