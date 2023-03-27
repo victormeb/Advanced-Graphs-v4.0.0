@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="AG-viewer-dashboard">
     <div 
       v-for="(row, index) in rows" :key="index" class="AG-viewer-row">
       <div
@@ -49,11 +49,14 @@
 </script>
 
 <style scoped>
+.AG-viewer-dashboard{
+  overflow: auto;
+}
+
 .AG-viewer-row {
   margin-bottom: 1rem;
   display: flex;
   flex-direction: row;
-  overflow: auto;
 }
 
 .AG-viewer-col {
