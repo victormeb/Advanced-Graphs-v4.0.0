@@ -34,10 +34,18 @@
             report_fields_by_repeat_instrument: this.report_fields_by_repeat_instrument,
         };
     },
+    mounted() {
+      console.log(this.rows);
+    },
     computed: {
       rows() {
-        return this.dashboard.body;
+        return this.dashboard && this.dashboard.body ? JSON.parse(this.dashboard.body) : [];
       },
     },
+    data() {
+      return {
+        GraphTypes,
+      };
+    }
   };
 </script>
