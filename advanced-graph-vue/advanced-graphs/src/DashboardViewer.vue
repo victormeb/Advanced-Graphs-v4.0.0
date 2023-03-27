@@ -20,7 +20,7 @@
 </template>
 
 <script>
-  import GraphTypes from "./component/GraphTypes.js";
+  import GraphTypes from "./components/GraphTypes.js";
 
   export default {
     name: "DashboardViewer",
