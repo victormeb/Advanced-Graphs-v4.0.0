@@ -6,7 +6,7 @@
         v-for="(graph, index) in row"
         :key="index"
       >
-        <div class="card">
+        <div class="AG-viewer-col">
           <component
             :is="GraphTypes[graph.type].graph"
             :parameters="graph.parameters"
