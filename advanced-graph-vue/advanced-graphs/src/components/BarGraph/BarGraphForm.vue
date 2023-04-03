@@ -119,13 +119,13 @@
   </template>
   
   <script>
-  import HelpfulParameter from "./HelpfulParameter.vue";
-  import InstrumentSelector from "./InstrumentSelector.vue";
-  import RadioComponent from "./RadioComponent.vue";
-  import CategoricalFieldSelector from "./CategoricalFieldSelector.vue";
-  import NumericFieldSelector from "./NumericFieldSelector.vue";
-  import PaletteSelector from "./PaletteSelector.vue";
-  import { isCategoricalField } from "../utils";
+  import HelpfulParameter from "@/components/HelpfulParameter.vue";
+  import InstrumentSelector from "@/components/InstrumentSelector.vue";
+  import RadioComponent from "@/components/RadioComponent.vue";
+  import CategoricalFieldSelector from "@/components/CategoricalFieldSelector.vue";
+  import NumericFieldSelector from "@/components/NumericFieldSelector.vue";
+  import PaletteSelector from "@/components/PaletteSelector.vue";
+  import { isCategoricalField } from "@/utils";
 
   export default {
     components: {

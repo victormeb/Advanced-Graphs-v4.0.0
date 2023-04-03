@@ -8,7 +8,19 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 // Fetch all the JSON files
 // Instantiate a new Vue instance
 // Define your test data as JSON objects
-const testModule = {tt: key => key };
+const testModule = 
+{
+    tt: key => key, 
+    ajax: (action, payload) => {
+        console.log(action, payload); return Promise.resolve(
+        {
+            title: 'Test Report',
+            report_id: '1',
+            dash_id: '1'
+        })
+    },
+    getUrl: () => "#",
+};
 // Fetch all the JSON files
 Promise.all([
     fetch('./sample/sample-report.json'),

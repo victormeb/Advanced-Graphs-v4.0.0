@@ -20,7 +20,8 @@
     props: {
       name: {
         type: String,
-        required: true,
+        required: false,
+        defaultValue: null,
       },
       values: {
         type: Array,

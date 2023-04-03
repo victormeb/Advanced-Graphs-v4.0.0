@@ -22,11 +22,21 @@
         <button class="btn btn-secondary">{{ module.tt('cancel') }}</button>
       </div>
     </div>
+    <saved-modal
+        v-if="savedModal"
+        :name="savedModal.name"
+        :list_link="savedModal.list_link"
+        :dash_link="savedModal.dash_link"
+        @close="savedModal=null">
+    </saved-modal>
+    <confirmation-modal ref="confirmationModal"></confirmation-modal>
   </template>
   
   <script>
   import DashboardOptions from './components/DashboardOptions.vue';
   import EditorTable from './components/EditorTable.vue';
+  import SavedModal from './components/SavedModal.vue';
+  import ConfirmationModal from './components/ConfirmationModal.vue';
   import { reactive } from 'vue';
   import { getUuid } from './utils.js';
 
@@ -35,6 +45,8 @@
     components: {
         DashboardOptions,
         EditorTable,
+        SavedModal,
+        ConfirmationModal,
     },
     props: ['module', 'dashboard', 'report', 'data_dictionary', 'report_fields_by_repeat_instrument'],
     provide() {
@@ -56,6 +68,7 @@
               [],
             ),
             localDashboard: this.dashboard,
+            savedModal: null,
         }
     },
     methods: {
@@ -83,7 +96,18 @@
             this.body.splice(index, 1, row);
             console.log('updateBody', this.body);
         },
-        removeDashboardRow(index) {
+        async removeDashboardRow(index) {
+            const confirm = await this.$refs.confirmationModal.show(
+                {
+                  title: this.module.tt('confirm_delete_row'),
+                  message: this.module.tt('confirm_delete_row_message'),
+                }
+            );
+
+            if (!confirm) {
+                return;
+            }
+
             this.body.splice(index, 1);
         },
         addDashboardRow() {
@@ -95,8 +119,14 @@
         this.localDashboard.title = this.title;
         this.localDashboard.is_public = this.isPublic;
         this.module.ajax('saveDashboard', this.localDashboard).then(function (result) {
-          console.log(result);
-        }).catch(function (error) {
+          console.log('saveDashboard', result);
+          this.savedModal = {
+            name: result.title,
+            list_link: this.module.getUrl('advanced_graphs.php'),
+            dash_link: this.module.getUrl('view_dash.php') + '&report_id=' + result.report_id 
+        + '&dash_id=' + result.dash_id,
+          };
+        }.bind(this)).catch(function (error) {
           console.log(error);
         });
       },

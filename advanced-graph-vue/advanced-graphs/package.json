@@ -9,7 +9,9 @@
     "build-lib": "vue-cli-service build --target lib --inline-vue --name AdvancedGraphs src/main.js"
   },
   "dependencies": {
-    "core-js": "^3.8.3"
+    "core-js": "^3.8.3",
+    "d3": "^7.8.3",
+    "d3-force": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

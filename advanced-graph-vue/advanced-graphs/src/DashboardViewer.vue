@@ -10,6 +10,7 @@
           <component
             :is="GraphTypes[graph.type].graph"
             :parameters="graph.parameters"
+            :editorMode="false"
           />
         </div>
       </div>

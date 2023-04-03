@@ -11,7 +11,6 @@ module.exports = defineConfig({
       title: 'Testing Editor',
       chunks: ['chunk-vendors', 'chunk-common', 'testingEditor'],
     },
-    editor: './src/edit-dash.js'
   },
   // configureWebpack: {
   //   entry: {

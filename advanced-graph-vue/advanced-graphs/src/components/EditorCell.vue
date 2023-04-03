@@ -13,7 +13,7 @@
         <button class="btn btn-primary" @click="$emit('moveCellRight')">
           <i class="fa fa-arrow-right" aria-hidden="true"></i>
         </button>
-        <button class="btn btn-danger" @click="$emit('deleteCell')">
+        <button class="btn btn-danger" @click="confirmDelete">
           <i class="fa fa-trash" aria-hidden="true"></i>
         </button>
         <button class="btn btn-success AG-editor-cell-button-add-right" @click="$emit('addCellRight')">
@@ -29,10 +29,12 @@
       </div>
       <div class="AG-editor-graph-container">
         <component 
-          v-if="showGraph" 
+          v-if="showGraph"
+          :editorMode="true"
           :key="graphId"
           :is="currentGraph" 
-          :parameters="cellData" />
+          :parameters="cellData"
+          @updateParameters="updateCellData" />
       </div>
       <div class="AG-editor-graph-buttons">
         <button 
@@ -44,18 +46,24 @@
       </div>
     </div>
   </div>
+  <confirmation-modal
+    ref="confirmationModal"
+  >
+  </confirmation-modal>
 </template>
   
   <script>
   import GraphTypeSelector from './GraphTypeSelector.vue';
   import GraphTypes from './GraphTypes.js'
- import { markRaw } from 'vue';
+  import ConfirmationModal from './ConfirmationModal.vue';
+  import { markRaw } from 'vue';
 
   
   export default {
     name: 'EditorCell',
     components: {
       GraphTypeSelector,
+      ConfirmationModal,
     },
     inject: ['module', 'report_fields_by_repeat_instrument'],
     props: {
@@ -64,6 +72,7 @@
         default: null,
       },
     },
+    emits: ['updateCell', 'deleteCell', 'moveCellLeft', 'moveCellRight', 'addCellRight'],
     data() {
       return {
         currentGraphType: this.cell && this.cell.type ? this.cell.type : null,
@@ -121,6 +130,17 @@
       previewGraph() {
         this.showGraph = true;
         this.graphId++;
+      },
+      async confirmDelete() {
+        const confirmed = await this.$refs.confirmationModal.show({
+          title: this.module.tt('delete_cell'),
+          message: this.module.tt('delete_cell_confirmation'),
+        });
+
+        if (confirmed) {
+          this.$emit('deleteCell');
+        }
+        
       },
     },
   };

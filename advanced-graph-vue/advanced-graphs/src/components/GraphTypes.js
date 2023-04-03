@@ -1,7 +1,7 @@
 // GraphTypes.js
 
-import BarGraphForm from './BarGraphForm.vue';
-import BarGraph from './BarGraph.vue';
+import BarGraphForm from './BarGraph/BarGraphForm.vue';
+import BarGraph from './BarGraph/BarGraph.vue';
 // import GroupedBarPlot from './GroupedBarPlot.vue';
 // import Table from './Table.vue';
 // import ScatterPlot from './ScatterPlot.vue';
