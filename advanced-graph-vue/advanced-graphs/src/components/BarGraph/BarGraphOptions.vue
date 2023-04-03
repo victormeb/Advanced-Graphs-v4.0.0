@@ -10,7 +10,7 @@
             <radio-component
                 v-model="x_label_limit"
                 :values="['truncate', 'wrap', 'none']"
-                :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('none')]"
+                :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
                 :defaultValue="'none'"
                 @update:modelValue="updateParameters"
             ></radio-component>
@@ -27,7 +27,7 @@
             <radio-component
                 v-model="y_label_limit"
                 :values="['truncate', 'wrap', 'none']"
-                :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('none')]"
+                :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
                 :defaultValue="'none'"
                 @update:modelValue="updateParameters"
             ></radio-component>
