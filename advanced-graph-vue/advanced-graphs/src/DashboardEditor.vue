@@ -24,7 +24,7 @@
     </div>
     <saved-modal
         v-if="savedModal"
-        :name="savedModal.name"
+        :name="title"
         :list_link="savedModal.list_link"
         :dash_link="savedModal.dash_link"
         @close="savedModal=null">
