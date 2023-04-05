@@ -1,41 +1,56 @@
 <!-- BarGraphOptions.vue -->
 <template>
     <div class="AG-bar-graph-options">
-      <div class="AG-bar-graph-options-block">
-        <h3>{{ module.tt("x_axis") }}</h3>
-        <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" /></label>
-        <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
-        <label>{{module.tt("x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
-        <label>{{module.tt("x_label_wrap")}}:
-            <radio-component
-                v-model="x_label_limit"
-                :values="['truncate', 'wrap', 'none']"
-                :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
-                :defaultValue="'none'"
-                @update:modelValue="updateParameters"
-            ></radio-component>
-        </label>
-        <label>{{module.tt("x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
-        <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
-        <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
+        <div class="AG-bar-graph-options-row">
+            <div class="AG-bar-graph-options-block">
+                <!-- Show legend -->
+                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
+            </div>
+        </div>
+      <div class="AG-bar-graph-options-row">
+        <div class="AG-bar-graph-options-block">
+            <h3>{{ module.tt("x_axis") }}</h3>
+            <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" /></label>
+            <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
+            <label>{{module.tt("x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("x_label_wrap")}}:
+                <radio-component
+                    v-model="x_label_limit"
+                    :values="['truncate', 'wrap', 'none']"
+                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
+                    :defaultValue="'none'"
+                    @update:modelValue="updateParameters"
+                ></radio-component>
+            </label>
+            <label>{{module.tt("x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
+        </div>
+        <div class="AG-bar-graph-options-block">
+            <h3>{{module.tt("y_axis")}}</h3>
+            <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
+            <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("y_label_wrap")}}:
+                <radio-component
+                    v-model="y_label_limit"
+                    :values="['truncate', 'wrap', 'none']"
+                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
+                    :defaultValue="'none'"
+                    @update:modelValue="updateParameters"
+                ></radio-component>
+            </label>
+            <label>{{module.tt("y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
+        </div>
       </div>
-      <div class="AG-bar-graph-options-block">
-        <h3>{{module.tt("y_axis")}}</h3>
-        <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
-        <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
-        <label>{{module.tt("y_label_wrap")}}:
-            <radio-component
-                v-model="y_label_limit"
-                :values="['truncate', 'wrap', 'none']"
-                :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
-                :defaultValue="'none'"
-                @update:modelValue="updateParameters"
-            ></radio-component>
-        </label>
-        <label>{{module.tt("y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
-        <label>{{module.tt("y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
-        <label>{{module.tt("y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
-    </div>
+      <div class="AG-bar-graph-options-row">
+        <div class="AG-bar-graph-options-block">
+            <h3>{{module.tt("bar_labels")}}</h3>
+            <label>{{module.tt("bar_label_size")}}:<input ref="bar_label_size" type="range" min="0" max="50" v-model.number="bar_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_label_position")}}:<input ref="bar_label_position" type="range" min="-50" max="50" step="0.1" v-model.number="bar_label_position" @input="updateParameters" /></label>
+        </div>   
+      </div>                 
   </div>
 </template>
 
@@ -161,10 +176,15 @@
             // if (typeof y_label_limit != 'undefined' && y_label_limit != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
             //     y_tick_format = d => d3.format(y_label_limit)(d);
             // }
+            const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 10;
+            const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 4.5;
 
 
             const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
             const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
+           
+            const show_legend = this.parameters.show_legend === true ? true : false;
+
             return {
                 x_title_size,
                 x_label_size,
@@ -180,12 +200,15 @@
                 y_label_length,
                 y_tick_format,
                 y_rotate,
-                y_title_offset
+                y_title_offset,
+                bar_label_size,
+                bar_label_position,
+                show_legend,
             }
         },
         methods: {
             updateParameters() {
-                console.log('updateParameters');
+                console.log('updateParameters', this.show_legend);
                 this.$emit("updateParameters", {
                 ...this.parameters,
                 x_title_size: this.x_title_size,
@@ -201,6 +224,9 @@
                 y_label_length: this.y_label_length,
                 y_rotate: this.y_rotate,
                 y_title_offset: this.y_title_offset,
+                bar_label_size: this.bar_label_size,
+                bar_label_position: this.bar_label_position,
+                show_legend: this.show_legend,
                 });
             },
         },
@@ -208,17 +234,20 @@
             this.$nextTick(function () {
                 this.$refs.x_title_size.value = this.x_title_size;
                 this.$refs.x_label_size.value = this.x_label_size;
-                this.$refs.x_label_limit.value = this.x_label_limit;
+                // this.$refs.x_label_limit.value = this.x_label_limit;
                 this.$refs.x_label_length.value = this.x_label_length;
                 this.$refs.x_rotate.value = this.x_rotate;
                 this.$refs.x_title_offset.value = this.x_title_offset;
                 this.$refs.bottom_margin.value = this.bottom_margin;
                 this.$refs.y_title_size.value = this.y_title_size;
                 this.$refs.y_label_size.value = this.y_label_size;
-                this.$refs.y_label_limit.value = this.y_label_limit;
+                // this.$refs.y_label_limit.value = this.y_label_limit;
                 this.$refs.y_label_length.value = this.y_label_length;
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
+                this.$refs.bar_label_size.value = this.bar_label_size;
+                this.$refs.bar_label_position.value = this.bar_label_position;
+                this.$refs.show_legend.checked = this.show_legend;
             });
 
             // emit the parameters to the parent with the new values, keeping the unchanged values
@@ -230,19 +259,31 @@
 <style scoped>
     .AG-bar-graph-options {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         justify-content: space-between;
         align-items: center;
         width: 100%;
         height: 100%;
     }
-
-    .AG-bar-graph-options > div {
+    .AG-bar-graph-options-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+        height: 100%;
+    }
+    .AG-bar-graph-options-row > div {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        /* align-items: center; */
+        align-items: flex-start;
         width: 100%;
         height: 100%;
+    }
+
+    input[type=checkbox] {
+        width: 20px;
+        height: 20px;
     }
 </style>

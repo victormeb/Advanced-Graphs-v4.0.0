@@ -9,6 +9,18 @@
         <div v-if="formData.instrument !== null && typeof formData.instrument === 'string'">
             <div class="AG-two-panes">
               <div class="AG-pane-left">
+              <!-- Title -->
+              <helpful-parameter
+                  :label-text="module.tt('title')"
+                  :help-text="module.tt('title_help')">
+                  <input type="text" v-model="formData.title">
+              </helpful-parameter>
+              <!-- Description -->
+              <helpful-parameter
+                  :label-text="module.tt('description')"
+                  :help-text="module.tt('description_help')">
+                  <input type="text" v-model="formData.description">
+              </helpful-parameter>
               <!-- Bar or Pie -->
               <helpful-parameter
                   :label-text="module.tt('bar_graph_type')"

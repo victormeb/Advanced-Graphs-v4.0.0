@@ -48,10 +48,6 @@ Since graphs are generated automatically, their number depends on the number of 
 
 In certain particular situations when a graph cannot be displayed or cannot be displayed properly (when no graph can be displayed; when there are too many categories to display the graph properly; for example), appropriate messages are shown.
 
-## Live filters
-
-Advanced Graphs takes into consideration live filters selected within the report, except when a filter is selected but the record id field is not included in the report.
-
 ## Limitations
 
 Checkboxes in graphs do not work if options are combined into a single column.

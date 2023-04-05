@@ -1,7 +1,13 @@
 <!-- BarGraph.vue -->
 <template>
     <div class="AG-graph-container">
-        <div ref="graphContainer"></div>
+        <div class="AG-graph-title">
+            <h3>{{ parameters.title || "" }}</h3>
+        </div>
+        <div ref="graphContainer" class="AG-graphContainer"></div>
+        <div class="AG-graph-description">
+            <p>{{ parameters.description || ""}}</p>
+        </div>
         <component
             v-if="editorMode"
             :is="moreOptionsComponent"
@@ -42,6 +48,8 @@ export default {
     },
     data() {
         return {
+            title: this.parameters.title || "",
+            description: this.parameters.description || "",
             graph: null,
             moreOptionsComponent: null,
         };
@@ -138,12 +146,11 @@ export default {
             var colorScale = d3.scaleOrdinal()
                 .domain(domain)
                 .range(domain.map((d, i) => interpolateColors(i / (domain.length > 1 ? domain.length-1: 1))));
-
-            const x_title_size = parameters.x_title_size ? Number(parameters.x_title_size) : 15;
-            const x_label_size = parameters.x_label_size ? Number(parameters.x_label_size) : 10;
-            const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
-            const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...domain.map(d => choices[d].length));
-            
+                const x_title_size = parameters.x_title_size ? Number(parameters.x_title_size) : 15;
+                const x_label_size = parameters.x_label_size ? Number(parameters.x_label_size) : 10;
+                const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
+                const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...domain.map(d => choices[d].length));
+                
             // Get the x tick format
             var x_tick_format = d => choices[d];
 
@@ -156,7 +163,7 @@ export default {
                 x_tick_format = d => wrapString(choices[d], x_label_length);
             }
             
-            const x_rotate = parameters.x_rotate ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
+            const x_rotate = parameters.x_rotate || parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
             const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
             const bottom_margin = parameters.bottom_margin ? Number(parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
             
@@ -186,10 +193,18 @@ export default {
             const y_rotate = parameters.y_rotate ? Number(parameters.y_rotate) : 0;
             const y_title_offset = parameters.y_title_offset ? Number(parameters.y_title_offset) : 45;
 
+            const bar_label_size = parameters.bar_label_size ? Number(parameters.bar_label_size) : 10;
+            const bar_label_position = parameters.bar_label_position ? Number(parameters.bar_label_position) : 0.5;
+
+            const show_legend = parameters.show_legend ? true : false;
+
+            const y_title = parameters.numeric_field ?  getFieldLabel(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
+
             var graph = null;
 
             // If the graph type is bar
-            if (parameters.graph_type == 'bar') {      
+            if (parameters.graph_type == 'bar') {     
+                
 
                 // Create x axis labels
                 const xAxisLabels = Plot.axisX(domain, {
@@ -219,8 +234,6 @@ export default {
                     fontSize: y_label_size
                 });
 
-                const y_title = parameters.numeric_field ? getFieldLabel(this.data_dictionary[parameters.numeric_field]) : this.module.tt('count')
-
                 // Create y axis title
                 const yAxisTitle = Plot.axisY({
                     label: y_title,
@@ -239,7 +252,33 @@ export default {
                     fill: d=>colorScale(d.key)
                 });
 
+                // Create a legend
+                // const legend = Plot.legend({
+                //     color: {
+                //         type: 'categorical',
+                //         domain: domain,
+                //         // range: domain.map(d => colorScale(d)),
+                //         // title: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
+                //         // format: x_tick_format,
+                //     }, 
+                //     // title: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
+                //     // format: x_tick_format, 
+                // });
+
+                // Create bar labels
+                const barLabels = Plot.text(barHeights, {
+                    x: d => d.key,
+                    y: d => d.value,
+                    dx: 0,
+                    dy: -bar_label_position, // Adjust the vertical position of the labels relative to the bars
+                    textAnchor: "middle",
+                    fontSize: bar_label_size, // Set the font size for the bar labels
+                    text: d => y_tick_format(d.value)
+                });
+
                 graph = Plot.plot({
+                    width: 640,
+                    height: 480,
                     x: {
                         domain: domain,
                         type: 'band'
@@ -247,12 +286,22 @@ export default {
                     y: {
                         type: 'linear'
                     },
+                    color: {
+                        type: 'categorical',
+                        domain: domain.map(d => choices[d]),
+                        range: domain.map(d => colorScale(d)),
+                        title: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
+                        format: x_tick_format,
+                        legend: show_legend
+                    },
                     marks: [
                         yAxisTitle,
                         yAxisLabels,
                         xAxisTitle,
                         xAxisLabels,
-                        bars
+                        bars,
+                        barLabels,
+                        // legend
                     ],
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
                     marginBottom: bottom_margin
@@ -270,12 +319,15 @@ export default {
                 // Create a pie chart
                 graph = this.PieChart(barHeights, {
                     width: 640,
-                    height: 400,
+                    height: 480,
                     innerRadius: 0,
                     outerRadius: Math.min(640, 400) / 2,
                     title: d => x_tick_format(d.key) + '\n' + d.value,
                     value: d => d.value,
                     name: d => choices[d.key],
+                    displayLegend: show_legend,
+                    categoryName: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
+                    numericName: y_title,
                     colors: colorScale,
                     spacing: label_spacing,
                     labelFont: label_size,
@@ -301,13 +353,16 @@ export default {
         PieChart(data, {
             name = ([x]) => x,  // given d in data, returns the (ordinal) label
             value = ([, y]) => y, // given d in data, returns the (quantitative) value
+            categoryName = "Category", // the name of the category dimension
+            numericName = "Value", // the name of the numeric dimension
             title, // given d in data, returns the title text
+            displayLegend = true, // whether to show a legend
             width = 640, // outer width, in pixels
             height = 400, // outer height, in pixels
             innerRadius = 0, // inner radius of pie, in pixels (non-zero for donut)
             outerRadius = Math.min(width, height) / 2, // outer radius of pie, in pixels
             labelRadius = (innerRadius * 0.2 + outerRadius * 0.8), // center radius of labels
-            format = ",", // a format specifier for values (in the label)
+            format = ",", // a foe =rmat specifier for values (in the label)
             names, // array of names (the domain of the color scale)
             colors, // array of colors for names
             stroke = innerRadius > 0 ? "none" : "white", // stroke separating widths
@@ -353,12 +408,14 @@ export default {
             const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
             const arcLabel = d3.arc().innerRadius(labelRadius).outerRadius(labelRadius);
             
+            // Construct the SVG.
             const svg = d3.create("svg")
                 .attr("width", width)
                 .attr("height", height)
                 .attr("viewBox", [-width / 2, -height / 2, width, height])
-                .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+                // .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
+            // Add the pie chart.
             svg.append("g")
                 .attr("stroke", stroke)
                 .attr("stroke-width", strokeWidth)
@@ -371,7 +428,7 @@ export default {
                 .append("title")
                 .text(d => title(d.data));
 
-
+            // Seperate the labels
             const simulation = d3Force.forceSimulation(arcs)
                 .force("x", d3Force.forceX(d => arcLabel.centroid(d)[0]).strength(separationStrength))
                 .force("y", d3Force.forceY(d => arcLabel.centroid(d)[1]).strength(separationStrength))
@@ -383,6 +440,7 @@ export default {
                 simulation.tick();
             }
 
+            // Add the labels.
             svg.append("g")
                 .attr("font-family", "sans-serif")
                 .attr("text-anchor", "middle")
@@ -399,6 +457,61 @@ export default {
                 .attr("font-size", (_, i, nodes) => i === nodes.length - 1 ? valueFont : labelFont)
                 .text((d, i, nodes) => i === nodes.length - 1 ? Number(Math.round(Number(d) / Number(precision)) * Number(precision)).toFixed(precision.includes('.') ? precision.split('.')[1].length : 0) : d);
 
+
+            // Add legend
+            const legend = svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", `translate(${outerRadius}, ${-height / 2 + 30})`);
+
+            // Add the category name to the legend
+            legend.append("text")
+                .attr("class", "legend-title")
+                .attr("y", -10)
+                .attr("x", 0)
+                .attr("font-weight", "bold")
+                .attr("font-size", 25)
+                .text(categoryName)
+                
+            const legendItems = legend.selectAll(".legend-item")
+                .data(arcs)
+                // .data(d => `${title(d.data)}`)
+                .join("g")
+                .attr("class", "legend-item")
+                .attr("transform", (_, i) => `translate(0, ${i * 20})`);
+
+
+            legendItems.append("rect")
+                .attr("width", 10)
+                .attr("height", 10)
+                .attr("fill", (_) => color(_));
+
+            legendItems.append("text")
+                .data(arcs)
+                .attr("x", 15)
+                .attr("y", 10)
+                // Get the name of the legend item
+                .text((d) => `${title(d.data)}`.split(/\n/).slice(0, -1).join(' '))
+
+            // Hide the legend if the displayLegend is false
+            if (!displayLegend) {
+                legend.style("display", "none");
+                numericName += " " + categoryName;
+            } else {
+                // shift the pie chart to the left
+                svg.attr("transform", `translate(${-outerRadius/2}, 0)`);
+            }
+
+            // Add the numeric title to the center of the chart
+            svg.append("text")
+                .attr("class", "numeric-title")
+                .attr("text-anchor", "middle")
+                .attr("y", -outerRadius - 10)
+                .attr("x", 0)
+                .attr("font-weight", "bold")
+                .attr("font-size", 25)
+                .text(numericName)
+
+
             return Object.assign(svg.node(), {scales: {color}});
         }
     }
@@ -413,5 +526,15 @@ export default {
         align-items: center;
         justify-content: center;
         flex-direction: column;
+    }
+
+    .AG-graphContainer {
+        min-width: 640px;
+        min-height: 480px;
+        width: auto;
+        height: auto;
+    }
+    .AG-graphContainer svg {
+        max-width: unset !important;
     }
 </style>
