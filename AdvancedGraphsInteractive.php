@@ -259,7 +259,7 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 
 			$newDash = $this->saveDash($payload);
 			if ($newDash) {
-				return json_encode($result);
+				return json_encode($newDash);
 			}
 
 			return "error man";

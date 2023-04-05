@@ -120,11 +120,12 @@
         this.localDashboard.is_public = this.isPublic;
         this.module.ajax('saveDashboard', this.localDashboard).then(function (result) {
           console.log('saveDashboard', result);
+          var new_dash = JSON.parse(result)[0];
           this.savedModal = {
-            name: result.title,
+            name: new_dash.title,
             list_link: this.module.getUrl('advanced_graphs.php'),
-            dash_link: this.module.getUrl('view_dash.php') + '&report_id=' + result.report_id 
-        + '&dash_id=' + result.dash_id,
+            dash_link: this.module.getUrl('view_dash.php') + '&report_id=' + new_dash.report_id 
+        + '&dash_id=' + new_dash.dash_id,
           };
         }.bind(this)).catch(function (error) {
           console.log(error);
