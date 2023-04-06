@@ -23,35 +23,58 @@
               </helpful-parameter>
               <!-- Bar or Pie -->
               <helpful-parameter
-                  :label-text="module.tt('bar_graph_type')"
-                  :help-text="module.tt('bar_graph_type_help')"
+                  :label-text="module.tt('grouped_graph_type')"
+                  :help-text="module.tt('grouped_graph_type_help')"
               >
                   <radio-component
                       v-model="formData.graph_type"
                       :name="'graph_type'"
-                      :values="['bar', 'pie']"
-                      :defaultValue="'bar'"
-                      :labels="[module.tt('bar'), module.tt('pie')]"
+                      :values="['stacked', 'grouped']"
+                      :defaultValue="'stacked'"
+                      :labels="[module.tt('stacked'), module.tt('grouped')]"
                   ></radio-component>
               </helpful-parameter>
-              <!-- Categorical Field -->
+              <!-- Categorical Field One -->
               <helpful-parameter
-                  :label-text="module.tt('bar_categorical_field')"
-                  :help-text="module.tt('bar_categorical_field_help')"
+                  :label-text="module.tt('grouped_categorical_field_one')"
+                  :help-text="module.tt('grouped_categorical_field_help')"
               >
                   <categorical-field-selector
-                      v-model="formData.categorical_field"
+                      v-model="formData.categorical_field_one"
                       :fields="report_fields_by_repeat_instrument[formData.instrument].fields"
                   ></categorical-field-selector>
               </helpful-parameter>
-              <!-- NA Category -->
+              <!-- NA Category One -->
               <helpful-parameter
                   :label-text="module.tt('na_category')"
                   :help-text="module.tt('na_category_help')"
               >
               <radio-component
-                      v-model="formData.na_category"
-                      :name="'na_category'"
+                      v-model="formData.na_category_one"
+                      :name="'na_category_one'"
+                      :values="['keep', 'drop']"
+                      :defaultValue="'keep'"
+                      :labels="[module.tt('keep'), module.tt('drop')]"
+                  ></radio-component>
+              </helpful-parameter>
+              <!-- Categorical Field Two -->
+              <helpful-parameter
+                  :label-text="module.tt('grouped_categorical_field_two')"
+                  :help-text="module.tt('grouped_categorical_field_help')"
+              >
+                  <categorical-field-selector
+                      v-model="formData.categorical_field_two"
+                      :fields="report_fields_by_repeat_instrument[formData.instrument].fields"
+                  ></categorical-field-selector>
+              </helpful-parameter>
+              <!-- NA Category Two -->
+              <helpful-parameter
+                  :label-text="module.tt('na_category')"
+                  :help-text="module.tt('na_category_help')"
+              >
+              <radio-component
+                      v-model="formData.na_category_two"
+                      :name="'na_category_two'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
                       :labels="[module.tt('keep'), module.tt('drop')]"
@@ -168,14 +191,16 @@
         // console.log('formData', this.formData);
         const instrument_selected = (typeof this.formData.instrument !== 'undefined') && this.formData.instrument !== null;
         const graph_type_selected = (typeof this.formData.graph_type !== 'undefined') && this.formData.graph_type !== null;
-        const categorical_field_selected = (typeof this.formData.categorical_field !== 'undefined') && this.formData.categorical_field !== null;
+        const categorical_field_one_selected = (typeof this.formData.categorical_field_one !== 'undefined') && this.formData.categorical_one_field !== null;
+        const categorical_field_two_selected = (typeof this.formData.categorical_field_two !== 'undefined') && this.formData.categorical_two_field !== null;
         const numeric_field_selected = (typeof this.formData.numeric_field !== 'undefined') && this.formData.numeric_field !== null;
-        const na_category_selected = (typeof this.formData.na_category !== 'undefined') && this.formData.na_category !== null;
+        const na_category_one_selected = (typeof this.formData.na_category_one !== 'undefined') && this.formData.na_category_one !== null;
+        const na_category_two_selected = (typeof this.formData.na_category_two !== 'undefined') && this.formData.na_category_two !== null;
         const unused_categories_selected = (typeof this.formData.unused_categories !== undefined) && this.formData.unused_categories !== null;
         const aggregation_function_selected = (typeof this.formData.aggregation_function !== 'undefined') && this.formData.aggregation_function !== null;
         // console.log('isFormReady', instrument_selected, graph_type_selected, categorical_field_selected, numeric_field_selected, na_category_selected, 'unused', unused_categories_selected, 'agg', aggregation_function_selected);
         // If any of the required fields are not selected, return false
-        if (!instrument_selected || !graph_type_selected || !categorical_field_selected || !numeric_field_selected || !na_category_selected || !unused_categories_selected) {
+        if (!instrument_selected || !graph_type_selected || !categorical_field_one_selected || !categorical_field_two_selected || !numeric_field_selected || !na_category_one_selected || !na_category_two_selected || !unused_categories_selected) {
           return false;
         }
 
@@ -231,13 +256,23 @@
         }
       },
       instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
-        // If there is a categorical field
-        if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isCategoricalField(field))) {
+          // Get the fields for this instrument
+          const fields = report_fields_by_repeat_instrument[instrument_name].fields;
+          // Count the number of categorical fields
+          let count = 0;
+          for (const field of fields) {
+          if (isCategoricalField(field)) {
+              count++;
+          }
+          }
+          // If there are at least two categorical fields
+          if (count >= 2) {
           // Return true
           return true;
-        }
-        return false;
-      }
+          }
+  
+          return false;
+      },
     }
   };
   </script>

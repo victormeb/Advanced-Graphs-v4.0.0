@@ -2,6 +2,8 @@
 
 import BarGraphForm from './BarGraph/BarGraphForm.vue';
 import BarGraph from './BarGraph/BarGraph.vue';
+import GroupedBarGraphForm from './GroupedBarGraph/GroupedBarGraphForm.vue';
+import GroupedBarGraph from './GroupedBarGraph/GroupedBarGraph.vue';
 // import GroupedBarPlot from './GroupedBarPlot.vue';
 // import Table from './Table.vue';
 // import ScatterPlot from './ScatterPlot.vue';
@@ -11,5 +13,5 @@ import BarGraph from './BarGraph/BarGraph.vue';
 
 export default {
     'bar_pie': {form: BarGraphForm, graph: BarGraph},
-    // 'likert': {form: LikertForm, graph: Likert}
+    'grouped_stacked': {form: GroupedBarGraphForm, graph: GroupedBarGraph},
 };

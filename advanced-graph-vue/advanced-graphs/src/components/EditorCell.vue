@@ -94,7 +94,7 @@
     computed: {
       availableGraphTypes() {
         return Object.keys(GraphTypes).filter(graphType => {
-          return GraphTypes[graphType].form.statics.isCreatable(this.report_fields_by_repeat_instrument);
+          return GraphTypes[graphType].form.methods.isCreatable(this.report_fields_by_repeat_instrument);
         });
       },
     },

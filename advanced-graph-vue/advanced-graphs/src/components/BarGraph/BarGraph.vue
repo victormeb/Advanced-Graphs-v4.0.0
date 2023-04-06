@@ -252,19 +252,6 @@ export default {
                     fill: d=>colorScale(d.key)
                 });
 
-                // Create a legend
-                // const legend = Plot.legend({
-                //     color: {
-                //         type: 'categorical',
-                //         domain: domain,
-                //         // range: domain.map(d => colorScale(d)),
-                //         // title: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
-                //         // format: x_tick_format,
-                //     }, 
-                //     // title: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
-                //     // format: x_tick_format, 
-                // });
-
                 // Create bar labels
                 const barLabels = Plot.text(barHeights, {
                     x: d => d.key,

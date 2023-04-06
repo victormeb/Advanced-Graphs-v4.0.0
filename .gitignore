@@ -1,7 +1,7 @@
 gittoken
 .Rproj.user
 *.Rproj
-*.html
+p_*.html
 .Rhistory
 .RData
 
