@@ -25,6 +25,18 @@
             <label>{{module.tt("x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
             <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
             <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
+            <label>{{module.tt("color_label_size")}}:<input ref="color_label_size" type="range" min="0" max="50" v-model.number="color_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("color_label_wrap")}}:
+                <radio-component
+                    v-model="color_tick_limit"
+                    :values="['truncate', 'wrap', 'none']"
+                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
+                    :defaultValue="'none'"
+                    @update:modelValue="updateParameters"
+                ></radio-component>
+            </label>
+            <label>{{module.tt("color_label_length")}}:<input ref="color_label_length" type="range" min="0" max="50" v-model.number="color_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("color_label_rotate")}}:<input ref="color_label_rotate" type="range" min="0" max="360" v-model.number="color_label_rotate" @input="updateParameters" /></label>
         </div>
         <div class="AG-bar-graph-options-block">
             <h3>{{module.tt("y_axis")}}</h3>
@@ -60,7 +72,7 @@
     import RadioComponent from '@/components/RadioComponent.vue';
 
     export default {
-        name: "BarGraphOptions",
+        name: "GroupedBarGraphOptions",
         components: {
             RadioComponent,
         },
@@ -185,6 +197,11 @@
            
             const show_legend = this.parameters.show_legend === true ? true : false;
 
+            const color_label_size = this.parameters.color_label_size ? Number(this.parameters.color_label_size) : 10;
+            const color_tick_limit = this.parameters.color_tick_limit ? Number(this.parameters.color_tick_limit) : null;
+            const color_label_length = this.parameters.color_label_length ? Number(this.parameters.color_label_length) : Math.max(...domain.map(d => choices[d].length));
+            const color_label_rotate = this.parameters.color_label_rotate ? Number(this.parameters.color_label_rotate) : color_label_length * color_label_size * 1.2 > 640 / domain.length ? 90 : 0;
+
             return {
                 x_title_size,
                 x_label_size,
@@ -204,6 +221,10 @@
                 bar_label_size,
                 bar_label_position,
                 show_legend,
+                color_label_size,
+                color_tick_limit,
+                color_label_length,
+                color_label_rotate,
             }
         },
         methods: {
@@ -227,6 +248,10 @@
                 bar_label_size: this.bar_label_size,
                 bar_label_position: this.bar_label_position,
                 show_legend: this.show_legend,
+                color_label_size: this.color_label_size,
+                color_tick_limit: this.color_tick_limit,
+                color_label_length: this.color_label_length,
+                color_label_rotate: this.color_label_rotate,
                 });
             },
         },
@@ -248,6 +273,10 @@
                 this.$refs.bar_label_size.value = this.bar_label_size;
                 this.$refs.bar_label_position.value = this.bar_label_position;
                 this.$refs.show_legend.checked = this.show_legend;
+                this.$refs.color_label_size.value = this.color_label_size;
+                // this.$refs.color_tick_limit.value = this.color_tick_limit;
+                this.$refs.color_label_length.value = this.color_label_length;
+                this.$refs.color_label_rotate.value = this.color_label_rotate;
             });
 
             // emit the parameters to the parent with the new values, keeping the unchanged values
