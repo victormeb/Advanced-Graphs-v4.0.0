@@ -20,7 +20,7 @@
                   :help-text="module.tt('description_help')">
                   <input type="text" v-model="formData.description">
               </helpful-parameter>
-              <!-- Bar or Pie -->
+              <!-- Stacked or Grouped -->
               <helpful-parameter
                   :label-text="module.tt('grouped_graph_type')"
                   :help-text="module.tt('grouped_graph_type_help')"
@@ -104,7 +104,7 @@
               >
               <radio-component
                       v-model="formData.unused_categories_two"
-                      :name="'unused_categorie_two'"
+                      :name="'unused_categories_two'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
                       :labels="[module.tt('keep'), module.tt('drop')]"
