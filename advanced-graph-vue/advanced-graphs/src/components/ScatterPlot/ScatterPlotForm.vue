@@ -15,6 +15,19 @@
                   :help-text="module.tt('title_help')">
                   <input type="text" v-model="formData.title">
               </helpful-parameter>
+              <!-- Graph Type: scatter or network -->
+                  <helpful-parameter
+                          :label-text="module.tt('bar_graph_type')"
+                          :help-text="module.tt('bar_graph_type_help')"
+                  >
+                      <radio-component
+                              v-model="formData.graph_type"
+                              :name="'graph_type'"
+                              :values="['scatter']"
+                              :defaultValue="'scatter'"
+                              :labels="[module.tt('scatter')]"
+                      ></radio-component>
+                  </helpful-parameter>
               <!-- Description -->
               <helpful-parameter
                   :label-text="module.tt('description')"
