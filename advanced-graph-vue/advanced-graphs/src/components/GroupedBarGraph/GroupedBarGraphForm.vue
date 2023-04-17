@@ -7,8 +7,7 @@
         :availableInstruments="availableInstruments"
         ></instrument-selector>
         <div v-if="formData.instrument !== null && typeof formData.instrument === 'string'">
-            <div class="AG-two-panes">
-              <div class="AG-pane-left">
+            <div>
               <!-- Title -->
               <helpful-parameter
                   :label-text="module.tt('title')"
@@ -21,7 +20,7 @@
                   :help-text="module.tt('description_help')">
                   <input type="text" v-model="formData.description">
               </helpful-parameter>
-              <!-- Bar or Pie -->
+              <!-- Stacked or Grouped -->
               <helpful-parameter
                   :label-text="module.tt('grouped_graph_type')"
                   :help-text="module.tt('grouped_graph_type_help')"
@@ -34,6 +33,9 @@
                       :labels="[module.tt('stacked'), module.tt('grouped')]"
                   ></radio-component>
               </helpful-parameter>
+            </div>
+            <div class="AG-two-panes">
+              <div class="AG-pane-left">
               <!-- Categorical Field One -->
               <helpful-parameter
                   :label-text="module.tt('grouped_categorical_field_one')"
@@ -57,6 +59,21 @@
                       :labels="[module.tt('keep'), module.tt('drop')]"
                   ></radio-component>
               </helpful-parameter>
+              <!-- Unused Categories One -->
+              <helpful-parameter
+                  :label-text="module.tt('unused_categories_one')"
+                  :help-text="module.tt('unused_categories_help')"
+              >
+              <radio-component
+                      v-model="formData.unused_categories_one"
+                      :name="'unused_categories_one'"
+                      :values="['keep', 'drop']"
+                      :defaultValue="'keep'"
+                      :labels="[module.tt('keep'), module.tt('drop')]"
+                  ></radio-component>
+              </helpful-parameter>
+            </div>
+            <div class="AG-pane-right">
               <!-- Categorical Field Two -->
               <helpful-parameter
                   :label-text="module.tt('grouped_categorical_field_two')"
@@ -80,21 +97,22 @@
                       :labels="[module.tt('keep'), module.tt('drop')]"
                   ></radio-component>
               </helpful-parameter>
-              <!-- Unused Categories -->
+              <!-- Unused Categories Two -->
               <helpful-parameter
-                  :label-text="module.tt('unused_categories')"
+                  :label-text="module.tt('unused_categories_two')"
                   :help-text="module.tt('unused_categories_help')"
               >
               <radio-component
-                      v-model="formData.unused_categories"
-                      :name="'unused_categories'"
+                      v-model="formData.unused_categories_two"
+                      :name="'unused_categories_two'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
                       :labels="[module.tt('keep'), module.tt('drop')]"
                   ></radio-component>
               </helpful-parameter>
             </div>
-            <div class="AG-pane-right">
+          </div>
+          <div>
               <!-- Numeric Field -->
               <helpful-parameter
                   :label-text="module.tt('numeric_field')"
@@ -147,7 +165,6 @@
                         v-model="formData.palette_brewer"
                     ></palette-selector>
               </helpful-parameter>
-            </div>
           </div>
         </div>
       </form>
@@ -190,7 +207,7 @@
       isFormReady() {
         // console.log('formData', this.formData);
         const instrument_selected = (typeof this.formData.instrument !== 'undefined') && this.formData.instrument !== null;
-        const graph_type_selected = (typeof this.formData.graph_type !== 'undefined') && this.formData.graph_type !== null;
+        const graph_type_selected = this.formData.graph_type == 'stacked' || this.formData.graph_type == 'grouped';
         const categorical_field_one_selected = (typeof this.formData.categorical_field_one !== 'undefined') && this.formData.categorical_one_field !== null;
         const categorical_field_two_selected = (typeof this.formData.categorical_field_two !== 'undefined') && this.formData.categorical_two_field !== null;
         const numeric_field_selected = (typeof this.formData.numeric_field !== 'undefined') && this.formData.numeric_field !== null;
@@ -201,6 +218,11 @@
         // console.log('isFormReady', instrument_selected, graph_type_selected, categorical_field_selected, numeric_field_selected, na_category_selected, 'unused', unused_categories_selected, 'agg', aggregation_function_selected);
         // If any of the required fields are not selected, return false
         if (!instrument_selected || !graph_type_selected || !categorical_field_one_selected || !categorical_field_two_selected || !numeric_field_selected || !na_category_one_selected || !na_category_two_selected || !unused_categories_selected) {
+          return false;
+        }
+
+        // If category one is equal to category two, return false
+        if (this.formData.categorical_field_one === this.formData.categorical_field_two) {
           return false;
         }
 

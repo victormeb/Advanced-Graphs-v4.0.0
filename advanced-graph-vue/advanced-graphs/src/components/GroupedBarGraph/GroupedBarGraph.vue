@@ -25,16 +25,16 @@ import * as d3 from 'd3';
 // import {PieChart} from "@d3/pie-chart";
 // import {map, flatMap} from "d3-array";
 import {parseChoicesOrCalculations, /*isCheckboxField, getCheckboxReport,*/ getFieldLabel, wrapString, truncateString} from '@/utils';
-import BarGraphOptions from './BarGraphOptions.vue';
-import PieGraphOptions from './PieGraphOptions.vue';
+import GroupedBarGraphOptions from './GroupedBarGraphOptions.vue';
+import StackedBarGraphOptions from './StackedBarGraphOptions.vue';
 
 import { markRaw } from 'vue';
 
 export default {
     name: 'BarGraph',
     components: {
-        BarGraphOptions,
-        PieGraphOptions,
+        GroupedBarGraphOptions,
+        StackedBarGraphOptions,
     },
     inject: ['module', 'data_dictionary', 'report'],
     props: {
@@ -57,11 +57,11 @@ export default {
     },
     mounted() {
         try {
-            if (this.parameters.graph_type == 'bar') {
-                this.moreOptionsComponent = markRaw(BarGraphOptions);
+            if (this.parameters.graph_type == 'stacked') {
+                this.moreOptionsComponent = markRaw(StackedBarGraphOptions);
             } 
-            else if (this.parameters.graph_type == 'pie') {
-                this.moreOptionsComponent = markRaw(PieGraphOptions);
+            else if (this.parameters.graph_type == 'grouped') {
+                this.moreOptionsComponent = markRaw(GroupedBarGraphOptions);
             }
             // wait until the moreOptionsComponent updates the parameters before updating the graph
             this.$nextTick(() => {
@@ -151,15 +151,37 @@ export default {
 
             const countsFlattened = Array.from(countsNested, ([category, typeMap]) => {
                 return Array.from(typeMap, ([type, value]) => ({category, type, value}));
-            }).flatMap(d => d);
+            }).flatMap(d => d)
+            // Reorder by category, then by type
+            .sort((a, b) => {
+                if (Number(a.category) < Number(b.category)) return -1;
+                if (Number(a.category) > Number(b.category)) return 1;
+                if (Number(a.type) < Number(b.type)) return -1;
+                if (Number(a.type) > Number(b.type)) return 1;
+                return 0;
+            });
 
-            var countKeys = Array.from(countsNested, ([key]) => key);
+            console.log("countsFlattened", countsFlattened);
 
-            var domain = Object.keys(choices_one).filter(function (d) { return countKeys.includes(d); });
+            // var countKeys = Array.from(countsNested, ([key]) => key);
+            var barDomain = Object.keys(choices_one);
 
-            // If unused_categories is set to keep, set the domain to all the choices
-            if (parameters.unused_categories == 'keep') {
-                domain = Object.keys(choices_one);
+            var colorDomain = Object.keys(choices_two);
+
+            // Get the bar domain from the categories in countsFlattened
+            // var barDomain = Array.from(new Set(countsFlattened.map(d => d.category)));
+
+            // Get the color domain from the types in countsFlattened
+            // var colorDomain = Array.from(new Set(countsFlattened.map(d => d.type)));
+
+            // If unused_categories_one is set to drop, set the domain of the bars to the categories in countsFlattened ordered by the order of choices
+            if (parameters.unused_categories_one == 'drop') {
+                barDomain = barDomain.filter(d => countsFlattened.some(e => e.category == d));
+            }            
+            
+            // If unused_categories_two is set to drop, set the domain of the stacks to the categories in countsFlattened ordered by the order of choices
+            if (parameters.unused_categories_two == 'drop') {
+                colorDomain = colorDomain.filter(d => countsFlattened.some(e => e.type == d));
             }
 
             // var barHeights = Array.from(counts, ([key, value]) => ({key: key, value: value}));
@@ -168,13 +190,14 @@ export default {
             var interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
         
             var colorScale = d3.scaleOrdinal()
-                .domain(domain)
-                .range(domain.map((d, i) => interpolateColors(i / (domain.length > 1 ? domain.length-1: 1))));
+                .domain(colorDomain)
+                // .range(["steelblue", "orange"]);
+                .range(colorDomain.map((d, i) => interpolateColors(i / (colorDomain.length > 1 ? colorDomain.length-1: 1))));
 
             const x_title_size = parameters.x_title_size ? Number(parameters.x_title_size) : 15;
             const x_label_size = parameters.x_label_size ? Number(parameters.x_label_size) : 10;
             const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
-            const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...domain.map(d => choices_one[d].length));
+            const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...barDomain.map(d => choices_one[d].length));
                 
             // Get the x tick format
             var x_tick_format = d => choices_one[d];
@@ -188,7 +211,7 @@ export default {
                 x_tick_format = d => wrapString(choices_one[d], x_label_length);
             }
             
-            const x_rotate = parameters.x_rotate || parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
+            const x_rotate = parameters.x_rotate || parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / barDomain.length ? 90 : 0;
             const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
             const bottom_margin = parameters.bottom_margin ? Number(parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
             
@@ -213,8 +236,8 @@ export default {
             const y_rotate = parameters.y_rotate ? Number(parameters.y_rotate) : 0;
             const y_title_offset = parameters.y_title_offset ? Number(parameters.y_title_offset) : 45;
 
-            // const bar_label_size = parameters.bar_label_size ? Number(parameters.bar_label_size) : 10;
-            // const bar_label_position = parameters.bar_label_position ? Number(parameters.bar_label_position) : 0.5;
+            const bar_label_size = parameters.bar_label_size ? Number(parameters.bar_label_size) : 10;
+            const bar_label_position = parameters.bar_label_position ? Number(parameters.bar_label_position) : 0.5;
 
             const show_legend = parameters.show_legend ? true : false;
 
@@ -222,80 +245,91 @@ export default {
 
             var graph = null;
 
+            // Create x axis labels
+            var xAxisLabels = Plot.axisX(barDomain, {
+                domain: barDomain,
+                type: 'band',
+                tickFormat: x_tick_format,
+                tickRotate:  x_rotate,
+                fontSize: x_label_size, 
+            });
+
+            // Create x axis title
+            const xAxisTitle = Plot.axisX({
+                domain: barDomain,
+                type: 'band',
+                label:  getFieldLabel(this.data_dictionary[parameters.categorical_field_one]),
+                labelOffset: x_title_offset,
+                ticks: null,
+                tickFormat: null,
+                fontSize: x_title_size
+            });
+
+            // Create y axis labels
+            const yAxisLabels = Plot.axisY({
+                label: null,
+                tickFormat: y_tick_format,
+                tickRotate: y_rotate,
+                fontSize: y_label_size
+            });
+
+            // Create y axis title
+            const yAxisTitle = Plot.axisY({
+                label: y_title,
+                labelAnchor: 'center',
+                labelOffset: y_title_offset,
+                fontSize: y_title_size,
+                tick: null,
+                tickFormat: () => ''
+            });
+
+            // Create bar labels
+            const barLabels = Plot.text(
+            // Create an array of the total value for each category
+            countsFlattened.reduce((acc, d) => {
+                const existing = acc.find(a => a.category === d.category);
+                if (existing) {
+                    existing.value += d.value;
+                } else {
+                    acc.push({ category: d.category, value: d.value });
+                }
+                return acc;
+            }, []),
+            {
+                x: d => d.category,
+                y: d => d.value,
+                dx: 0,
+                dy: -bar_label_position, // Adjust the vertical position of the labels relative to the bars
+                textAnchor: "middle",
+                fontSize: bar_label_size, // Set the font size for the bar labels
+                text: d => y_tick_format(d.value)
+            });
+
             // If the graph type is bar
             if (parameters.graph_type == 'stacked') {     
-                // Create x axis labels
-                const xAxisLabels = Plot.axisX(domain, {
-                    domain: domain,
-                    type: 'band',
-                    tickFormat: x_tick_format,
-                    tickRotate:  x_rotate,
-                    fontSize: x_label_size, 
-                });
-
-                // Create x axis title
-                const xAxisTitle = Plot.axisX({
-                    domain: domain,
-                    type: 'band',
-                    label:  getFieldLabel(this.data_dictionary[parameters.categorical_field_one]),
-                    labelOffset: x_title_offset,
-                    ticks: null,
-                    tickFormat: null,
-                    fontSize: x_title_size
-                });
-
-                // Create y axis labels
-                const yAxisLabels = Plot.axisY({
-                    label: null,
-                    tickFormat: y_tick_format,
-                    tickRotate: y_rotate,
-                    fontSize: y_label_size
-                });
-
-                // Create y axis title
-                const yAxisTitle = Plot.axisY({
-                    label: y_title,
-                    labelAnchor: 'center',
-                    labelOffset: y_title_offset,
-                    fontSize: y_title_size,
-                    tick: null,
-                    tickFormat: () => ''
-                });
-
                 // Create a bar chart
-                const bars = Plot.barY(countsFlattened, {
-                    domain: domain,
+                const stackedBars = Plot.barY(countsFlattened, {
+                    domain: barDomain,
                     x: d => d.category,
                     y: 'value',
-                    fill: d=>colorScale(d.type),
+                    fill: d => colorScale(d.type),
 
                 });
-
-                // Create bar labels
-                // const barLabels = Plot.text(barHeights, {
-                //     x: d => d.key,
-                //     y: d => d.value,
-                //     dx: 0,
-                //     dy: -bar_label_position, // Adjust the vertical position of the labels relative to the bars
-                //     textAnchor: "middle",
-                //     fontSize: bar_label_size, // Set the font size for the bar labels
-                //     text: d => y_tick_format(d.value)
-                // });
-
+                console.log("colorDomain", colorDomain);
                 graph = Plot.plot({
                     width: 640,
                     height: 480,
                     x: {
-                        domain: domain,
+                        domain: barDomain,
                         type: 'band'
                     },
                     y: {
                         type: 'linear'
                     },
                     color: {
-                        type: 'categorical',
-                        domain: Array.from(new Set(countsFlattened.map(d => choices_two[d.type]))),
-                        range: Array.from(new Set(countsFlattened.map(d => colorScale(d.type)))),
+                        type: 'ordinal',
+                        domain: colorDomain.map(d => choices_two[d]),
+                        range: colorDomain.map(d => colorScale(d)),
                         title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
                         format: x_tick_format,
                         legend: show_legend ? true : true,
@@ -305,9 +339,8 @@ export default {
                         yAxisLabels,
                         xAxisTitle,
                         xAxisLabels,
-                        bars,
-                        // barLabels,
-                        // legend
+                        stackedBars,
+                        barLabels,
                     ],
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
                     marginBottom: bottom_margin
@@ -315,8 +348,74 @@ export default {
 
                 return graph;
             } else if (parameters.graph_type == 'grouped') {
-                console.log('');
+                // Create a bar chart
+                const groupedBars = Plot.barY(countsFlattened, {
+                    domain: barDomain,
+                    x: d => d.type,
+                    y: 'value',
+                    fill: d => colorScale(d.type),
+                    width: 0.8
+                });
 
+                const color_label_length = parameters.color_label_length ? Number(parameters.color_label_length) : Math.max(...colorDomain.map(d => choices_two[d].toString().length));
+
+                var color_tick_format = d => choices_two[d];
+
+                if (parameters.color_tick_limit == 'truncate') {
+                    color_tick_format = d => truncateString(choices_two[d], color_label_length)
+                } else if (parameters.color_tick_limit == 'wrap') {
+                    color_tick_format = d => wrapString(choices_two[d], color_label_length)
+                }
+
+                const color_label_rotate = parameters.color_label_rotate ? Number(parameters.color_label_rotate) : 0;
+                const color_label_size = parameters.color_label_size ? Number(parameters.color_label_size) : 10;
+
+                xAxisLabels = Plot.axisX(colorDomain, {
+                    domain: colorDomain,
+                    type: 'band',
+                    tickFormat: color_tick_format,
+                    tickRotate:  color_label_rotate,
+                    fontSize: color_label_size, 
+                });
+
+                graph = Plot.plot({
+                    width: 640,
+                    height: 480,
+                    x: {
+                        domain: colorDomain,
+                        type: 'band'
+                    },
+                    y: {
+                        type: 'linear'
+                    },
+                    color: {
+                        type: 'ordinal',
+                        domain: colorDomain.map(d => choices_two[d]),
+                        range: colorDomain.map(d => colorScale(d)),
+                        title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
+                        format: x_tick_format,
+                        legend: show_legend ? true : true,
+                    },
+                    facet: {
+                        data: countsFlattened,
+                        x: d => d.category,
+                    },
+                    fx: {
+                        tickFormat: x_tick_format,
+                    },
+                    marks: [
+                        yAxisTitle,
+                        yAxisLabels,
+                        xAxisTitle,
+                        xAxisLabels,
+                        groupedBars,
+                        // barLabels,
+                    ],
+                    marginLeft: parameters.left_margin ? parameters.left_margin : 80,
+                    marginBottom: bottom_margin
+                });
+
+                return graph;
             }
 
             // Return a paragraph tag element with the error message
