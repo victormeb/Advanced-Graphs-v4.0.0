@@ -21,64 +21,25 @@
                   :help-text="module.tt('description_help')">
                   <input type="text" v-model="formData.description">
               </helpful-parameter>
-              <!-- Bar or Pie -->
-              <helpful-parameter
-                  :label-text="module.tt('bar_graph_type')"
-                  :help-text="module.tt('bar_graph_type_help')"
-              >
-                  <radio-component
-                      v-model="formData.graph_type"
-                      :name="'graph_type'"
-                      :values="['bar', 'pie']"
-                      :defaultValue="'bar'"
-                      :labels="[module.tt('bar'), module.tt('pie')]"
-                  ></radio-component>
-              </helpful-parameter>
-              <!-- Categorical Field -->
-              <helpful-parameter
-                  :label-text="module.tt('bar_categorical_field')"
-                  :help-text="module.tt('bar_categorical_field_help')"
-              >
-                  <categorical-field-selector
-                      v-model="formData.categorical_field"
-                      :fields="report_fields_by_repeat_instrument[formData.instrument].fields"
-                  ></categorical-field-selector>
-              </helpful-parameter>
-              <!-- NA Category -->
-              <helpful-parameter
-                  :label-text="module.tt('na_category')"
-                  :help-text="module.tt('na_category_help')"
-              >
-              <radio-component
-                      v-model="formData.na_category"
-                      :name="'na_category'"
-                      :values="['keep', 'drop']"
-                      :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
-                  ></radio-component>
-              </helpful-parameter>
-              <!-- Unused Categories -->
-              <helpful-parameter
-                  :label-text="module.tt('unused_categories')"
-                  :help-text="module.tt('unused_categories_help')"
-              >
-              <radio-component
-                      v-model="formData.unused_categories"
-                      :name="'unused_categories'"
-                      :values="['keep', 'drop']"
-                      :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
-                  ></radio-component>
-              </helpful-parameter>
-            </div>
+                  <!-- Numeric Field X-->
+                  <helpful-parameter
+                          :label-text="module.tt('numeric_field_x')"
+                          :help-text="module.tt('numeric_field_help')"
+                  >
+                      <numeric-field-selector
+                              v-model="formData.numeric_field"
+                              :fields="report_fields_by_repeat_instrument[formData.instrument].fields"
+                      ></numeric-field-selector>
+                  </helpful-parameter>
+              </div>
             <div class="AG-pane-right">
-              <!-- Numeric Field -->
+              <!-- Numeric Field Y-->
               <helpful-parameter
-                  :label-text="module.tt('numeric_field')"
+                  :label-text="module.tt('numeric_field_y')"
                   :help-text="module.tt('numeric_field_help')"
               >
               <numeric-field-selector
-                      v-model="formData.numeric_field"
+                      v-model="formData.numeric_field_y"
                       :fields="report_fields_by_repeat_instrument[formData.instrument].fields"
                   ></numeric-field-selector>
               </helpful-parameter>
@@ -99,23 +60,7 @@
                     ></radio-component>
                 <input type="number" v-if="formData.na_numeric === 'replace'" v-model="formData.na_numeric_value" />
               </helpful-parameter>
-              <!-- Aggregation Function -->
-              <helpful-parameter
-                  v-if="formData.numeric_field !== null 
-                    && typeof formData.numeric_field === 'string' 
-                    && formData.is_count != true"
-                  :label-text="module.tt('aggregation_function')"
-                  :help-text="module.tt('aggregation_function_help')"
-              >
-                <radio-component
-                        v-model="formData.aggregation_function"
-                        :name="'aggregation_function'"
-                        :values="['count', 'sum', 'mean', 'min', 'max']"
-                        :defaultValue="'count'"
-                        :labels="[module.tt('count'), module.tt('sum'), module.tt('mean'), module.tt('min'), module.tt('max')]"
-                    ></radio-component>
-              </helpful-parameter>
-              <!-- Palette -->
+               <!-- Palette -->
               <helpful-parameter
                   :label-text="module.tt('palette')"
                   :help-text="module.tt('palette_help')"
@@ -134,17 +79,18 @@
   import HelpfulParameter from "@/components/HelpfulParameter.vue";
   import InstrumentSelector from "@/components/InstrumentSelector.vue";
   import RadioComponent from "@/components/RadioComponent.vue";
-  import CategoricalFieldSelector from "@/components/CategoricalFieldSelector.vue";
+  //import CategoricalFieldSelector from "@/components/CategoricalFieldSelector.vue";
   import NumericFieldSelector from "@/components/NumericFieldSelector.vue";
   import PaletteSelector from "@/components/PaletteSelector.vue";
-  import { isCategoricalField } from "@/utils";
+  //import { isCategoricalField } from "@/utils";
+  import { isNumericField } from "@/utils";
 
   export default {
     components: {
       HelpfulParameter,
       InstrumentSelector,
       RadioComponent,
-      CategoricalFieldSelector,
+    //  CategoricalFieldSelector,
       NumericFieldSelector,
       PaletteSelector,
     },
@@ -167,15 +113,16 @@
       isFormReady() {
         // console.log('formData', this.formData);
         const instrument_selected = (typeof this.formData.instrument !== 'undefined') && this.formData.instrument !== null;
-        const graph_type_selected = (typeof this.formData.graph_type !== 'undefined') && this.formData.graph_type !== null;
-        const categorical_field_selected = (typeof this.formData.categorical_field !== 'undefined') && this.formData.categorical_field !== null;
-        const numeric_field_selected = (typeof this.formData.numeric_field !== 'undefined') && this.formData.numeric_field !== null;
-        const na_category_selected = (typeof this.formData.na_category !== 'undefined') && this.formData.na_category !== null;
-        const unused_categories_selected = (typeof this.formData.unused_categories !== undefined) && this.formData.unused_categories !== null;
-        const aggregation_function_selected = (typeof this.formData.aggregation_function !== 'undefined') && this.formData.aggregation_function !== null;
+        const graph_type_selected = true; //(typeof this.formData.graph_type !== 'undefined') && this.formData.graph_type !== null;
+        // const categorical_field_selected = (typeof this.formData.categorical_field !== 'undefined') && this.formData.categorical_field !== null;
+          const numeric_field_selected = (typeof this.formData.numeric_field !== 'undefined') && this.formData.numeric_field !== null;
+          const numeric_field_y_selected = (typeof this.formData.numeric_field_y !== 'undefined') && this.formData.numeric_field_y !== null;
+        //  const na_category_selected = (typeof this.formData.na_category !== 'undefined') && this.formData.na_category !== null;
+        // const unused_categories_selected = (typeof this.formData.unused_categories !== undefined) && this.formData.unused_categories !== null;
+        // const aggregation_function_selected = (typeof this.formData.aggregation_function !== 'undefined') && this.formData.aggregation_function !== null;
         // console.log('isFormReady', instrument_selected, graph_type_selected, categorical_field_selected, numeric_field_selected, na_category_selected, 'unused', unused_categories_selected, 'agg', aggregation_function_selected);
         // If any of the required fields are not selected, return false
-        if (!instrument_selected || !graph_type_selected || !categorical_field_selected || !numeric_field_selected || !na_category_selected || !unused_categories_selected) {
+        if (!instrument_selected || !graph_type_selected || !numeric_field_selected || !numeric_field_y_selected ) { //|| !unused_categories_selected) {
           return false;
         }
 
@@ -185,9 +132,9 @@
         }
 
         // If numeric field is selected, but no aggregation function is selected, return false
-        if (numeric_field_selected && typeof this.formData.numeric_field === 'string' && this.formData.is_count != true && !aggregation_function_selected) {
-          return false;
-        }
+        // if (numeric_field_selected && typeof this.formData.numeric_field === 'string' && this.formData.is_count != true && !aggregation_function_selected) {
+        //   return false;
+        // }
 
         // console.log('isFormReady', true);
         // Return true if there are enough selected parameters to create a bar or pie graph
@@ -223,7 +170,7 @@
       isCreatable(report_fields_by_repeat_instrument) {
         // For each instrument in report_fields_by_reapeat_instrument
         for (const instrument in report_fields_by_repeat_instrument) {
-          // If there is a categorical field
+          // If there is a numeric field
           if (this.instrumentCanCreate(report_fields_by_repeat_instrument, instrument)) {
             // Return true
             return true;
@@ -232,7 +179,7 @@
       },
       instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
         // If there is a categorical field
-        if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isCategoricalField(field))) {
+        if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isNumericField(field))) {
           // Return true
           return true;
         }
