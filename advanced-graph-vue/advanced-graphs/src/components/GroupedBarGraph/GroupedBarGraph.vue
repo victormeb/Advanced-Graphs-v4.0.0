@@ -284,7 +284,7 @@ export default {
             });
 
             // Create bar labels
-            const barLabels = Plot.text(
+            var barLabels = Plot.text(
             // Create an array of the total value for each category
             countsFlattened.reduce((acc, d) => {
                 const existing = acc.find(a => a.category === d.category);
@@ -378,6 +378,18 @@ export default {
                     fontSize: color_label_size, 
                 });
 
+                barLabels = Plot.text(
+                    countsFlattened,
+                    {
+                        x: d => d.type,
+                        y: d => d.value,
+                        dx: 0,
+                        dy: -bar_label_position, // Adjust the vertical position of the labels relative to the bars
+                        textAnchor: "middle",
+                        fontSize: bar_label_size, // Set the font size for the bar labels
+                        text: d => y_tick_format(d.value)
+                    });
+
                 graph = Plot.plot({
                     width: 640,
                     height: 480,
@@ -409,7 +421,7 @@ export default {
                         xAxisTitle,
                         xAxisLabels,
                         groupedBars,
-                        // barLabels,
+                        barLabels,
                     ],
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
                     marginBottom: bottom_margin
