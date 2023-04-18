@@ -113,7 +113,7 @@ export default {
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
             }
 
-            //var barHeightFunction = function (d) { return d[parameters.numeric_field]; };
+            //var barHeightFunction = function ( d) { return d[parameters.numeric_field]; };
 
             // If we are using a numeric field and na_numeric is set to replace, set the bar height function to use the na_numeric_value parameter
             // if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'replace') {
@@ -139,9 +139,9 @@ export default {
 
             //var barHeights = Array.from(counts, ([key, value]) => ({key: key, value: value}));
 
-            var xValues =   filteredReport.filter(function (d) { return d[parameters.numeric_field]; });
+            var xValues =   filteredReport.map((obj) => obj[parameters.numeric_field]);
 
-            var yValues =   filteredReport.filter(function (d) { return d[parameters.numeric_field_y]; });
+            var yValues =   filteredReport.map((obj) => obj[parameters.numeric_field_y]);
 
 
             // Create a function to interpolate between colors for each category
@@ -344,40 +344,45 @@ export default {
             throw new Error("xValues and yValues must have the same length.");
           }
 
-          const width = 500;
-          const height = 500;
-          const margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
-          const xScale = d3.scaleLinear()
-            .domain([d3.min(xValues), d3.max(xValues)])
-            .range([margin.left, width - margin.right]);
+            const width = 500;
+            const height = 500;
+            const margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
-          const yScale = d3.scaleLinear()
-            .domain([d3.min(yValues), d3.max(yValues)])
-            .range([height - margin.bottom, margin.top]);
+            const data = xValues.map((x, i) => ({ x, y: yValues[i] }));
 
-          const xAxis = d3.axisBottom(xScale);
-          const yAxis = d3.axisLeft(yScale);
+            const xScale = d3.scaleLinear()
+                .domain([d3.min(xValues), d3.max(xValues)])
+                .range([margin.left, width - margin.right]);
 
-          const svg = d3.create("svg")
-            .attr("width", width)
-            .attr("height", height);
+            const yScale = d3.scaleLinear()
+                .domain([d3.min(yValues), d3.max(yValues)])
+                .range([height - margin.bottom, margin.top]);
 
-          svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
-            .call(xAxis);
+            const xAxis = d3.axisBottom(xScale);
+            const yAxis = d3.axisLeft(yScale);
 
-          svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(yAxis);
+            const svg = d3.create("svg")
+                .attr("width", width)
+                .attr("height", height);
 
-          svg.selectAll("circle")
-            .data(xValues)
-            .join("circle")
-            .attr("cx", (i) => (xValues[i]))
-            .attr("cy", (i) => (yValues[i]))
-            .attr("r", 3)
-            .attr("fill", "steelblue");
+            svg.append("g")
+                .attr("transform", `translate(0,${height - margin.bottom})`)
+                .call(xAxis);
+
+            svg.append("g")
+                .attr("transform", `translate(${margin.left},0)`)
+                .call(yAxis);
+
+            svg.selectAll("circle")
+                .data(data)
+                .join("circle")
+                .attr("cx", (d) => xScale(d.x))
+                .attr("cy", (d) => yScale(d.y))
+                .attr("r", 3)
+                .attr("fill", "steelblue");
+
+            //return svg.node();
 
             var errorDiv = document.createElement('p');
             errorDiv.innerHTML = this.module.tt('Scatterplots are not supported in this version of the module.'+xValues.length+','+yValues.length);

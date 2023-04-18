@@ -17,8 +17,8 @@
               </helpful-parameter>
               <!-- Graph Type: scatter or network -->
                   <helpful-parameter
-                          :label-text="module.tt('bar_graph_type')"
-                          :help-text="module.tt('bar_graph_type_help')"
+                          :label-text="module.tt('graph_type')"
+                          :help-text="module.tt('graph_type_help')"
                   >
                       <radio-component
                               v-model="formData.graph_type"
@@ -126,7 +126,7 @@
       isFormReady() {
         // console.log('formData', this.formData);
         const instrument_selected = (typeof this.formData.instrument !== 'undefined') && this.formData.instrument !== null;
-        const graph_type_selected = true; //(typeof this.formData.graph_type !== 'undefined') && this.formData.graph_type !== null;
+        const graph_type_selected = (typeof this.formData.graph_type !== 'undefined') && this.formData.graph_type !== null;
         // const categorical_field_selected = (typeof this.formData.categorical_field !== 'undefined') && this.formData.categorical_field !== null;
           const numeric_field_selected = (typeof this.formData.numeric_field !== 'undefined') && this.formData.numeric_field !== null;
           const numeric_field_y_selected = (typeof this.formData.numeric_field_y !== 'undefined') && this.formData.numeric_field_y !== null;
