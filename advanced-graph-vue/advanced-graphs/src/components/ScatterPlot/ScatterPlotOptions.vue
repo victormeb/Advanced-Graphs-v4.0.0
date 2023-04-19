@@ -46,11 +46,11 @@
       </div>
       <div class="AG-bar-graph-options-row">
         <div class="AG-bar-graph-options-block">
-            <h3>{{module.tt("bar_labels")}}</h3>
-            <label>{{module.tt("bar_label_size")}}:<input ref="bar_label_size" type="range" min="0" max="50" v-model.number="bar_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("bar_label_position")}}:<input ref="bar_label_position" type="range" min="-50" max="50" step="0.1" v-model.number="bar_label_position" @input="updateParameters" /></label>
-        </div>   
-      </div>                 
+            <h3>{{module.tt("dot_options")}}</h3>
+            <label>{{module.tt("scatter_dot_size")}}:<input ref="scatter_dot_size" type="range" min="0" max="50" v-model.number="scatter_dot_size" @input="updateParameters" /></label>
+<!--            <label>{{module.tt("bar_label_position")}}:<input ref="bar_label_position" type="range" min="-50" max="50" step="0.1" v-model.number="bar_label_position" @input="updateParameters" /></label>-->
+        </div>
+      </div>
   </div>
 </template>
 
@@ -176,7 +176,7 @@
             // if (typeof y_label_limit != 'undefined' && y_label_limit != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
             //     y_tick_format = d => d3.format(y_label_limit)(d);
             // }
-            const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 10;
+            const scatter_dot_size = this.parameters.scatter_dot_size ? Number(this.parameters.scatter_dot_size) : 10;
             const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 4.5;
 
 
@@ -201,7 +201,7 @@
                 y_tick_format,
                 y_rotate,
                 y_title_offset,
-                bar_label_size,
+                scatter_dot_size,
                 bar_label_position,
                 show_legend,
             }
@@ -224,7 +224,7 @@
                 y_label_length: this.y_label_length,
                 y_rotate: this.y_rotate,
                 y_title_offset: this.y_title_offset,
-                bar_label_size: this.bar_label_size,
+                scatter_dot_size: this.scatter_dot_size,
                 bar_label_position: this.bar_label_position,
                 show_legend: this.show_legend,
                 });
@@ -245,7 +245,7 @@
                 this.$refs.y_label_length.value = this.y_label_length;
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
-                this.$refs.bar_label_size.value = this.bar_label_size;
+                this.$refs.scatter_dot_size.value = this.scatter_dot_size;
                 this.$refs.bar_label_position.value = this.bar_label_position;
                 this.$refs.show_legend.checked = this.show_legend;
             });

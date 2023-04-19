@@ -19,16 +19,16 @@
 </template>
 
 <script>
-//import * as Plot from '@observablehq/plot';
+import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
 //import * as d3Force from 'd3-force';
 // import {PieChart} from "@d3/pie-chart";
 // import {parseChoicesOrCalculations, isCheckboxField, getCheckboxReport, getFieldLabel, wrapString, truncateString} from '@/utils';
-//import {parseChoicesOrCalculations, getFieldLabel} from '@/utils';
-import {parseChoicesOrCalculations} from '@/utils';
+import {parseChoicesOrCalculations, getFieldLabel} from '@/utils';
+// import {parseChoicesOrCalculations} from '@/utils';
 import ScatterPlotOptions from './ScatterPlotOptions.vue';
 
-//import { markRaw } from 'vue';
+import { markRaw } from 'vue';
 //import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
 
 export default {
@@ -57,9 +57,9 @@ export default {
     },
     mounted() {
         try {
-            // if (this.parameters.graph_type == 'bar') {
-            //     this.moreOptionsComponent = markRaw(BarGraphOptions);
-            // }
+            if (this.parameters.graph_type == 'scatter') {
+                this.moreOptionsComponent = markRaw(ScatterPlotOptions);
+            }
 
             // wait until the moreOptionsComponent updates the parameters before updating the graph
             this.$nextTick(() => {
@@ -150,10 +150,10 @@ export default {
             // var colorScale = d3.scaleOrdinal()
             //     .domain(domain)
             //     .range(domain.map((d, i) => interpolateColors(i / (domain.length > 1 ? domain.length-1: 1))));
-            //     const x_title_size = parameters.x_title_size ? Number(parameters.x_title_size) : 15;
-            //     const x_label_size = parameters.x_label_size ? Number(parameters.x_label_size) : 10;
+                const x_title_size = parameters.x_title_size ? Number(parameters.x_title_size) : 15;
+                const x_label_size = parameters.x_label_size ? Number(parameters.x_label_size) : 10;
                 // const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
-                // const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...domain.map(d => choices[d].length));
+                const x_label_length = parameters.x_label_length; //? Number(parameters.x_label_length) : Math.max(...domain.map(d => choices[d].length));
 
             // Get the x tick format
             // var x_tick_format = d => choices[d];
@@ -162,19 +162,19 @@ export default {
             // if (x_label_limit == 'truncate') {
             //     x_tick_format = d => truncateString(choices[d], x_label_length);
             // }
-            // If x_label_limit is set to wrap, wrap the labels
+            // // If x_label_limit is set to wrap, wrap the labels
             // if (x_label_limit == 'wrap') {
             //     x_tick_format = d => wrapString(choices[d], x_label_length);
             // }
+            //
+            const x_rotate = parameters.x_rotate ; //|| parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
+            const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
+            const bottom_margin = parameters.bottom_margin ? Number(parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
             
-            // const x_rotate = parameters.x_rotate || parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
-            // const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
-            // const bottom_margin = parameters.bottom_margin ? Number(parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
-            
-            // const y_title_size = parameters.y_title_size ? Number(parameters.y_title_size) : 15;
-            // const y_label_size = parameters.y_label_size ? Number(parameters.y_label_size) : 10;
+            const y_title_size = parameters.y_title_size ? Number(parameters.y_title_size) : 15;
+            const y_label_size = parameters.y_label_size ? Number(parameters.y_label_size) : 10;
             // const y_label_limit = parameters.y_label_limit ? parameters.y_label_limit : null;
-            // const y_label_length = parameters.y_label_length ? Number(parameters.y_label_length) : Math.max(...barHeights.map(d => d.value.toString().length));
+            // const y_label_length = parameters.y_label_length ; //? Number(parameters.y_label_length) : Math.max(...domain.map(d => choices[d].length));
             
             // Get the y tick format
             // var y_tick_format = d => d;
@@ -194,8 +194,8 @@ export default {
             // }
 
             //
-            // const y_rotate = parameters.y_rotate ? Number(parameters.y_rotate) : 0;
-            // const y_title_offset = parameters.y_title_offset ? Number(parameters.y_title_offset) : 45;
+            const y_rotate = parameters.y_rotate ? Number(parameters.y_rotate) : 0;
+            const y_title_offset = parameters.y_title_offset ? Number(parameters.y_title_offset) : 45;
 
             // const bar_label_size = parameters.bar_label_size ? Number(parameters.bar_label_size) : 10;
             // const bar_label_position = parameters.bar_label_position ? Number(parameters.bar_label_position) : 0.5;
@@ -203,6 +203,7 @@ export default {
             // const show_legend = parameters.show_legend ? true : false;
 
             // const y_title = parameters.numeric_field ?  getFieldLabel(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
+            const y_title =  getFieldLabel(this.data_dictionary[parameters.numeric_field_y]);  // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
 
             var graph = null;
 
@@ -308,7 +309,7 @@ export default {
                 // const seperation_strength = parameters.seperation_strength ? Number(parameters.seperation_strength) : 1.1;
                 // const seperation_iterations = parameters.seperation_iterations ? Number(parameters.seperation_iterations) : 50;
                 // Create a pie chart
-                graph = this.Scatterplot(xValues,yValues); //, {
+                // graph = this.Scatterplot(xValues,yValues); //, {
                     // width: 640,
                     // height: 480,
                     // innerRadius: 0,
@@ -329,6 +330,72 @@ export default {
                     // separationIterations: seperation_iterations
                 // });
 
+                // Create x axis labels
+                const xAxisLabels = Plot.axisX( {
+                    //domain: domain,
+                    type: 'band',
+                    // tickFormat: x_tick_format,
+                    tickRotate:  x_rotate,
+                    fontSize: x_label_size,
+                });
+
+                // Create x axis title
+                const xAxisTitle = Plot.axisX({
+                    //domain: domain,
+                    type: 'band',
+                    label:  getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                    labelOffset: x_title_offset,
+                    ticks: null,
+                    tickFormat: null,
+                    fontSize: x_title_size
+                });
+
+                // Create y axis labels
+                const yAxisLabels = Plot.axisY({
+                    label: null,
+                    // tickFormat: y_tick_format,
+                    tickRotate: y_rotate,
+                    fontSize: y_label_size
+                });
+
+                // Create y axis title
+                const yAxisTitle = Plot.axisY({
+                    label: y_title,
+                    labelAnchor: 'center',
+                    labelOffset: y_title_offset,
+                    fontSize: y_title_size,
+                    tick: null,
+                    tickFormat: () => ''
+                });
+
+                if (xValues.length !== yValues.length) {
+                    throw new Error("xValues and yValues must have the same length.");
+                }
+
+                const data = xValues.map((x, i) => ({ x, y: yValues[i] }));
+
+                graph = Plot.plot({
+                    marks: [
+                        Plot.dot(data, { x: "x", y: "y", r: parameters.scatter_dot_size+1, fill: "steelblue" }),
+                                yAxisTitle,
+                                yAxisLabels,
+                                xAxisTitle,
+                                xAxisLabels,
+                    ],
+                        marginBottom: bottom_margin,
+                        marginLeft: parameters.left_margin ? parameters.left_margin : 80,
+                    x: {
+                        label: '',
+                    },
+                    //     label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                    //     fontSize: x_title_size
+                    // },
+                    // y: {
+                    //     label: ,
+                    // },
+                });
+
+                // return scatterplot;
                 return graph;
 
             }
