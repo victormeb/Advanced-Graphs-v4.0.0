@@ -48,7 +48,7 @@
         <div class="AG-bar-graph-options-block">
             <h3>{{module.tt("dot_options")}}</h3>
             <label>{{module.tt("scatter_dot_size")}}:<input ref="scatter_dot_size" type="range" min="0" max="50" v-model.number="scatter_dot_size" @input="updateParameters" /></label>
-<!--            <label>{{module.tt("bar_label_position")}}:<input ref="bar_label_position" type="range" min="-50" max="50" step="0.1" v-model.number="bar_label_position" @input="updateParameters" /></label>-->
+            <label>{{module.tt("scatter_dot_color")}}:<input ref="scatter_dot_color" type="range" min="-50" max="50" step="0.1" v-model.number="scatter_dot_color" @input="updateParameters" /></label>
         </div>
       </div>
   </div>
@@ -177,7 +177,7 @@
             //     y_tick_format = d => d3.format(y_label_limit)(d);
             // }
             const scatter_dot_size = this.parameters.scatter_dot_size ? Number(this.parameters.scatter_dot_size) : 10;
-            const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 4.5;
+            const scatter_dot_color = this.parameters.scatter_dot_color ? Number(this.parameters.scatter_dot_color) : 4.5;
 
 
             const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
@@ -202,7 +202,7 @@
                 y_rotate,
                 y_title_offset,
                 scatter_dot_size,
-                bar_label_position,
+                scatter_dot_color,
                 show_legend,
             }
         },
@@ -225,7 +225,7 @@
                 y_rotate: this.y_rotate,
                 y_title_offset: this.y_title_offset,
                 scatter_dot_size: this.scatter_dot_size,
-                bar_label_position: this.bar_label_position,
+                scatter_dot_color: this.scatter_dot_color,
                 show_legend: this.show_legend,
                 });
             },
@@ -246,7 +246,7 @@
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
                 this.$refs.scatter_dot_size.value = this.scatter_dot_size;
-                this.$refs.bar_label_position.value = this.bar_label_position;
+                this.$refs.scatter_dot_color.value = this.scatter_dot_color;
                 this.$refs.show_legend.checked = this.show_legend;
             });
 

@@ -145,9 +145,15 @@ export default {
 
 
             // Create a function to interpolate between colors for each category
-            // var interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
+            var interpolateColors = d3.interpolateRgbBasis(parameters.palette_brewer ? parameters.palette_brewer : ['red', 'green', 'blue']);
             //
-            // var colorScale = d3.scaleOrdinal()
+            var colorScale = d3.scaleSequential()
+                .domain([1, 100])
+                .interpolator(interpolateColors);
+
+            // d3.scaleLinear()
+            //     .domain([d3.min(yValues), d3.max(yValues)])
+            //     .range(interpolateColors(0,  1));  //d3.scaleOrdinal();
             //     .domain(domain)
             //     .range(domain.map((d, i) => interpolateColors(i / (domain.length > 1 ? domain.length-1: 1))));
                 const x_title_size = parameters.x_title_size ? Number(parameters.x_title_size) : 15;
@@ -376,7 +382,7 @@ export default {
 
                 graph = Plot.plot({
                     marks: [
-                        Plot.dot(data, { x: "x", y: "y", r: parameters.scatter_dot_size+1, fill: "steelblue" }),
+                        Plot.dot(data, { x: "x", y: "y", r: parameters.scatter_dot_size+1, fill: colorScale(parameters.scatter_dot_color*10) }),
                                 yAxisTitle,
                                 yAxisLabels,
                                 xAxisTitle,
@@ -402,7 +408,7 @@ export default {
 
             // Return a paragraph tag element with the error message
             var errorDiv = document.createElement('p');
-            errorDiv.innerHTML = this.module.tt('Scatterplots are not supported in this version of the module.'+xValues.length+','+yValues.length+','+parameters.graph_type);
+            errorDiv.innerHTML = this.module.tt('Scatterplots are not supported in this version of the module.'+xValues.length+','+yValues.length+','+parameters.graph_type,colorScale);
             return errorDiv;
         },
 
