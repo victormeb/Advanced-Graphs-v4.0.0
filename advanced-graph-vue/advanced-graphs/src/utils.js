@@ -1,6 +1,15 @@
 // Utils.js
-export // A function that parses a fields select_choices_or_calculations string
-function parseChoicesOrCalculations(field) {
+
+// A function that gets the text from an HTML string 
+export function stripHtml(html)
+{
+   let tmp = document.createElement("DIV");
+   tmp.innerHTML = html;
+   return tmp.textContent || tmp.innerText || "";
+}
+
+// A function that parses a fields select_choices_or_calculations string into an object
+export function parseChoicesOrCalculations(field) {
     // If the field is not a radio field, return an empty object
     if (!isRadioField(field) && !isCheckboxField(field)) {
         return {};
@@ -27,10 +36,13 @@ function parseChoicesOrCalculations(field) {
 
         return {};
     }
+    // If the choices or calculations string is not empty, return the parsed choices or calculations
+    return stripChoicesOrCalculations(choices_or_calculations);
+}
 
-
+export function stripChoicesOrCalculations(choiceString) {
     // Split the choices or calculations string by |
-    var choices_or_calculations_array = choices_or_calculations.split('|');
+    var choices_or_calculations_array = choiceString.split('|');
 
     // Create an array to hold the parsed choices or calculations
     var parsed_choices_or_calculations = {};
@@ -44,7 +56,7 @@ function parseChoicesOrCalculations(field) {
 
         // remove the leading and trailing spaces from the value and label
         choice_or_calculation_value = choice_or_calculation_value.trim();
-        choice_or_calculation_label = choice_or_calculation_label.trim();
+        choice_or_calculation_label = stripHtml(choice_or_calculation_label.trim());
 
         // Add the parsed choice or calculation to the array
         parsed_choices_or_calculations[choice_or_calculation_value] = choice_or_calculation_label;
