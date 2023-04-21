@@ -8,6 +8,8 @@ import LikertGraphForm from './Likert/LikertGraphForm.vue';
 import LikertGraph from './Likert/LikertGraph.vue';
 import ScatterPlotForm from "@/components/ScatterPlot/ScatterPlotForm.vue";
 import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
+import TableComponent from "@/components/Tables/TableComponent.vue";
+import TableForm from "@/components/Tables/TableForm.vue";
 // import GroupedBarPlot from './GroupedBarPlot.vue';
 // import Table from './Table.vue';
 // import ScatterPlot from './ScatterPlot.vue';
@@ -20,4 +22,5 @@ export default {
     'grouped_stacked': {form: GroupedBarGraphForm, graph: GroupedBarGraph},
     'scatter': {form: ScatterPlotForm, graph: ScatterPlot},
     'likert': {form: LikertGraphForm, graph: LikertGraph},
+    'table': {form: TableForm, graph: TableComponent},
 };

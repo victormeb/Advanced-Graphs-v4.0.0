@@ -1,25 +1,23 @@
 <template>
-    <div>
-      <label for="instrument">Select an instrument:</label>
+  <div>
+    <label for="instrument">{{module.tt('select_an_instrument')}}:</label>
       <br>
       <select name="instrument" v-model="selectedInstrument" @change="onInstrumentChange">
-        <option :selected="true" :value="null">-- Select an instrument --</option>
+        <option :selected="true" :value="null">--{{module.tt('select_an_instrument')}} --</option>
         <option v-for="(instrument, instrument_name) in availableInstruments" :key="instrument_name" :value="instrument_name" :selected="selectedInstrument===instrument_name">
           {{ instrument.label }}
         </option>
       </select>
-    </div>
-  </template>
+  </div>
+</template>
   
   <script>
   export default {
+    name: "InstrumentSelector",
+    inject: ["module"],
     props: {
       availableInstruments: {
         type: Object,
-        default: null,
-      },
-      currentlySelectedInstrument: {
-        type: String,
         default: null,
       },
       modelValue: {
@@ -38,7 +36,7 @@
       },
     },
   };
-  </script>
+</script>
 
   <style scoped>
     label {

@@ -12,14 +12,4 @@ module.exports = defineConfig({
       chunks: ['chunk-vendors', 'chunk-common', 'testingEditor'],
     },
   },
-  // configureWebpack: {
-  //   entry: {
-  //     editor: './src/edit-dash.js'
-  //   },
-  //   output: {
-  //     library: 'AdvancedGraphs',
-  //     libraryExport: ['default', 'createDashboardEditorApp'],
-  //     libraryTarget: 'umd',
-  //   }
-  // },
 });
