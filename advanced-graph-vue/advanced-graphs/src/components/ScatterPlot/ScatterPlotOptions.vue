@@ -14,13 +14,13 @@
             <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
             <label>{{module.tt("x_label_wrap")}}:
-                <radio-component
-                    v-model="x_label_limit"
-                    :values="['truncate', 'wrap', 'none']"
-                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
-                    :defaultValue="'none'"
-                    @update:modelValue="updateParameters"
-                ></radio-component>
+<!--                <radio-component-->
+<!--                    v-model="x_label_limit"-->
+<!--                    :values="['truncate', 'wrap', 'none']"-->
+<!--                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"-->
+<!--                    :defaultValue="'none'"-->
+<!--                    @update:modelValue="updateParameters"-->
+<!--                ></radio-component>-->
             </label>
             <label>{{module.tt("x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
             <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
@@ -30,12 +30,12 @@
             <h3>{{module.tt("y_axis")}}</h3>
             <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("y_label_wrap")}}:
+            <label>{{module.tt("marker_shape")}}:
                 <radio-component
-                    v-model="y_label_limit"
-                    :values="['truncate', 'wrap', 'none']"
-                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
-                    :defaultValue="'none'"
+                    v-model="marker_type"
+                    :values="['circle', 'square', 'triangle']"
+                    :labels="[module.tt('circle'), module.tt('diamond'), module.tt('triangle')]"
+                    :defaultValue="'circle'"
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
@@ -162,23 +162,23 @@
 
             const y_title_size = this.parameters.y_title_size ? Number(this.parameters.y_title_size) : 15;
             const y_label_size = this.parameters.y_label_size ? Number(this.parameters.y_label_size) : 10;
-            const y_label_limit = this.parameters.y_label_limit ? Number(this.parameters.y_label_limit) : null;
+            const marker_type = this.parameters.marker_type ? Number(this.parameters.marker_type) : null;
             const y_label_length = Number(this.parameters.y_label_length);   //this.parameters.y_label_length ? Number(this.parameters.y_label_length) : Math.max(...barHeights.map(d => d.value.toString().length));
 
             // Get the y tick format
             var y_tick_format = d => d;1
 
-            // If y_label_limit is set to truncate, truncate the labels
-            if (y_label_limit == 'truncate') {
+            // If marker_type is set to truncate, truncate the labels
+            if (marker_type == 'truncate') {
                 y_tick_format = d => truncateString(d, y_label_length);
             }
-            // If y_label_limit is set to wrap, wrap the labels
-            if (y_label_limit == 'wrap') {
+            // If marker_type is set to wrap, wrap the labels
+            if (marker_type == 'wrap') {
                 y_tick_format = d => wrapString(d, y_label_length);
             }
 
-            // If y_label_limit is a string and not truncate or wrap, use it as the tick format
-            // if (typeof y_label_limit != 'undefined' && y_label_limit != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
+            // If marker_type is a string and not truncate or wrap, use it as the tick format
+            // if (typeof marker_type != 'undefined' && marker_type != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
             //     y_tick_format = d => d3.format(y_label_limit)(d);
             // }
             const scatter_dot_size = this.parameters.scatter_dot_size ? Number(this.parameters.scatter_dot_size) : 10;
@@ -201,7 +201,7 @@
                 bottom_margin,
                 y_title_size,
                 y_label_size,
-                y_label_limit,
+                marker_type,
                 y_label_length,
                 y_tick_format,
                 y_rotate,
@@ -225,7 +225,7 @@
                 bottom_margin: this.bottom_margin,
                 y_title_size: this.y_title_size,
                 y_label_size: this.y_label_size,
-                y_label_limit: this.y_label_limit,
+                marker_type: this.marker_type,
                 y_label_length: this.y_label_length,
                 y_rotate: this.y_rotate,
                 y_title_offset: this.y_title_offset,
@@ -246,7 +246,7 @@
                 this.$refs.bottom_margin.value = this.bottom_margin;
                 this.$refs.y_title_size.value = this.y_title_size;
                 this.$refs.y_label_size.value = this.y_label_size;
-                // this.$refs.y_label_limit.value = this.y_label_limit;
+                // this.$refs.marker_type.value = this.marker_type;
                 this.$refs.y_label_length.value = this.y_label_length;
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
