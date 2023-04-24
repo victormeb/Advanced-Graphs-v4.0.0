@@ -100,17 +100,19 @@ export default {
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
-                filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field_y] != ''; });
             }
 
             // If there are some NA entries for the category in the filtered report
-            if (filteredReport.some(d => d[parameters.categorical_field] == ""))
+            if (filteredReport.some(d => d[parameters.numeric_field] == ""))
                 // Add an NA category to choices
                 choices[""] = this.module.tt("na");
 
             // If we are using a numeric field and na_numeric is set to drop filter out the rows with missing values for the field specified by the numeric parameter
             if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'drop') {
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field_y] != ''; });
             }
 
             //var barHeightFunction = function ( d) { return d[parameters.numeric_field]; };

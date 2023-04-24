@@ -1,16 +1,16 @@
 <!-- ScatterPlotOptions.vue -->
 <template>
-    <div class="AG-bar-graph-options">
-        <div class="AG-bar-graph-options-row">
-            <div class="AG-bar-graph-options-block">
+    <div class="AG-scatter-plot-options">
+        <div class="AG-scatter-plot-options-row">
+            <div class="AG-scatter-plot-options-block">
                 <!-- Show legend -->
                 <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
             </div>
         </div>
-      <div class="AG-bar-graph-options-row">
-        <div class="AG-bar-graph-options-block">
+      <div class="AG-scatter-plot-options-row">
+        <div class="AG-scatter-plot-options-block">
             <h3>{{ module.tt("x_axis") }}</h3>
-            <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" /></label>
+            <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" />10</label>
             <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
             <label>{{module.tt("x_label_wrap")}}:
@@ -26,7 +26,7 @@
             <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
             <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
         </div>
-        <div class="AG-bar-graph-options-block">
+        <div class="AG-scatter-plot-options-block">
             <h3>{{module.tt("y_axis")}}</h3>
             <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
@@ -44,8 +44,8 @@
             <label>{{module.tt("y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
         </div>
       </div>
-      <div class="AG-bar-graph-options-row">
-        <div class="AG-bar-graph-options-block">
+      <div class="AG-scatter-plot-options-row">
+        <div class="AG-scatter-plot-options-block">
             <h3>{{module.tt("dot_options")}}</h3>
             <label>{{module.tt("scatter_dot_size")}}:<input ref="scatter_dot_size" type="range" min="0" max="50" v-model.number="scatter_dot_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_dot_color")}}:<input ref="scatter_dot_color" type="range" min="-50" max="50" step="0.1" v-model.number="scatter_dot_color" @input="updateParameters" /></label>
@@ -55,8 +55,9 @@
 </template>
 
 <script>
-    import { parseChoicesOrCalculations, isCheckboxField, getCheckboxReport, truncateString, wrapString} from '@/utils.js';
-    import * as d3 from 'd3'; 
+// import { parseChoicesOrCalculations, isCheckboxField, getCheckboxReport, truncateString, wrapString} from '@/utils.js';
+    import {   truncateString, wrapString} from '@/utils.js';
+    // import * as d3 from 'd3';
     import RadioComponent from '@/components/RadioComponent.vue';
 
     export default {
@@ -74,58 +75,62 @@
         emits: ['updateParameters'],
         data() {
              // Get the choices for the category
-             var choices = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field]);
+             // var choices = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field]);
 
-            var this_report = this.report;
+             // todo: change categorical to numeric and implement na replacement
+            // var this_report = this.report;
 
             // If the category is a checkbox field, get a checkbox field report
-            if (isCheckboxField(this.parameters.categorical_field)) {
-                this_report = getCheckboxReport(this.parameters.categorical_field);
-            }
+            // if (isCheckboxField(this.parameters.categorical_field)) {
+            //     this_report = getCheckboxReport(this.parameters.categorical_field);
+            // }
 
+            // todo: change categorical to numeric and implement na replacement
             // Get a dataframe that only has entries for the instrument specified by the instrument parameter
-            var filteredReport = this_report.filter(function (d) { return d['redcap_repeat_instrument'] == this.parameters.instrument; }.bind(this));
+            // var filteredReport = this_report.filter(function (d) { return d['redcap_repeat_instrument'] == this.parameters.instrument; }.bind(this));
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
-            if (this.parameters.na_category == 'drop') {
-                filteredReport = filteredReport.filter(function (d) { return d[this.parameters.categorical_field] != ''; }.bind(this));
-            }
+            // if (this.parameters.na_category == 'drop') {
+                // filteredReport = filteredReport.filter(function (d) { return d[this.parameters.categorical_field] != ''; }.bind(this));
+            // }
 
+            // todo: change categorical to numeric and implement na replacement
             // If there are some NA entries for the category in the filtered report
-            if (filteredReport.some(d => d[this.parameters.categorical_field] == ""))
-                // Add an NA category to choices
-                choices[""] = this.module.tt("na");
+            // if (filteredReport.some(d => d[this.parameters.categorical_field] == ""))
+            //     // Add an NA category to choices
+            //     choices[""] = this.module.tt("na");
 
+            // todo: change categorical to numeric and implement na replacement
             // If we are using a numeric field and na_numeric is set to drop filter out the rows with missing values for the field specified by the numeric parameter
-            if (!this.parameters.is_count && this.parameters.numeric_field != '' && this.parameters.na_numeric == 'drop') {
-                filteredReport = filteredReport.filter(function (d) { return d[this.parameters.numeric_field] != ''; }.bind(this));
-            }
+            // if (!this.parameters.is_count && this.parameters.numeric_field != '' && this.parameters.na_numeric == 'drop') {
+            //     filteredReport = filteredReport.filter(function (d) { return d[this.parameters.numeric_field] != ''; }.bind(this));
+            // }
 
-            var barHeightFunction = function (d) { return d[this.parameters.numeric_field]; }.bind(this);
+            // var barHeightFunction = function (d) { return d[this.parameters.numeric_field]; }.bind(this);
 
             // If we are using a numeric field and na_numeric is set to replace, set the bar height function to use the na_numeric_value parameter
-            if (!this.parameters.is_count && this.parameters.numeric_field != '' && this.parameters.na_numeric == 'replace') {
-                barHeightFunction = function (d) { return d[this.parameters.numeric_field] == '' ? this.parameters.na_numeric_value : d[this.parameters.numeric_field]; }.bind(this);
-            }
+            // if (!this.parameters.is_count && this.parameters.numeric_field != '' && this.parameters.na_numeric == 'replace') {
+            //     barHeightFunction = function (d) { return d[this.parameters.numeric_field] == '' ? this.parameters.na_numeric_value : d[this.parameters.numeric_field]; }.bind(this);
+            // }
 
-            var counts = d3.rollup(filteredReport, v => v.length, d => d[this.parameters.categorical_field]);
+            // var counts = d3.rollup(filteredReport, v => v.length, d => d[this.parameters.categorical_field]);
 
 
             // If we are not using a numeric field, get the counts for each category
-            if (!(this.parameters.is_count || this.parameters.numeric_field == '')) {
-                counts = d3.rollup(filteredReport, v => d3[this.parameters.aggregation_function](v, barHeightFunction), d => d[this.parameters.categorical_field]);
-            }
+            // if (!(this.parameters.is_count || this.parameters.numeric_field == '')) {
+            //     counts = d3.rollup(filteredReport, v => d3[this.parameters.aggregation_function](v, barHeightFunction), d => d[this.parameters.categorical_field]);
+            // }
 
-            var countKeys = Array.from(counts, ([key]) => key);
+            // var countKeys = Array.from(counts, ([key]) => key);
 
-            var domain = Object.keys(choices).filter(function (d) { return countKeys.includes(d); });
+            // var domain = Object.keys(choices).filter(function (d) { return countKeys.includes(d); });
 
             // If unused_categories is set to keep, set the domain to all the choices
-            if (this.parameters.unused_categories == 'keep') {
-                domain = Object.keys(choices);
-            }
+            // if (this.parameters.unused_categories == 'keep') {
+            //     domain = Object.keys(choices);
+            // }
 
-            var barHeights = Array.from(counts, ([key, value]) => ({key: key, value: value}));
+            // var barHeights = Array.from(counts, ([key, value]) => ({key: key, value: value}));
 
             // Create a function to interpolate between colors for each category
             // var interpolateColors = d3.interpolateRgbBasis(this.parameters.palette_brewer ? this.parameters.palette_brewer : ['red', 'green', 'blue']);
@@ -137,31 +142,31 @@
             const x_title_size = this.parameters.x_title_size ? Number(this.parameters.x_title_size) : 15;
             const x_label_size = this.parameters.x_label_size ? Number(this.parameters.x_label_size) : 10;
             const x_label_limit = this.parameters.x_label_limit ? Number(this.parameters.x_label_limit) : null;
-            const x_label_length = this.parameters.x_label_length ? Number(this.parameters.x_label_length) : Math.max(...domain.map(d => choices[d].length));
+            const x_label_length =  this.parameters.x_label_length ? Number(this.parameters.x_label_length)  : 10; // Math.max(...domain.map(d => choices[d].length));
 
             // Get the x tick format
-            var x_tick_format = d => choices[d];
+            // var x_tick_format = d => choices[d];
 
-            // If x_label_limit is set to truncate, truncate the labels
-            if (x_label_limit == 'truncate') {
-                x_tick_format = d => truncateString(choices[d], x_label_length);
-            }
-            // If x_label_limit is set to wrap, wrap the labels
-            if (x_label_limit == 'wrap') {
-                x_tick_format = d => wrapString(choices[d], x_label_length);
-            }
+            // // If x_label_limit is set to truncate, truncate the labels
+            // if (x_label_limit == 'truncate') {
+            //     x_tick_format = d => truncateString(choices[d], x_label_length);
+            // }
+            // // If x_label_limit is set to wrap, wrap the labels
+            // if (x_label_limit == 'wrap') {
+            //     x_tick_format = d => wrapString(choices[d], x_label_length);
+            // }
 
-            const x_rotate = this.parameters.x_rotate ? Number(this.parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
+            const x_rotate = this.parameters.x_rotate ? Number(this.parameters.x_rotate) : (x_label_length * x_label_size * 1.2 > 32) ? 90 : 0;   //Number(this.parameters.x_rotate);
             const x_title_offset = this.parameters.x_title_offset ? Number(this.parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
             const bottom_margin = this.parameters.bottom_margin ? Number(this.parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
 
             const y_title_size = this.parameters.y_title_size ? Number(this.parameters.y_title_size) : 15;
             const y_label_size = this.parameters.y_label_size ? Number(this.parameters.y_label_size) : 10;
             const y_label_limit = this.parameters.y_label_limit ? Number(this.parameters.y_label_limit) : null;
-            const y_label_length = this.parameters.y_label_length ? Number(this.parameters.y_label_length) : Math.max(...barHeights.map(d => d.value.toString().length));
+            const y_label_length = Number(this.parameters.y_label_length);   //this.parameters.y_label_length ? Number(this.parameters.y_label_length) : Math.max(...barHeights.map(d => d.value.toString().length));
 
             // Get the y tick format
-            var y_tick_format = d => d;
+            var y_tick_format = d => d;1
 
             // If y_label_limit is set to truncate, truncate the labels
             if (y_label_limit == 'truncate') {
@@ -190,7 +195,7 @@
                 x_label_size,
                 x_label_limit,
                 x_label_length,
-                x_tick_format,
+                // x_tick_format,
                 x_rotate,
                 x_title_offset,
                 bottom_margin,
@@ -257,7 +262,7 @@
 </script>
 
 <style scoped>
-    .AG-bar-graph-options {
+    .AG-scatter-plot-options {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -265,7 +270,7 @@
         width: 100%;
         height: 100%;
     }
-    .AG-bar-graph-options-row {
+    .AG-scatter-plot-options-row {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -273,7 +278,7 @@
         width: 100%;
         height: 100%;
     }
-    .AG-bar-graph-options-row > div {
+    .AG-scatter-plot-options-row > div {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
