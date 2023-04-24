@@ -1,22 +1,22 @@
 <template>
     <div>
-        <table>
-            <tr class="header">
+        <table class="AG-cross-tab">
+            <tr>
                 <th></th>
-                <th :colspan="column_categories.length">
+                <th  class="header" :colspan="column_categories.length">
                     {{ category_two }}
                 </th>
             </tr>
-            <tr class="header">
-                <th> {{ category_one }}</th>
+            <tr>
+                <th class="header"> {{ category_one }}</th>
                 <td v-for="(category, index) in column_categories" :key="index">
-                    {{ category }}
+                    {{ choices_two[category] }}
                 </td>
                 <th>{{module.tt('table_total')}}</th>
             </tr>
             <tr v-for="(row, row_categories, index) in tableData" :key="index">
                 <td>
-                    <p>{{ row_categories }}</p>
+                    <p>{{ choices_one[row_categories] }}</p>
                 </td>
                 <td v-for="(value,column) in row" :key="column">
                     <p v-if="percents_or_totals == 'totals'">{{ value.value }}</p>
@@ -24,22 +24,22 @@
                     <p v-else-if="percents_or_totals == 'both'">{{ value.value }} ({{ d3.format(".0%")(value[attributeType]) }})</p>
                 </td>
                 <!-- Total column -->
-                <td>
+                <td class="column-total">
                     <p v-if="percents_or_totals == 'totals'">{{ totalColumn[row_categories].value }}</p>
                     <p v-else-if="percents_or_totals == 'percents'">{{ d3.format(".0%")(totalColumn[row_categories][attributeType]) }}</p>
                     <p v-else-if="percents_or_totals == 'both'">{{ totalColumn[row_categories].value }} ({{ d3.format(".0%")(totalColumn[row_categories][attributeType]) }})</p>
                 </td>
             </tr>
             <!-- Total Row -->
-            <tr class="header">
+            <tr>
                 <th>{{module.tt('table_total')}}</th>
-                <td v-for="(category, index) in column_categories" :key="index">
+                <td class="row-total" v-for="(category, index) in column_categories" :key="index">
                     <p v-if="percents_or_totals == 'totals'">{{ totalRow[category].value }}</p>
                     <p v-else-if="percents_or_totals == 'percents'">{{ d3.format(".0%")(totalRow[category][attributeType]) }}</p>
                     <p v-else-if="percents_or_totals == 'both'">{{ totalRow[category].value }} ({{ d3.format(".0%")(totalRow[category][attributeType]) }})</p>
                 </td>
                 <!-- Grand Total -->
-                <td>
+                <td class="grand-total">
                     <p v-if="percents_or_totals == 'totals'">{{ grandTotal }}</p>
                     <p v-else-if="percents_or_totals == 'percents'">{{ d3.format(".0%")(1) }}</p>
                     <p v-else-if="percents_or_totals == 'both'">{{ grandTotal }} ({{ d3.format(".0%")(1) }})</p>
@@ -186,23 +186,23 @@
             // For each row in the rows set
             for (const row of rows) {
                 // For each column in the columns set
-                tableData[choices_one[row]] = {};
+                tableData[row] = {};
                 var rowTotal = 0;
                 for (const column of columns) {
 
 
                     // If the row and column are not in the nested counts
                     if (countsNested.has(row) && countsNested.get(row).has(column)) {
-                        tableData[choices_one[row]][choices_two[column]] = {value: countsNested.get(row).get(column), rowPercent: countsNested.get(row).get(column) / rowTotals[Array.from(rows).indexOf(row)], columnPercent: countsNested.get(row).get(column) / columnTotals[Array.from(columns).indexOf(column)], totalPercent: countsNested.get(row).get(column) / total};
+                        tableData[row][column] = {value: countsNested.get(row).get(column), rowPercent: countsNested.get(row).get(column) / rowTotals[Array.from(rows).indexOf(row)], columnPercent: countsNested.get(row).get(column) / columnTotals[Array.from(columns).indexOf(column)], totalPercent: countsNested.get(row).get(column) / total};
                         rowTotal += countsNested.get(row).get(column);
                         continue;
                     }
 
                     // Add the row and column to the nested counts with a value of 0
-                    tableData[choices_one[row]][choices_two[column]] = {value: 0, rowPercent: 0, columnPercent: 0, totalPercent: 0};
+                    tableData[row][column] = {value: 0, rowPercent: 0, columnPercent: 0, totalPercent: 0};
                 }
 
-                totalColumn[choices_one[row]] = {value: rowTotal, rowPercent: 1, columnPercent: rowTotal / total, totalPercent: rowTotal / total};
+                totalColumn[row] = {value: rowTotal, rowPercent: 1, columnPercent: rowTotal / total, totalPercent: rowTotal / total};
             }
 
             var totalRow = {};
@@ -214,7 +214,7 @@
                         columnTotal += countsNested.get(row).get(column);
                     }
                 }
-                totalRow[choices_two[column]] = {value: columnTotal, rowPercent: columnTotal / total, columnPercent: 1, totalPercent: columnTotal / total};
+                totalRow[column] = {value: columnTotal, rowPercent: columnTotal / total, columnPercent: 1, totalPercent: columnTotal / total};
             }
 
             // tableData['Total']['Total'] = {value: total, rowPercent: 1, columnPercent: 1, totalPercent: 1};
@@ -230,8 +230,8 @@
 
             return {
                 tableData: tableData,
-                row_categories: Array.from(rows, value => choices_one[value]),
-                column_categories: Array.from(columns, value => choices_two[value]),
+                row_categories: Array.from(rows, value => value),
+                column_categories: Array.from(columns, value => value),
                 category_one: this.data_dictionary[this.parameters.categorical_field_one].field_label,
                 category_two: this.data_dictionary[this.parameters.categorical_field_two].field_label,
                 percents_or_totals: this.parameters.percents_or_totals,
@@ -240,11 +240,85 @@
                 totalRow: totalRow,
                 totalColumn: totalColumn,
                 grandTotal: total,
+                choices_one: choices_one,
+                choices_two: choices_two,
             }
         },
     }
 </script>
 
 <style scoped>
-    
+    /* Make the table scrollable */
+    .table-container {
+        overflow-x: auto;
+    }
+
+    /* Make the row and column totals red */
+    .row-total {
+        color: red;
+    }
+
+    .column-total {
+        color: red;
+    }
+
+    .grand-total {
+        color: red;
+        font-weight: bold;
+    }
+
+    /* Add space between the first and second column */
+    .AG-cross-tab td:nth-child(2) {
+        padding-left: 20px;
+    }
+
+    /* Center the header */
+    /* Add a border around the headers */
+    .header {
+        text-align: center;
+        border: 1px solid black;
+    }
+
+    /* Add spacing between all the cells */
+    .AG-cross-tab td {
+        padding: 5px;
+    }
+
+    /* Add a border around the first column */
+    .AG-cross-tab td:first-child {
+        border-left: 1px solid black;
+        border-right: 1px solid black;
+    }
+
+    /* Add a border around the second row */
+    .AG-cross-tab tr:nth-child(2) td {
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+    }
+
+    /* Add a border around the total column cell */
+    .AG-cross-tab tr:nth-child(2) th {
+        border: 1px solid black;
+    }
+
+
+    /* Add a border around the final column */
+    .AG-cross-tab td:last-child {
+        border-right: 1px solid black;
+        border-left: 1px solid black;
+    }
+
+    /* Add a border around the final row */
+    .AG-cross-tab tr:last-child td {
+        border-bottom: 1px solid black;
+        border-top: 1px solid black;
+    }
+
+    /* Add a border around the total row cell */
+    .AG-cross-tab tr:last-child th {
+        border: 1px solid black;
+    }
+
+
+
 </style>

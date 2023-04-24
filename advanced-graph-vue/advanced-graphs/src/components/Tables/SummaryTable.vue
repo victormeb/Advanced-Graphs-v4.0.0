@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="tableContainer">
         <table>
             <tr class="header">
                 <th>
@@ -109,3 +109,48 @@
         }
     }
 </script>
+
+<style scoped>
+    /* Make the table's height 480 and width 640 and make the table scrollable */
+    .tableContainer {
+        height: 480px;
+        width: 640px;
+        overflow: auto;
+    }
+
+    /* Center the table */
+    table {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .header th {
+        border: 1px solid black;
+
+    }
+
+    /* Add a border to the first column */
+    table tr td:first-child {
+        border-left: 1px solid black;
+        border-right: 1px solid black;
+        padding-right: 10px;
+    }
+
+    /* Add a border to the last row */
+    table tr:last-child td {
+        border-bottom: 1px solid black;
+        border-top: 1px solid black;
+        font-weight: bold;
+    }
+
+    /* Add a border to the last column */
+    table tr td:last-child {
+        border-right: 1px solid black;
+    }
+
+    /* Make the last cell red */
+    table tr:last-child td:last-child {
+        color: red;
+    }
+
+</style>
