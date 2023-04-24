@@ -100,17 +100,19 @@ export default {
 
             // If na_category is 'drop', filter out the rows with missing values for the field specified by the category parameter
             if (parameters.na_category == 'drop') {
-                filteredReport = filteredReport.filter(function (d) { return d[parameters.categorical_field] != ''; });
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field_y] != ''; });
             }
 
             // If there are some NA entries for the category in the filtered report
-            if (filteredReport.some(d => d[parameters.categorical_field] == ""))
+            if (filteredReport.some(d => d[parameters.numeric_field] == ""))
                 // Add an NA category to choices
                 choices[""] = this.module.tt("na");
 
             // If we are using a numeric field and na_numeric is set to drop filter out the rows with missing values for the field specified by the numeric parameter
             if (!parameters.is_count && parameters.numeric_field != '' && parameters.na_numeric == 'drop') {
                 filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field] != ''; });
+                filteredReport = filteredReport.filter(function (d) { return d[parameters.numeric_field_y] != ''; });
             }
 
             //var barHeightFunction = function ( d) { return d[parameters.numeric_field]; };
@@ -380,9 +382,70 @@ export default {
 
                 const data = xValues.map((x, i) => ({ x, y: yValues[i] }));
 
+                //const square = d3.symbol().type(d3.symbolSquare).size(164);
+
+
+                //In Observable Plot, you can use the Plot.mark function to create custom markers for your scatterplot. To use square or triangle markers instead of circular dots, you can define a custom SVG path and use it as the shape of the markers.
+
+                // Square marker
+                //const squarePath = "M -5 -5 L 5 -5 L 5 5 L -5 5 Z";
+
+                // Triangle marker
+                //const trianglePath = "M 0 -5 L 5 5 L -5 5 Z";
+
+                let dotPlot = Plot.dot(data, {
+                    x: "x",
+                    y: "y",
+                    r: parameters.scatter_dot_size,
+                    fill: colorScale(parameters.scatter_dot_color*10)
+                });
+
+                let squarePlot = Plot.vector(data, {
+                    x: "x",
+                    y: "y",
+                    //x2: "x" ,
+                    //y2: "y"
+                    r: parameters.scatter_dot_size+1,
+                    length: parameters.scatter_dot_size+1,
+                    //d: trianglePath, //squarePath,
+                    shape: "spike", //square,
+                    anchor: "start",
+
+                    fill: colorScale(parameters.scatter_dot_color*10)
+                });
+                let squarePlot2 = Plot.vector(data, {
+                    x: "x",
+                    y: "y",
+                    //x2: "x" ,
+                    //y2: "y"
+                    r: parameters.scatter_dot_size+1,
+                    length: parameters.scatter_dot_size+1,
+                    rotate: 180,
+                    //d: trianglePath, //squarePath,
+                    shape: "spike", //square,
+                    anchor: "start",
+
+                    fill: colorScale(parameters.scatter_dot_color*10)
+                });
+
+                let trianglePlot = Plot.vector(data, {
+                    x: "x",
+                    y: "y",
+                    //x2: "x" ,
+                    //y2: "y"
+                    r: parameters.scatter_dot_size+1,
+                    length: parameters.scatter_dot_size+1,
+                    //d: trianglePath, //squarePath,
+                    shape: "spike", //square,
+                    anchor: "start",
+
+                    fill: colorScale(parameters.scatter_dot_color*10)
+                });
+
                 graph = Plot.plot({
-                    marks: [
-                        Plot.dot(data, { x: "x", y: "y", r: parameters.scatter_dot_size+1, fill: colorScale(parameters.scatter_dot_color*10) }),
+                    marks: [ (parameters.marker_type == "circle")? dotPlot :
+                        (parameters.marker_type == "square")?squarePlot:squarePlot,
+                        (parameters.marker_type == "square")?squarePlot2:trianglePlot,
                                 yAxisTitle,
                                 yAxisLabels,
                                 xAxisTitle,
