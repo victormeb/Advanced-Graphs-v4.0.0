@@ -4,7 +4,7 @@
         <div class="AG-scatter-plot-options-row">
             <div class="AG-scatter-plot-options-block">
                 <!-- Show legend -->
-                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
+<!--                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>-->
             </div>
         </div>
       <div class="AG-scatter-plot-options-row">
@@ -188,7 +188,7 @@
             const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
             const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
            
-            const show_legend = this.parameters.show_legend === true ? true : false;
+            // const show_legend = this.parameters.show_legend === true ? true : false;
 
             return {
                 x_title_size,
@@ -208,12 +208,12 @@
                 y_title_offset,
                 scatter_dot_size,
                 scatter_dot_color,
-                show_legend,
+                // show_legend,
             }
         },
         methods: {
             updateParameters() {
-                console.log('updateParameters', this.show_legend);
+                // console.log('updateParameters', this.show_legend);
                 this.$emit("updateParameters", {
                 ...this.parameters,
                 x_title_size: this.x_title_size,
@@ -231,7 +231,7 @@
                 y_title_offset: this.y_title_offset,
                 scatter_dot_size: this.scatter_dot_size,
                 scatter_dot_color: this.scatter_dot_color,
-                show_legend: this.show_legend,
+                // show_legend: this.show_legend,
                 });
             },
         },
@@ -252,7 +252,7 @@
                 this.$refs.y_title_offset.value = this.y_title_offset;
                 this.$refs.scatter_dot_size.value = this.scatter_dot_size;
                 this.$refs.scatter_dot_color.value = this.scatter_dot_color;
-                this.$refs.show_legend.checked = this.show_legend;
+                // this.$refs.show_legend.checked = this.show_legend;
             });
 
             // emit the parameters to the parent with the new values, keeping the unchanged values
