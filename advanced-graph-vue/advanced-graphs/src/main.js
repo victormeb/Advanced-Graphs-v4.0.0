@@ -1,11 +1,9 @@
-// edit-dash.js
+// main.js
 import { createApp } from 'vue';
 import DashboardEditor from './DashboardEditor.vue';
 import DashboardList from './DashboardList.vue';
 import DashboardViewer from './DashboardViewer.vue';
 import 'bootstrap/dist/css/bootstrap.min.css';
-// import { library } from '@fortawesome/fontawesome-svg-core';
-// import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 
