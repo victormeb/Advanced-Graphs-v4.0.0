@@ -10,6 +10,8 @@ import ScatterPlotForm from "@/components/ScatterPlot/ScatterPlotForm.vue";
 import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
 import TableComponent from "@/components/Tables/TableComponent.vue";
 import TableForm from "@/components/Tables/TableForm.vue";
+import Maps from "@/components/Maps/Maps.vue";
+import MapsForm from "@/components/Maps/MapsForm.vue";
 // import GroupedBarPlot from './GroupedBarPlot.vue';
 // import Table from './Table.vue';
 // import ScatterPlot from './ScatterPlot.vue';
@@ -23,4 +25,5 @@ export default {
     'scatter': {form: ScatterPlotForm, graph: ScatterPlot},
     'likert': {form: LikertGraphForm, graph: LikertGraph},
     'table': {form: TableForm, graph: TableComponent},
+    'map': {form: MapsForm, graph: Maps},
 };
