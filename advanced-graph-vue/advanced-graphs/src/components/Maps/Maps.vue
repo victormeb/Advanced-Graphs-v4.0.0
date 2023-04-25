@@ -105,6 +105,42 @@ export default {
             } else {
                 this.addDotsToMap(this.graph, processedData);
             }
+
+            // If show legend is true, add a legend to the map
+            if (this.parameters.show_legend) {
+                this.addLegendToMap(this.graph, processedData);
+            }
+        },
+        addLegendToMap(map, processedData) {
+            // Get the unique location identifiers from the processed data
+            const locationIdentifiers = [...new Set(processedData.map(row => row.identifier))];
+
+            // Get the choices for the category field if it exists
+            const categoryChoices = this.parameters.location_identifier ? parseChoicesOrCalculations(this.data_dictionary[this.parameters.location_identifier]) : null;
+
+            // Create a color scale for the dots
+            const colorScale = d3.scaleOrdinal()
+                .domain(locationIdentifiers)
+                .range(this.parameters.palette_brewer || d3.schemeCategory10);
+
+            // Create a legend
+            const legend = L.control({position: 'bottomright'});
+
+            // Add the legend to the map
+            legend.onAdd = function () {
+                const div = L.DomUtil.create('div', 'info legend');
+                const labels = [];
+
+                // loop through our density intervals and generate a label with a colored square for each interval
+                locationIdentifiers.forEach((identifier,) => {
+                    labels.push('<i class="fas fa-square" style="color:' + colorScale(identifier) + '"></i> ' + (categoryChoices ? categoryChoices[identifier] : identifier));
+                });
+
+                div.innerHTML = labels.join('<br>');
+                return div;
+            };
+
+            legend.addTo(map);
         },
         addDotsToMap(map, processedData) {
             // Get the unique location identifiers from the processed data
