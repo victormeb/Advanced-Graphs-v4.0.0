@@ -12,6 +12,8 @@ import TableComponent from "@/components/Tables/TableComponent.vue";
 import TableForm from "@/components/Tables/TableForm.vue";
 import Maps from "@/components/Maps/Maps.vue";
 import MapsForm from "@/components/Maps/MapsForm.vue";
+import NetworkGraphForm from "@/components/Network/NetworkGraphForm.vue";
+import NetworkGraph from "@/components/Network/NetworkGraph.vue";
 // import GroupedBarPlot from './GroupedBarPlot.vue';
 // import Table from './Table.vue';
 // import ScatterPlot from './ScatterPlot.vue';
@@ -26,4 +28,5 @@ export default {
     'likert': {form: LikertGraphForm, graph: LikertGraph},
     'table': {form: TableForm, graph: TableComponent},
     'map': {form: MapsForm, graph: Maps},
+    'network': {form: NetworkGraphForm, graph: NetworkGraph},
 };

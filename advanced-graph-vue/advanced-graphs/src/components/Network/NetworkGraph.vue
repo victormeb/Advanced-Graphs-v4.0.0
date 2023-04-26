@@ -26,15 +26,15 @@ import * as d3 from 'd3';
 // import {parseChoicesOrCalculations, isCheckboxField, getCheckboxReport, getFieldLabel, wrapString, truncateString} from '@/utils';
 import {parseChoicesOrCalculations, getFieldLabel} from '@/utils';
 // import {parseChoicesOrCalculations} from '@/utils';
-import ScatterPlotOptions from './ScatterPlotOptions.vue';
+import NetworkGraphOptions from './NetworkGraphOptions.vue';
 
 import { markRaw } from 'vue';
 //import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
 
 export default {
-    name: 'ScatterPlot',
+    name: 'NetworkGraph',
     components: {
-        ScatterPlotOptions,
+        NetworkGraphOptions,
     },
     inject: ['module', 'data_dictionary', 'report'],
     props: {
@@ -58,7 +58,7 @@ export default {
     mounted() {
         try {
             if (( this.parameters.graph_type == 'scatter') || (this.parameters.graph_type == 'network')) {
-                this.moreOptionsComponent = markRaw(ScatterPlotOptions);
+                this.moreOptionsComponent = markRaw(NetworkGraphOptions);
             }
 
             // wait until the moreOptionsComponent updates the parameters before updating the graph
@@ -217,8 +217,264 @@ export default {
 
             // If the graph type is bar
             if (parameters.graph_type == 'network') {
-                // Return an empty div
-                return document.createElement('div');
+
+                //
+                // // Create x axis labels
+                // const xAxisLabels = Plot.axisX( {
+                //     //domain: domain,
+                //     type: 'band',
+                //     // tickFormat: x_tick_format,
+                //     tickRotate:  x_rotate,
+                //     fontSize: x_label_size,
+                // });
+                //
+                // // Create x axis title
+                // const xAxisTitle = Plot.axisX({
+                //     //domain: domain,
+                //     type: 'band',
+                //     label:  getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                //     labelOffset: x_title_offset,
+                //     ticks: null,
+                //     tickFormat: null,
+                //     fontSize: x_title_size
+                // });
+                //
+                // // Create y axis labels
+                // const yAxisLabels = Plot.axisY({
+                //     label: null,
+                //     // tickFormat: y_tick_format,
+                //     tickRotate: y_rotate,
+                //     fontSize: y_label_size
+                // });
+                //
+                // // Create y axis title
+                // const yAxisTitle = Plot.axisY({
+                //     label: y_title,
+                //     labelAnchor: 'center',
+                //     labelOffset: y_title_offset,
+                //     fontSize: y_title_size,
+                //     tick: null,
+                //     tickFormat: () => ''
+                // });
+
+                // if (xValues.length !== yValues.length) {
+                //     throw new Error("xValues and yValues must have the same length.");
+                // }
+
+                // const data = xValues.map((x, i) => ({ x, y: yValues[i] }));
+
+                //const square = d3.symbol().type(d3.symbolSquare).size(164);
+
+
+                //In Observable Plot, you can use the Plot.mark function to create custom markers for your scatterplot. To use square or triangle markers instead of circular dots, you can define a custom SVG path and use it as the shape of the markers.
+
+                // Square marker
+                //const squarePath = "M -5 -5 L 5 -5 L 5 5 L -5 5 Z";
+
+                // Triangle marker
+                //const trianglePath = "M 0 -5 L 5 5 L -5 5 Z";
+
+                // let dotPlot = Plot.dot(data, {
+                //     x: "x",
+                //     y: "y",
+                //     r: parameters.scatter_dot_size,
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+                //
+                // let squarePlot = Plot.vector(data, {
+                //     x: "x",
+                //     y: "y",
+                //     //x2: "x" ,
+                //     //y2: "y"
+                //     r: parameters.scatter_dot_size+1,
+                //     length: parameters.scatter_dot_size+1,
+                //     //d: trianglePath, //squarePath,
+                //     shape: "spike", //square,
+                //     anchor: "start",
+                //
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+                // let squarePlot2 = Plot.vector(data, {
+                //     x: "x",
+                //     y: "y",
+                //     //x2: "x" ,
+                //     //y2: "y"
+                //     r: parameters.scatter_dot_size+1,
+                //     length: parameters.scatter_dot_size+1,
+                //     rotate: 180,
+                //     //d: trianglePath, //squarePath,
+                //     shape: "spike", //square,
+                //     anchor: "start",
+                //
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+                //
+                // let trianglePlot = Plot.vector(data, {
+                //     x: "x",
+                //     y: "y",
+                //     //x2: "x" ,
+                //     //y2: "y"
+                //     r: parameters.scatter_dot_size+1,
+                //     length: parameters.scatter_dot_size+1,
+                //     //d: trianglePath, //squarePath,
+                //     shape: "spike", //square,
+                //     anchor: "start",
+                //
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+
+                // graph = Plot.plot({
+                //     marks: [ (parameters.marker_type == "circle")? dotPlot :
+                //         (parameters.marker_type == "square")?squarePlot:squarePlot,
+                //         (parameters.marker_type == "square")?squarePlot2:trianglePlot,
+                //         yAxisTitle,
+                //         yAxisLabels,
+                //         xAxisTitle,
+                //         xAxisLabels,
+                //     ],
+                //     marginBottom: bottom_margin,
+                //     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
+                //     x: {
+                //         label: '',
+                //     },
+                //     //     label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                //     //     fontSize: x_title_size
+                //     // },
+                //     // y: {
+                //     //     label: ,
+                //     // },
+                // });
+
+                // const width = 600;
+                // const height = 400;
+                // const nodes = Array.from(new Set(data.flatMap(d => [d[x], d[y]]))).map(name => ({name}));
+                // const links = data.map(d => ({source: d[x], target: d[y]}));
+
+                // const forceSimulation = d3.forceSimulation(nodes)
+                //     .force("link", d3.forceLink(links).id(d => d.name).distance(50))
+                //     .force("charge", d3.forceManyBody().strength(-200))
+                //     .force("center", d3.forceCenter())
+                //     .stop();
+
+                // // Run the force simulation for a specified number of iterations
+                // const numIterations = 300;
+                // for (let i = 0; i < numIterations; ++i) {
+                //     forceSimulation.tick();
+                // }
+
+                // const xScale = d3.scaleLinear()
+                //     .domain(d3.extent(nodes, d => d.x))
+                //     .range([0, width]);
+
+                // const yScale = d3.scaleLinear()
+                //     .domain(d3.extent(nodes, d => d.y))
+                //     .range([0, height]);
+
+                // const nodeColor = "cadetblue";
+                // const linkColor = "black";
+
+                // const graph = Plot.plot({
+                //     width,
+                //     height,
+                //     marks: [
+                //         Plot.ruleY(links, {x1: d => xScale(d.source.x), x2: d => xScale(d.target.x), y: d => yScale(d.source.y), stroke: linkColor}),
+                //         Plot.dot(nodes, {x: d => xScale(d.x), y: d => yScale(d.y), fill: nodeColor})
+                //     ]
+                // });
+
+
+                // // return scatterplot;
+                // return graph;
+
+                // Create x axis labels
+                // const xAxisLabels = Plot.axisX(domain, {
+                //     //domain: domain,
+                //     type: 'band',
+                //     tickFormat: x_tick_format,
+                //     tickRotate:  x_rotate,
+                //     fontSize: x_label_size,
+                // });
+                //
+                // // Create x axis title
+                // const xAxisTitle = Plot.axisX({
+                //     //domain: domain,
+                //     type: 'band',
+                //     label:  getFieldLabel(this.data_dictionary[parameters.categorical_field]),
+                //     labelOffset: x_title_offset,
+                //     ticks: null,
+                //     tickFormat: null,
+                //     fontSize: x_title_size
+                // });
+                //
+                // // Create y axis labels
+                // const yAxisLabels = Plot.axisY({
+                //     label: null,
+                //     tickFormat: y_tick_format,
+                //     tickRotate: y_rotate,
+                //     fontSize: y_label_size
+                // });
+                //
+                // // Create y axis title
+                // const yAxisTitle = Plot.axisY({
+                //     label: y_title,
+                //     labelAnchor: 'center',
+                //     labelOffset: y_title_offset,
+                //     fontSize: y_title_size,
+                //     tick: null,
+                //     tickFormat: () => ''
+                // });
+                //
+                // // Create a bar chart
+                // const bars = Plot.barY(barHeights, {
+                //     domain: domain,
+                //     x: d => d.key,
+                //     y: 'value',
+                //     fill: d=>colorScale(d.key)
+                // });
+                //
+                // Create bar labels
+                // const barLabels = Plot.text(barHeights, {
+                //     x: d => d.key,
+                //     y: d => d.value,
+                //     dx: 0,
+                //     dy: -bar_label_position, // Adjust the vertical position of the labels relative to the bars
+                //     textAnchor: "middle",
+                //     fontSize: bar_label_size, // Set the font size for the bar labels
+                //     text: d => y_tick_format(d.value)
+                // });
+                //
+                // graph = Plot.plot({
+                //     width: 640,
+                //     height: 480,
+                //     x: {
+                //         domain: domain,
+                //         type: 'band'
+                //     },
+                //     y: {
+                //         type: 'linear'
+                //     },
+                //     color: {
+                //         type: 'categorical',
+                //         domain: domain.map(d => choices[d]),
+                //         range: domain.map(d => colorScale(d)),
+                //         title: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
+                //         format: x_tick_format,
+                //         legend: show_legend
+                //     },
+                //     marks: [
+                //         yAxisTitle,
+                //         yAxisLabels,
+                //         xAxisTitle,
+                //         xAxisLabels,
+                //         bars,
+                //         barLabels,
+                //         // legend
+                //     ],
+                //     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
+                //     marginBottom: bottom_margin
+                // });
+                //
+                // return graph;
             } else if (parameters.graph_type == 'scatter') {
                 // const label_spacing = parameters.label_spacing ? Number(parameters.label_spacing) : 0.1;
                 // const label_size = parameters.label_size ? Number(parameters.label_size) : 10;
