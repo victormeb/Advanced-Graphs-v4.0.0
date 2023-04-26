@@ -9,7 +9,7 @@
         <GraphTypeSelector 
         :currentGraphType="currentGraphType"
         :availableGraphTypes="availableGraphTypes"
-        @graphTypeChange="createGraphFormFromSelectedGraphType" />
+        @graphTypeChange="graphTypeChange" />
         <button class="btn btn-primary" @click="$emit('moveCellRight')">
           <i class="fa fa-arrow-right" aria-hidden="true"></i>
         </button>
@@ -99,6 +99,11 @@
       },
     },
     methods: {
+      graphTypeChange(graphType) {
+        this.updateCellData({});
+
+        this.createGraphFormFromSelectedGraphType(graphType);
+      },
       createGraphFormFromSelectedGraphType(graphType) {
         // Implementation for creating the graph form from the selected graph type
         if (!graphType) {

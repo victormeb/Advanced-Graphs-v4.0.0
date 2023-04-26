@@ -110,7 +110,7 @@
                 filteredReport = filteredReport.filter(function (d) { return d[this.parameters.numeric_field] != ''; }.bind(this));
             }
 
-            var barHeightFunction = function (d) { return d[this.parameters.numeric_field]; };
+            var barHeightFunction = function (d) { return d[this.parameters.numeric_field]; }.bind(this);
 
             // If we are using a numeric field and na_numeric is set to replace, set the bar height function to use the na_numeric_value parameter
             if (!this.parameters.is_count && this.parameters.numeric_field != '' && this.parameters.na_numeric == 'replace') {
@@ -226,7 +226,6 @@
             } else if (row_column_or_table == 'column') {
                 attributeType = 'columnPercent';
             }
-
 
             return {
                 tableData: tableData,
