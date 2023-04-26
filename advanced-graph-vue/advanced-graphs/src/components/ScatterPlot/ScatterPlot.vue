@@ -57,9 +57,10 @@ export default {
     },
     mounted() {
         try {
-            if (( this.parameters.graph_type == 'scatter') || (this.parameters.graph_type == 'network')) {
-                this.moreOptionsComponent = markRaw(ScatterPlotOptions);
-            }
+            // if (( this.parameters.graph_type == 'scatter') || (this.parameters.graph_type == 'network')) {
+            // }
+
+            this.moreOptionsComponent = markRaw(ScatterPlotOptions);
 
             // wait until the moreOptionsComponent updates the parameters before updating the graph
             this.$nextTick(() => {
