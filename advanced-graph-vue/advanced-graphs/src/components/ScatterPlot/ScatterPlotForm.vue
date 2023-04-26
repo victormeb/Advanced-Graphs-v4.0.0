@@ -23,9 +23,9 @@
                       <radio-component
                               v-model="formData.graph_type"
                               :name="'graph_type'"
-                              :values="['scatter']"
+                              :values="['scatter','network']"
                               :defaultValue="'scatter'"
-                              :labels="[module.tt('scatter')]"
+                              :labels="[module.tt('scatter','network')]"
                       ></radio-component>
                   </helpful-parameter>
               <!-- Description -->

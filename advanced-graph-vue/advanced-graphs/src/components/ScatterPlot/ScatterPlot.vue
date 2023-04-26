@@ -57,7 +57,7 @@ export default {
     },
     mounted() {
         try {
-            if (this.parameters.graph_type == 'scatter') {
+            if (( this.parameters.graph_type == 'scatter') || (this.parameters.graph_type == 'network')) {
                 this.moreOptionsComponent = markRaw(ScatterPlotOptions);
             }
 
@@ -217,7 +217,174 @@ export default {
 
             // If the graph type is bar
             if (parameters.graph_type == 'network') {
-                
+
+                //
+                // // Create x axis labels
+                // const xAxisLabels = Plot.axisX( {
+                //     //domain: domain,
+                //     type: 'band',
+                //     // tickFormat: x_tick_format,
+                //     tickRotate:  x_rotate,
+                //     fontSize: x_label_size,
+                // });
+                //
+                // // Create x axis title
+                // const xAxisTitle = Plot.axisX({
+                //     //domain: domain,
+                //     type: 'band',
+                //     label:  getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                //     labelOffset: x_title_offset,
+                //     ticks: null,
+                //     tickFormat: null,
+                //     fontSize: x_title_size
+                // });
+                //
+                // // Create y axis labels
+                // const yAxisLabels = Plot.axisY({
+                //     label: null,
+                //     // tickFormat: y_tick_format,
+                //     tickRotate: y_rotate,
+                //     fontSize: y_label_size
+                // });
+                //
+                // // Create y axis title
+                // const yAxisTitle = Plot.axisY({
+                //     label: y_title,
+                //     labelAnchor: 'center',
+                //     labelOffset: y_title_offset,
+                //     fontSize: y_title_size,
+                //     tick: null,
+                //     tickFormat: () => ''
+                // });
+
+                if (xValues.length !== yValues.length) {
+                    throw new Error("xValues and yValues must have the same length.");
+                }
+
+                const data = xValues.map((x, i) => ({ x, y: yValues[i] }));
+
+                //const square = d3.symbol().type(d3.symbolSquare).size(164);
+
+
+                //In Observable Plot, you can use the Plot.mark function to create custom markers for your scatterplot. To use square or triangle markers instead of circular dots, you can define a custom SVG path and use it as the shape of the markers.
+
+                // Square marker
+                //const squarePath = "M -5 -5 L 5 -5 L 5 5 L -5 5 Z";
+
+                // Triangle marker
+                //const trianglePath = "M 0 -5 L 5 5 L -5 5 Z";
+
+                // let dotPlot = Plot.dot(data, {
+                //     x: "x",
+                //     y: "y",
+                //     r: parameters.scatter_dot_size,
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+                //
+                // let squarePlot = Plot.vector(data, {
+                //     x: "x",
+                //     y: "y",
+                //     //x2: "x" ,
+                //     //y2: "y"
+                //     r: parameters.scatter_dot_size+1,
+                //     length: parameters.scatter_dot_size+1,
+                //     //d: trianglePath, //squarePath,
+                //     shape: "spike", //square,
+                //     anchor: "start",
+                //
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+                // let squarePlot2 = Plot.vector(data, {
+                //     x: "x",
+                //     y: "y",
+                //     //x2: "x" ,
+                //     //y2: "y"
+                //     r: parameters.scatter_dot_size+1,
+                //     length: parameters.scatter_dot_size+1,
+                //     rotate: 180,
+                //     //d: trianglePath, //squarePath,
+                //     shape: "spike", //square,
+                //     anchor: "start",
+                //
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+                //
+                // let trianglePlot = Plot.vector(data, {
+                //     x: "x",
+                //     y: "y",
+                //     //x2: "x" ,
+                //     //y2: "y"
+                //     r: parameters.scatter_dot_size+1,
+                //     length: parameters.scatter_dot_size+1,
+                //     //d: trianglePath, //squarePath,
+                //     shape: "spike", //square,
+                //     anchor: "start",
+                //
+                //     fill: colorScale(parameters.scatter_dot_color*10)
+                // });
+
+                // graph = Plot.plot({
+                //     marks: [ (parameters.marker_type == "circle")? dotPlot :
+                //         (parameters.marker_type == "square")?squarePlot:squarePlot,
+                //         (parameters.marker_type == "square")?squarePlot2:trianglePlot,
+                //         yAxisTitle,
+                //         yAxisLabels,
+                //         xAxisTitle,
+                //         xAxisLabels,
+                //     ],
+                //     marginBottom: bottom_margin,
+                //     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
+                //     x: {
+                //         label: '',
+                //     },
+                //     //     label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                //     //     fontSize: x_title_size
+                //     // },
+                //     // y: {
+                //     //     label: ,
+                //     // },
+                // });
+
+                const width = 600;
+                const height = 400;
+                const nodes = Array.from(new Set(data.flatMap(d => [d[x], d[y]]))).map(name => ({name}));
+                const links = data.map(d => ({source: d[x], target: d[y]}));
+
+                const forceSimulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(links).id(d => d.name).distance(50))
+                    .force("charge", d3.forceManyBody().strength(-200))
+                    .force("center", d3.forceCenter())
+                    .stop();
+
+                // Run the force simulation for a specified number of iterations
+                const numIterations = 300;
+                for (let i = 0; i < numIterations; ++i) {
+                    forceSimulation.tick();
+                }
+
+                const xScale = d3.scaleLinear()
+                    .domain(d3.extent(nodes, d => d.x))
+                    .range([0, width]);
+
+                const yScale = d3.scaleLinear()
+                    .domain(d3.extent(nodes, d => d.y))
+                    .range([0, height]);
+
+                const nodeColor = "cadetblue";
+                const linkColor = "black";
+
+                const graph = Plot.plot({
+                    width,
+                    height,
+                    marks: [
+                        Plot.ruleY(links, {x1: d => xScale(d.source.x), x2: d => xScale(d.target.x), y: d => yScale(d.source.y), stroke: linkColor}),
+                        Plot.dot(nodes, {x: d => xScale(d.x), y: d => yScale(d.y), fill: nodeColor})
+                    ]
+                });
+
+
+                // return scatterplot;
+                return graph;
 
                 // Create x axis labels
                 // const xAxisLabels = Plot.axisX(domain, {
