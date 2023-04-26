@@ -214,176 +214,128 @@ export default {
             const y_title =  getFieldLabel(this.data_dictionary[parameters.numeric_field_y]);  // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
 
             var graph = null;
+        
+            const xAxisLabels = Plot.axisX( {
+                //domain: domain,
+                type: 'band',
+                // tickFormat: x_tick_format,
+                tickRotate:  x_rotate,
+                fontSize: x_label_size,
+            });
 
-            // If the graph type is bar
-            if (parameters.graph_type == 'network') {
-                // Return an empty div
-                return document.createElement('div');
-            } else if (parameters.graph_type == 'scatter') {
-                // const label_spacing = parameters.label_spacing ? Number(parameters.label_spacing) : 0.1;
-                // const label_size = parameters.label_size ? Number(parameters.label_size) : 10;
-                // const value_size = parameters.value_size ? Number(parameters.value_size) : 10;
-                // const value_precision = parameters.value_precision ? parameters.value_precision : '1';
-                // const seperation_force = parameters.seperation_force ? Number(parameters.seperation_force) : 28;
-                // const seperation_strength = parameters.seperation_strength ? Number(parameters.seperation_strength) : 1.1;
-                // const seperation_iterations = parameters.seperation_iterations ? Number(parameters.seperation_iterations) : 50;
-                // Create a pie chart
-                // graph = this.Scatterplot(xValues,yValues); //, {
-                    // width: 640,
-                    // height: 480,
-                    // innerRadius: 0,
-                    // outerRadius: Math.min(640, 400) / 2,
-                    // title: d => x_tick_format(d.key) + '\n' + d.value,
-                    // value: d => d.value,
-                    // name: d => choices[d.key],
-                    // displayLegend: show_legend,
-                    // categoryName: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
-                    // numericName: y_title,
-                    // colors: colorScale,
-                    // spacing: label_spacing,
-                    // labelFont: label_size,
-                    // valueFont: value_size,
-                    // precision: value_precision + '',
-                    // separationForce: seperation_force,
-                    // separationStrength: seperation_strength,
-                    // separationIterations: seperation_iterations
-                // });
+            // Create x axis title
+            const xAxisTitle = Plot.axisX({
+                //domain: domain,
+                type: 'band',
+                label:  getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                labelOffset: x_title_offset,
+                ticks: null,
+                tickFormat: null,
+                fontSize: x_title_size
+            });
 
-                // Create x axis labels
-                const xAxisLabels = Plot.axisX( {
-                    //domain: domain,
-                    type: 'band',
-                    // tickFormat: x_tick_format,
-                    tickRotate:  x_rotate,
-                    fontSize: x_label_size,
-                });
+            // Create y axis labels
+            const yAxisLabels = Plot.axisY({
+                label: null,
+                // tickFormat: y_tick_format,
+                tickRotate: y_rotate,
+                fontSize: y_label_size
+            });
 
-                // Create x axis title
-                const xAxisTitle = Plot.axisX({
-                    //domain: domain,
-                    type: 'band',
-                    label:  getFieldLabel(this.data_dictionary[parameters.numeric_field]),
-                    labelOffset: x_title_offset,
-                    ticks: null,
-                    tickFormat: null,
-                    fontSize: x_title_size
-                });
+            // Create y axis title
+            const yAxisTitle = Plot.axisY({
+                label: y_title,
+                labelAnchor: 'center',
+                labelOffset: y_title_offset,
+                fontSize: y_title_size,
+                tick: null,
+                tickFormat: () => ''
+            });
 
-                // Create y axis labels
-                const yAxisLabels = Plot.axisY({
-                    label: null,
-                    // tickFormat: y_tick_format,
-                    tickRotate: y_rotate,
-                    fontSize: y_label_size
-                });
-
-                // Create y axis title
-                const yAxisTitle = Plot.axisY({
-                    label: y_title,
-                    labelAnchor: 'center',
-                    labelOffset: y_title_offset,
-                    fontSize: y_title_size,
-                    tick: null,
-                    tickFormat: () => ''
-                });
-
-                if (xValues.length !== yValues.length) {
-                    throw new Error("xValues and yValues must have the same length.");
-                }
-
-                const data = xValues.map((x, i) => ({ x, y: yValues[i] }));
-
-                //const square = d3.symbol().type(d3.symbolSquare).size(164);
-
-
-                //In Observable Plot, you can use the Plot.mark function to create custom markers for your scatterplot. To use square or triangle markers instead of circular dots, you can define a custom SVG path and use it as the shape of the markers.
-
-                // Square marker
-                //const squarePath = "M -5 -5 L 5 -5 L 5 5 L -5 5 Z";
-
-                // Triangle marker
-                //const trianglePath = "M 0 -5 L 5 5 L -5 5 Z";
-
-                let dotPlot = Plot.dot(data, {
-                    x: "x",
-                    y: "y",
-                    r: parameters.scatter_dot_size,
-                    fill: colorScale(parameters.scatter_dot_color*10)
-                });
-
-                let squarePlot = Plot.vector(data, {
-                    x: "x",
-                    y: "y",
-                    //x2: "x" ,
-                    //y2: "y"
-                    r: parameters.scatter_dot_size+1,
-                    length: parameters.scatter_dot_size+1,
-                    //d: trianglePath, //squarePath,
-                    shape: "spike", //square,
-                    anchor: "start",
-
-                    fill: colorScale(parameters.scatter_dot_color*10)
-                });
-                let squarePlot2 = Plot.vector(data, {
-                    x: "x",
-                    y: "y",
-                    //x2: "x" ,
-                    //y2: "y"
-                    r: parameters.scatter_dot_size+1,
-                    length: parameters.scatter_dot_size+1,
-                    rotate: 180,
-                    //d: trianglePath, //squarePath,
-                    shape: "spike", //square,
-                    anchor: "start",
-
-                    fill: colorScale(parameters.scatter_dot_color*10)
-                });
-
-                let trianglePlot = Plot.vector(data, {
-                    x: "x",
-                    y: "y",
-                    //x2: "x" ,
-                    //y2: "y"
-                    r: parameters.scatter_dot_size+1,
-                    length: parameters.scatter_dot_size+1,
-                    //d: trianglePath, //squarePath,
-                    shape: "spike", //square,
-                    anchor: "start",
-
-                    fill: colorScale(parameters.scatter_dot_color*10)
-                });
-
-                graph = Plot.plot({
-                    marks: [ (parameters.marker_type == "circle")? dotPlot :
-                        (parameters.marker_type == "square")?squarePlot:squarePlot,
-                        (parameters.marker_type == "square")?squarePlot2:trianglePlot,
-                                yAxisTitle,
-                                yAxisLabels,
-                                xAxisTitle,
-                                xAxisLabels,
-                    ],
-                        marginBottom: bottom_margin,
-                        marginLeft: parameters.left_margin ? parameters.left_margin : 80,
-                    x: {
-                        label: '',
-                    },
-                    //     label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
-                    //     fontSize: x_title_size
-                    // },
-                    // y: {
-                    //     label: ,
-                    // },
-                });
-
-                // return scatterplot;
-                return graph;
-
+            if (xValues.length !== yValues.length) {
+                throw new Error("xValues and yValues must have the same length.");
             }
 
-            // Return a paragraph tag element with the error message
-            var errorDiv = document.createElement('p');
-            errorDiv.innerHTML = this.module.tt('Scatterplots are not supported in this version of the module.'+xValues.length+','+yValues.length+','+parameters.graph_type,colorScale);
-            return errorDiv;
+            const data = xValues.map((x, i) => ({ x, y: yValues[i] }));
+
+            //const square = d3.symbol().type(d3.symbolSquare).size(164);
+
+
+            //In Observable Plot, you can use the Plot.mark function to create custom markers for your scatterplot. To use square or triangle markers instead of circular dots, you can define a custom SVG path and use it as the shape of the markers.
+
+            // Square marker
+            //const squarePath = "M -5 -5 L 5 -5 L 5 5 L -5 5 Z";
+
+            // Triangle marker
+            //const trianglePath = "M 0 -5 L 5 5 L -5 5 Z";
+
+            let dotPlot = Plot.dot(data, {
+                x: "x",
+                y: "y",
+                r: parameters.scatter_dot_size,
+                fill: colorScale(parameters.scatter_dot_color*10)
+            });
+
+            let squarePlot = Plot.vector(data, {
+                x: "x",
+                y: "y",
+                //x2: "x" ,
+                //y2: "y"
+                r: parameters.scatter_dot_size+1,
+                length: parameters.scatter_dot_size+1,
+                //d: trianglePath, //squarePath,
+                shape: "spike", //square,
+                anchor: "start",
+
+                fill: colorScale(parameters.scatter_dot_color*10)
+            });
+            let squarePlot2 = Plot.vector(data, {
+                x: "x",
+                y: "y",
+                //x2: "x" ,
+                //y2: "y"
+                r: parameters.scatter_dot_size+1,
+                length: parameters.scatter_dot_size+1,
+                rotate: 180,
+                //d: trianglePath, //squarePath,
+                shape: "spike", //square,
+                anchor: "start",
+
+                fill: colorScale(parameters.scatter_dot_color*10)
+            });
+
+            let trianglePlot = Plot.vector(data, {
+                x: "x",
+                y: "y",
+                //x2: "x" ,
+                //y2: "y"
+                r: parameters.scatter_dot_size+1,
+                length: parameters.scatter_dot_size+1,
+                //d: trianglePath, //squarePath,
+                shape: "spike", //square,
+                anchor: "start",
+
+                fill: colorScale(parameters.scatter_dot_color*10)
+            });
+
+            graph = Plot.plot({
+                marks: [ (parameters.marker_type == "circle")? dotPlot :
+                    (parameters.marker_type == "square")?squarePlot:squarePlot,
+                    (parameters.marker_type == "square")?squarePlot2:trianglePlot,
+                            yAxisTitle,
+                            yAxisLabels,
+                            xAxisTitle,
+                            xAxisLabels,
+                ],
+                    marginBottom: bottom_margin,
+                    marginLeft: parameters.left_margin ? parameters.left_margin : 80,
+                x: {
+                    label: '',
+                },
+            });
+
+            // return scatterplot;
+            return graph;
         },
 
         Scatterplot(xValues, yValues) {

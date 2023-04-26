@@ -96,6 +96,10 @@ export function isNumericField(field) {
         || field['field_type'] == 'calc');
 }
 
+export function isTextField(field) {
+    return field.field_type == 'text';
+}
+
 
 export function instrumentCanCreate(instrument, validationFunction) {
     return validationFunction(instrument);
@@ -111,6 +115,10 @@ export function getCheckboxFields(fields) {
 
 export function getNumericFields(fields) {
     return fields.filter(isNumericField);
+}
+
+export function getTextFields(fields) {
+    return fields.filter(isTextField);
 }
 
 export function getCoordinateFields(fields) {
