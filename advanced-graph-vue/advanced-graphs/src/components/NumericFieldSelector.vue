@@ -7,7 +7,7 @@
                 :key="index" 
                 :value="field.field_name" 
                 :selected="currentField==field">
-                    {{ field.field_label }}
+                    {{ stripHtml(field.field_label) }}
             </option>
             <optgroup :label="module.tt('count')">
                 <option
@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { getNumericFields } from '../utils.js'
+import { getNumericFields, stripHtml } from '../utils.js'
 
 export default {
     name: 'CategoricalFieldSelector',
@@ -40,6 +40,7 @@ export default {
     data() {
         return {
             currentField: this.modelValue,
+            stripHtml,
         };
     },
     computed: {

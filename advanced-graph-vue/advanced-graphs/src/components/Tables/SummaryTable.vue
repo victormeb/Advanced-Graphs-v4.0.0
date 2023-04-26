@@ -95,7 +95,7 @@
             }
 
             // Add a total row to the counts array that takes the sum of the counts
-            countsArray.push({ category: this.module.tt("total"), count: d3.sum(countsArray, d => d.count), percent: 1 });
+            countsArray.push({ category: this.module.tt("table_total"), count: d3.sum(countsArray, d => d.count), percent: 1 });
 
 
 

@@ -113,6 +113,36 @@ export function getNumericFields(fields) {
     return fields.filter(isNumericField);
 }
 
+export function getCoordinateFields(fields) {
+    const longitude_keywords = ['longitude', 'longitud', 'Longitude', 'Longitud'];
+    const latitude_keywords = ['latitude', 'latitud', 'Latitude', 'Latitud'];
+
+    var coordinate_fields = {};
+
+    for (var i = 0; i < fields.length; i++) {
+        var field = fields[i];
+
+        var is_longitude = longitude_keywords.some(v => field.field_name.includes(v));
+
+        if (is_longitude) {
+            var stripped_name = field.field_name.replace(longitude_keywords.find(v => field.field_name.includes(v)), '');
+
+            var matching_latitude_field = fields.find(v => v.field_name.includes(stripped_name) && latitude_keywords.some(b => v.field_name.includes(b)));
+
+            if (!matching_latitude_field) {
+                continue;
+            }
+
+            coordinate_fields[stripped_name] = {
+                'longitude': field,
+                'latitude': matching_latitude_field
+            };
+        }
+    }
+
+    return coordinate_fields;
+}
+
 // A function that takes a checkbox field name and returns a report that has been transformed into a longer format
 export function getCheckboxReport(report, checkbox_field) {
     // If the field is not a checkbox field, return the report

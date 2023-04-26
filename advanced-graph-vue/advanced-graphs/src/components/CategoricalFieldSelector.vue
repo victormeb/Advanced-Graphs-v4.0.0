@@ -7,14 +7,14 @@
                 :key="index" 
                 :value="field.field_name" 
                 :selected="currentField==field">
-                    {{ field.field_label }}
+                    {{ stripHtml(field.field_label) }}
             </option>
             <optgroup v-if="checkboxFields.length" :label="module.tt('checkbox')">
                 <option v-for="(field, index) in checkboxFields" 
                 :key="index" 
                 :value="field.field_name" 
                 :selected="currentField==field">
-                    {{ field.field_label }}
+                    {{ stripHtml(field.field_label) }}
                 </option>
             </optgroup>
 
@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import { getRadioFields, getCheckboxFields } from '../utils.js'
+import { getRadioFields, getCheckboxFields, stripHtml } from '../utils.js'
 
 export default {
     name: 'CategoricalFieldSelector',
@@ -41,6 +41,7 @@ export default {
     data() {
         return {
             currentField: this.modelValue,
+            stripHtml,
         };
     },
     computed: {
