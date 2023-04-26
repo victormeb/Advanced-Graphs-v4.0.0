@@ -216,7 +216,7 @@ export default {
             var graph = null;
 
             // If the graph type is bar
-            if (parameters.graph_type == 'network') {
+            // if (parameters.graph_type == 'network') {
 
                 //
                 // // Create x axis labels
@@ -475,7 +475,7 @@ export default {
                 // });
                 //
                 // return graph;
-            } else if (parameters.graph_type == 'scatter') {
+            // } else if (parameters.graph_type == 'scatter') {
                 // const label_spacing = parameters.label_spacing ? Number(parameters.label_spacing) : 0.1;
                 // const label_size = parameters.label_size ? Number(parameters.label_size) : 10;
                 // const value_size = parameters.value_size ? Number(parameters.value_size) : 10;
@@ -632,8 +632,11 @@ export default {
                 });
 
                 // return scatterplot;
-                return graph;
 
+            // }
+
+            if (graph) {
+                return graph;
             }
 
             // Return a paragraph tag element with the error message
