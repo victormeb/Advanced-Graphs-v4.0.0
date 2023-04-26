@@ -113,16 +113,15 @@
       isFormReady() {
         // console.log('formData', this.formData);
         const instrument_selected = (typeof this.formData.instrument !== 'undefined') && this.formData.instrument !== null;
-        const graph_type_selected = (typeof this.formData.graph_type !== 'undefined') && this.formData.graph_type !== null;
         // const categorical_field_selected = (typeof this.formData.categorical_field !== 'undefined') && this.formData.categorical_field !== null;
-          const numeric_field_selected = (typeof this.formData.numeric_field !== 'undefined') && this.formData.numeric_field !== null;
-          const numeric_field_y_selected = (typeof this.formData.numeric_field_y !== 'undefined') && this.formData.numeric_field_y !== null;
+        const numeric_field_selected = (typeof this.formData.numeric_field !== 'undefined') && this.formData.numeric_field !== null;
+        const numeric_field_y_selected = (typeof this.formData.numeric_field_y !== 'undefined') && this.formData.numeric_field_y !== null;
         //  const na_category_selected = (typeof this.formData.na_category !== 'undefined') && this.formData.na_category !== null;
         // const unused_categories_selected = (typeof this.formData.unused_categories !== undefined) && this.formData.unused_categories !== null;
         // const aggregation_function_selected = (typeof this.formData.aggregation_function !== 'undefined') && this.formData.aggregation_function !== null;
         // console.log('isFormReady', instrument_selected, graph_type_selected, categorical_field_selected, numeric_field_selected, na_category_selected, 'unused', unused_categories_selected, 'agg', aggregation_function_selected);
         // If any of the required fields are not selected, return false
-        if (!instrument_selected || !graph_type_selected || !numeric_field_selected || !numeric_field_y_selected ) { //|| !unused_categories_selected) {
+        if (!instrument_selected || !numeric_field_selected || !numeric_field_y_selected ) {
           return false;
         }
 
