@@ -4,7 +4,6 @@ namespace VIHA\AdvancedGraphsInteractive;
 use \REDCap as REDCap;
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
-use Logging; 
 
 class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 {
@@ -639,22 +638,6 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		$q = $this->query($sql, []);
 		$report_id = $q->fetch_assoc()['report_id'];
 		return $report_id;
-	}
-
-	public function resetCache($pid, $dash_id, $doLogging=true)
-	{
-		$dash_id = (int)$dash_id;
-		$sql = "update $dashboard_table_name set cache_time = null, cache_content = null
-                where dash_id = $dash_id and project_id = ".$pid;
-		if ($this->query($sql, [])) {
-			// Logging
-			if ($doLogging) {
-			    Logging::logEvent($sql, "$dashboard_table_name", "MANAGE", $dash_id, "dash_id = $dash_id", "Reset cached snapshot for advanced graph dashboard" . " - \"".$this->getDashboardName($dash_id)."\"");
-			}
-			// Return success
-			return true;
-		}
-		return false;
 	}
 
 	// Render the setup page
