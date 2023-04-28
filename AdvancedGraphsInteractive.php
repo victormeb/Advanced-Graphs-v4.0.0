@@ -647,60 +647,6 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		print "<div id='dashboard_list_parent_div' class='mt-3'>".$this->renderDashboardList()."</div>";
 	}
 
-	// // Checks for errors in the dashboard order of all dashboards (in case their numbering gets off)
-	// public function checkDashOrder()
-	// {
-	// 	// Do a quick compare of the field_order by using Arithmetic Series (not 100% reliable, but highly reliable and quick)
-	// 	// and make sure it begins with 1 and ends with field order equal to the total field count.
-	// 	$sql = "select sum(dash_order) as actual, round(count(1)*(count(1)+1)/2) as ideal,
-	// 			min(dash_order) as min, max(dash_order) as max, count(1) as dash_count
-	// 			from redcap_project_dashboards where project_id = " . PROJECT_ID;
-	// 	$q = $this->query($sql, []);
-	// 	$row = $q->fetch_assoc();
-	// 	db_free_result($q);
-	// 	if ( ($row['actual'] != $row['ideal']) || ($row['min'] != '1') || ($row['max'] != $row['dash_count']) )
-	// 	{
-	// 		return $this->fixDashOrder();
-	// 	}
-	// }
-
-	// // Fixes the dashboard order of all dashboards (if somehow their numbering gets off)
-	// public function fixDashOrder()
-	// {
-	// 	// Set all dash_orders to null
-	// 	$sql = "select @n := 0";
-	// 	$this->query($sql, []);
-	// 	// Reset field_order of all fields, beginning with "1"
-	// 	$sql = "update redcap_project_dashboards
-	// 			set dash_order = @n := @n + 1 where project_id = ".PROJECT_ID."
-	// 			order by dash_order, dash_id";
-	// 	if (!db_query($sql))
-	// 	{
-	// 	    // If unique key prevented easy fix, then do manually via looping
-	// 		$sql = "select dash_id from redcap_project_dashboards
-    //                 where project_id = ".PROJECT_ID."
-    //                 order by dash_order, dash_id";
-	// 		$q = $this->query($sql, []);
-	// 		$dash_order = 1;
-	// 		$dash_orders = array();
-	// 		while ($row = $q->fetch_assoc()) {
-	// 			$dash_orders[$row['dash_id']] = $dash_order++;
-	// 		}
-	// 		// Reset all orders to null
-	// 		$sql = "update redcap_project_dashboards set dash_order = null where project_id = ".PROJECT_ID;
-	// 		$this->query($sql, []);
-	// 		foreach ($dash_orders as $dash_id=>$dash_order) {
-	// 		    // Set order of each individually
-	// 			$sql = "update redcap_project_dashboards
-    //                     set dash_order = $dash_order 
-    //                     where dash_id = $dash_id";
-	// 			$this->query($sql, []);
-	// 		}
-	// 	}
-	// 	// Return boolean on success
-	// 	return true;
-	// }
-
 	// Ensure all project dashboards have a hash
 	public function checkDashHash($dash_id=null)
 	{

@@ -11,6 +11,7 @@
         <div class="AG-scatter-plot-options-block">
             <h3>{{ module.tt("scatter_x_axis") }}</h3>
             <label>{{module.tt("scatter_bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_x_label_wrap")}}:
@@ -24,10 +25,11 @@
             </label>
             <label>{{module.tt("scatter_x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
-            <label>{{module.tt("scatter_x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
         </div>
         <div class="AG-scatter-plot-options-block">
             <h3>{{module.tt("scatter_y_axis")}}</h3>
+            <label>{{module.tt("scatter_left_margin")}}:<input ref="bottom_margin" type="number" v-model.number="left_margin" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_marker_shape")}}:
@@ -41,7 +43,6 @@
             </label>
             <label>{{module.tt("scatter_y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
-            <label>{{module.tt("scatter_y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
         </div>
       </div>
       <div class="AG-scatter-plot-options-row">
@@ -187,6 +188,7 @@
 
             const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
             const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
+            const left_margin = this.parameters.left_margin ? Number(this.parameters.left_margin) : y_label_length * y_label_size * Math.sin(y_rotate * Math.PI / 180)*0.5 + y_title_size * 2 + 20;
            
             // const show_legend = this.parameters.show_legend === true ? true : false;
 
@@ -206,6 +208,7 @@
                 y_tick_format,
                 y_rotate,
                 y_title_offset,
+                left_margin,
                 scatter_dot_size,
                 scatter_dot_color,
                 // show_legend,
@@ -229,6 +232,7 @@
                 y_label_length: this.y_label_length,
                 y_rotate: this.y_rotate,
                 y_title_offset: this.y_title_offset,
+                left_margin: this.left_margin,
                 scatter_dot_size: this.scatter_dot_size,
                 scatter_dot_color: this.scatter_dot_color,
                 // show_legend: this.show_legend,
@@ -250,6 +254,7 @@
                 this.$refs.y_label_length.value = this.y_label_length;
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
+                this.$refs.left_margin.value = this.left_margin;
                 this.$refs.scatter_dot_size.value = this.scatter_dot_size;
                 this.$refs.scatter_dot_color.value = this.scatter_dot_color;
                 // this.$refs.show_legend.checked = this.show_legend;
