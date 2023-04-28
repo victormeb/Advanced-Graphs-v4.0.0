@@ -1,11 +1,1 @@
-gittoken
-.Rproj.user
-*.Rproj
-p_*.html
-.Rhistory
-.RData
-
 .DS_Store
-graph_forms/barplot/main-options.html
-.gitignore
-graph_forms/barplot/other-options.html
