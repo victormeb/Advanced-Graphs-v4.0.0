@@ -28,5 +28,5 @@ export default {
     'likert': {form: LikertGraphForm, graph: LikertGraph},
     'table': {form: TableForm, graph: TableComponent},
     'map': {form: MapsForm, graph: Maps},
-    'network': {form: NetworkGraphForm, graph: NetworkGraph},
+    'network_graph': {form: NetworkGraphForm, graph: NetworkGraph},
 };
