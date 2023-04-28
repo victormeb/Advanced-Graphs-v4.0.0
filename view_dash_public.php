@@ -14,48 +14,93 @@ $objHtmlPage->PrintHeader(false);
 
 // // Header
 // include APP_PATH_DOCROOT . 'ProjectGeneral/print_page.php';
-$dashboard = $module->getDashboards($pid, $dash_id);
+$dashboard = $module->getDashboards($pid, $dash_id)[0];
 
 if ($dashboard['is_public'] != "1") {
     echo "<h1>Advanced Graphs</h1><h2 style='color: red;'>This is not a publicly available dashboard</h2>";
     exit(0);
 }
 
-$module->loadJS("dash-builder.js");
-$module->loadJS("jquery.min.js", "mapdependencies/jquery-1.12.4");
-$module->loadJS("htmlwidgets.js", "mapdependencies/htmlwidgets-1.5.4");
-$module->loadCSS("leaflet.css", "mapdependencies/leaflet-1.3.1");
-$module->loadJS("leaflet.js", "mapdependencies/leaflet-1.3.1");
-$module->loadCSS("leafletfix.css", "mapdependencies/leafletfix-1.0.0");
-$module->loadJS("proj4.min.js", "mapdependencies/proj4-2.6.2");
-$module->loadJS("proj4leaflet.js", "mapdependencies/Proj4Leaflet-1.0.1");
-$module->loadCSS("rstudio_leaflet.css", "mapdependencies/rstudio_leaflet-1.3.1");
-$module->loadJS("leaflet.js", "mapdependencies/leaflet-binding-2.1.1");
-$module->loadCSS("MarkerCluster.css", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadCSS("MarkerCluster.Default.css", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadJS("leaflet.markercluster.js", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadJS("leaflet.markercluster.freezable.js", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadJS("leaflet.markercluster.layersupport.js", "mapdependencies/leaflet-markercluster-1.0.5");
-$module->loadCSS("advanced-graphs.css");
+// Get the associated report ID from the dashboard
+if (isset($dashboard['report_id'])) {
+    // echo "<br>isset";
+    $report_id = $dashboard['report_id'];
+} else {
+    // Get the reffering URL
+    $referring_url = $_SERVER['HTTP_REFERER'];
     
-echo "<center><h1>$dash_title</h1></center><div id=\"advanced_graphs\"><h2>Loading your dashboard...</h1><h2>Please Wait</h2></div>";
+    // parse the URL
+    $url_parts = parse_url($referring_url);
 
+    // Get the query string
+    $query_string = $url_parts['query'];
 
-// $url = $_SERVER["HTTP_REFERER"];
-// $parts = parse_url($url, PHP_URL_QUERY);
-// parse_str($parts, $query);
+    // Parse the query string
+    parse_str($query_string, $query_parts);
 
-// $original_params = json_encode($query);
+    // Get the report ID if there is one
+    if (isset($query_parts['report_id'])) {
+        $report_id = $query_parts['report_id'];
+    } else {
+        $report_id = null;
+    }
+}
 
+// If the report ID is null, then we need to alert the user that they need to create a report first.
+if ($report_id == null) {
+    echo "<h1>You need to create a report before you can create a dashboard.</h1>";
+    // Header
+    include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+    exit;
+}
+
+// Get the report name
+$report_name = $module->getReportName($project_id, $report_id);
+
+// Get the report
+// $report = $module->getReport($project_id, $report_id);
+// $report = $module->get_report($project_id, $report_id, array(), null, "array");
+$report = $module->getReport($report_id);
+
+// Get the report fields
+$report_fields = $module->getReportFields($project_id, $report_id);
+
+// Get the data dictionary
+$data_dictionary = $module->getDataDictionary($project_id);
+
+// Get the report fields by the repeating instruments
+$report_fields_by_reapeat_instrument = $module->getReportFieldsByRepeatInstrument($project_id, $report_id);
+
+// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-vendors.js');
+// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-common.js');
+// $module->loadCSS('advanced-graph-vue/advanced-graphs/dist/css/chunk-vendors.css');
+
+$js_module = $module->initializeJavascriptModuleObject();
+
+$module->tt_transferToJavascriptModuleObject();
+?>
+
+<?php 
+$module->loadJS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.umd.js');
+$module->loadCSS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.css');
 
 ?>
+
+<div id="advanced_graphs">
+    
+</div>
+
 <script>
-    var report_object = <?php echo $dashboard['body'];?>;
-    var live_filters = <?php echo $dashboard['live_filters']?>;
-    var pid = <?php echo $pid;?>;
-    var report_id = "<?php echo $dashboard['report_id'];?>";
-    // Urls to other pages
-    var ajax_url = "<?php echo  $module->getUrl("advanced_graphs_ajax_public.php");?>" + "&NOAUTH" + "&pid=" + pid ;
-    console.log(report_object);
-    generate_graphs();
+    // in an anonymous function to avoid polluting the global namespace
+    $(document).ready(function() {
+        // Get the module object
+        var module = <?=$module->getJavascriptModuleObjectName()?>;
+        var dashboard = <?php echo json_encode($dashboard); ?>;
+        var data_dictionary = <?php echo json_encode($data_dictionary); ?>;
+        var report = <?php echo json_encode($report); ?>;
+        var report_fields_by_reapeat_instrument = <?php echo json_encode($report_fields_by_reapeat_instrument); ?>;
+
+        var app = AdvancedGraphs.createDashboardViewerApp(module, dashboard, report, data_dictionary, report_fields_by_reapeat_instrument);
+        app.mount('#advanced_graphs');
+    });
 </script>
