@@ -1,14 +1,14 @@
-<!-- ScatterPlotOptions.vue -->
+<!-- NetworkGraphOptions.vue -->
 <template>
-    <div class="AG-scatter-plot-options">
-        <div class="AG-scatter-plot-options-row">
-            <div class="AG-scatter-plot-options-block">
+    <div class="AG-network-plot-options">
+        <div class="AG-network-plot-options-row">
+            <div class="AG-network-plot-options-block">
                 <!-- Show legend -->
 <!--                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>-->
             </div>
         </div>
-      <div class="AG-scatter-plot-options-row">
-        <div class="AG-scatter-plot-options-block">
+      <div class="AG-network-plot-options-row">
+        <div class="AG-network-plot-options-block">
             <h3>{{ module.tt("x_axis") }}</h3>
             <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" />10</label>
             <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
@@ -26,7 +26,7 @@
             <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
             <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
         </div>
-        <div class="AG-scatter-plot-options-block">
+        <div class="AG-network-plot-options-block">
             <h3>{{module.tt("y_axis")}}</h3>
             <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
@@ -44,11 +44,11 @@
             <label>{{module.tt("y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
         </div>
       </div>
-      <div class="AG-scatter-plot-options-row">
-        <div class="AG-scatter-plot-options-block">
+      <div class="AG-network-plot-options-row">
+        <div class="AG-network-plot-options-block">
             <h3>{{module.tt("dot_options")}}</h3>
-            <label>{{module.tt("scatter_dot_size")}}:<input ref="scatter_dot_size" type="range" min="0" max="50" v-model.number="scatter_dot_size" @input="updateParameters" /></label>
-            <label>{{module.tt("scatter_dot_color")}}:<input ref="scatter_dot_color" type="range" min="-50" max="50" step="0.1" v-model.number="scatter_dot_color" @input="updateParameters" /></label>
+            <label>{{module.tt("dot_size")}}:<input ref="dot_size" type="range" min="0" max="50" v-model.number="dot_size" @input="updateParameters" /></label>
+            <label>{{module.tt("dot_color")}}:<input ref="dot_color" type="range" min="-50" max="50" step="0.1" v-model.number="dot_color" @input="updateParameters" /></label>
         </div>
       </div>
   </div>
@@ -61,7 +61,7 @@
     import RadioComponent from '@/components/RadioComponent.vue';
 
     export default {
-        name: "ScatterPlotOptions",
+        name: "NetworkGraphOptions",
         components: {
             RadioComponent,
         },
@@ -181,13 +181,13 @@
             // if (typeof marker_type != 'undefined' && marker_type != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
             //     y_tick_format = d => d3.format(y_label_limit)(d);
             // }
-            const scatter_dot_size = this.parameters.scatter_dot_size ? Number(this.parameters.scatter_dot_size) : 10;
-            const scatter_dot_color = this.parameters.scatter_dot_color ? Number(this.parameters.scatter_dot_color) : 4.5;
+            const dot_size = this.parameters.dot_size ? Number(this.parameters.dot_size) : 10;
+            const dot_color = this.parameters.dot_color ? Number(this.parameters.dot_color) : 4.5;
 
 
             const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
             const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
-           
+
             // const show_legend = this.parameters.show_legend === true ? true : false;
 
             return {
@@ -206,8 +206,8 @@
                 y_tick_format,
                 y_rotate,
                 y_title_offset,
-                scatter_dot_size,
-                scatter_dot_color,
+                dot_size,
+                dot_color,
                 // show_legend,
             }
         },
@@ -229,8 +229,8 @@
                 y_label_length: this.y_label_length,
                 y_rotate: this.y_rotate,
                 y_title_offset: this.y_title_offset,
-                scatter_dot_size: this.scatter_dot_size,
-                scatter_dot_color: this.scatter_dot_color,
+                dot_size: this.dot_size,
+                dot_color: this.dot_color,
                 // show_legend: this.show_legend,
                 });
             },
@@ -250,8 +250,8 @@
                 this.$refs.y_label_length.value = this.y_label_length;
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
-                this.$refs.scatter_dot_size.value = this.scatter_dot_size;
-                this.$refs.scatter_dot_color.value = this.scatter_dot_color;
+                this.$refs.dot_size.value = this.dot_size;
+                this.$refs.dot_color.value = this.dot_color;
                 // this.$refs.show_legend.checked = this.show_legend;
             });
 
@@ -262,7 +262,7 @@
 </script>
 
 <style scoped>
-    .AG-scatter-plot-options {
+    .AG-network-plot-options {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -270,7 +270,7 @@
         width: 100%;
         height: 100%;
     }
-    .AG-scatter-plot-options-row {
+    .AG-network-plot-options-row {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -278,7 +278,7 @@
         width: 100%;
         height: 100%;
     }
-    .AG-scatter-plot-options-row > div {
+    .AG-network-plot-options-row > div {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
