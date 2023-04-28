@@ -74,15 +74,15 @@
                     v-if="formData.numeric_field !== null 
                       && typeof formData.numeric_field === 'string' 
                       && formData.is_count != true"
-                    :label-text="module.tt('na_numeric')"
-                    :help-text="module.tt('na_numeric_help')"
+                    :label-text="module.tt('map_na_numeric')"
+                    :help-text="module.tt('map_na_numeric_help')"
                 >
                   <radio-component
                           v-model="formData.na_numeric"
                           :name="'na_numeric'"
                           :values="['drop', 'replace']"
                           :defaultValue="'drop'"
-                          :labels="[module.tt('drop'), module.tt('replace')]"
+                          :labels="[module.tt('map_drop'), module.tt('map_replace')]"
                       ></radio-component>
                   <input type="number" v-if="formData.na_numeric === 'replace'" v-model="formData.na_numeric_value" />
                 </helpful-parameter>
@@ -91,8 +91,8 @@
                     v-if="formData.numeric_field !== null 
                       && typeof formData.numeric_field === 'string' 
                       && formData.is_count != true"
-                    :label-text="module.tt('aggregation_function')"
-                    :help-text="module.tt('aggregation_function_help')"
+                    :label-text="module.tt('map_aggregation_function')"
+                    :help-text="module.tt('map_aggregation_function_help')"
                 >
                   <radio-component
                           v-model="formData.aggregation_function"

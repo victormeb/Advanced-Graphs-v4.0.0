@@ -59,7 +59,7 @@
             const y_label_limit = this.parameters.y_label_limit ? Number(this.parameters.y_label_limit) : null;
             const y_label_length = this.parameters.y_label_length ? Number(this.parameters.y_label_length) : Math.max(...Object.keys(choices).map(key => choices[key].length));
 
-            const left_margin = this.parameters.left_margin ? Number(this.parameters.left_margin) : 0;
+            const left_margin = this.parameters.left_margin ? Number(this.parameters.left_margin) : 100;
 
             // Get the y tick format
             var y_tick_format = d => d;

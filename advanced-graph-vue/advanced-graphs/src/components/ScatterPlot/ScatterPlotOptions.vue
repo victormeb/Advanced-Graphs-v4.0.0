@@ -10,7 +10,7 @@
       <div class="AG-scatter-plot-options-row">
         <div class="AG-scatter-plot-options-block">
             <h3>{{ module.tt("scatter_x_axis") }}</h3>
-            <label>{{module.tt("scatter_bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" />10</label>
+            <label>{{module.tt("scatter_bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_x_label_wrap")}}:

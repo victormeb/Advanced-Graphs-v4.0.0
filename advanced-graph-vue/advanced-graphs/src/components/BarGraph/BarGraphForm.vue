@@ -31,7 +31,7 @@
                       :name="'graph_type'"
                       :values="['bar', 'pie']"
                       :defaultValue="'bar'"
-                      :labels="[module.tt('bar_bar'), module.tt('bar_pie')]"
+                      :labels="[module.tt('bar_bar'), module.tt('bar_bar_pie')]"
                   ></radio-component>
               </helpful-parameter>
               <!-- Categorical Field -->
