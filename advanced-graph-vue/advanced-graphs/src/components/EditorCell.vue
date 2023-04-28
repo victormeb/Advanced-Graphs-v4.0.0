@@ -41,7 +41,7 @@
           class="btn btn-primary"
           :disabled="!formReady"
           @click="previewGraph">
-          {{module.tt('preview')}}
+          {{module.tt('editor_cell_preview')}}
         </button>
       </div>
     </div>
@@ -138,8 +138,8 @@
       },
       async confirmDelete() {
         const confirmed = await this.$refs.confirmationModal.show({
-          title: this.module.tt('delete_cell'),
-          message: this.module.tt('delete_cell_confirmation'),
+          title: this.module.tt('editor_cell_delete_cell'),
+          message: this.module.tt('editor_cell_delete_cell_confirmation'),
         });
 
         if (confirmed) {

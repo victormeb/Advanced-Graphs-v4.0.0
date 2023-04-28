@@ -23,8 +23,8 @@
               </helpful-parameter>
                   <!-- Numeric Field X-->
                   <helpful-parameter
-                          :label-text="module.tt('numeric_field_x')"
-                          :help-text="module.tt('numeric_field_help')"
+                          :label-text="module.tt('scatter_field_x')"
+                          :help-text="module.tt('scatter_field_help')"
                   >
                       <numeric-field-selector
                               v-model="formData.numeric_field"
@@ -35,8 +35,8 @@
             <div class="AG-pane-right">
               <!-- Numeric Field Y-->
               <helpful-parameter
-                  :label-text="module.tt('numeric_field_y')"
-                  :help-text="module.tt('numeric_field_help')"
+                  :label-text="module.tt('scatter_field_y')"
+                  :help-text="module.tt('scatter_field_help')"
               >
               <numeric-field-selector
                       v-model="formData.numeric_field_y"
@@ -48,15 +48,15 @@
                   v-if="formData.numeric_field !== null 
                     && typeof formData.numeric_field === 'string' 
                     && formData.is_count != true"
-                  :label-text="module.tt('na_numeric')"
-                  :help-text="module.tt('na_numeric_help')"
+                  :label-text="module.tt('scatter_na_numeric')"
+                  :help-text="module.tt('scatter_na_numeric_help')"
               >
                 <radio-component
                         v-model="formData.na_numeric"
                         :name="'na_numeric'"
                         :values="['drop', 'replace']"
                         :defaultValue="'drop'"
-                        :labels="[module.tt('drop'), module.tt('replace')]"
+                        :labels="[module.tt('scatter_drop'), module.tt('scatter_replace')]"
                     ></radio-component>
                 <input type="number" v-if="formData.na_numeric === 'replace'" v-model="formData.na_numeric_value" />
               </helpful-parameter>

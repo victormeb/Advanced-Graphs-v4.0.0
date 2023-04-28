@@ -3,15 +3,15 @@
       <div class="modal-wrapper">
         <div class="modal-container">
             <div class="modal-header">
-                <h3>{{ module.tt('dashboard_saved') }}</h3>
+                <h3>{{ module.tt('saved_modal_dashboard_saved') }}</h3>
             </div>
             <div class="modal-body">
-                <p> {{module.tt('dashboard_named_saved', this.name)}} </p>
+                <p> {{module.tt('saved_modal_dashboard_named_saved', this.name)}} </p>
             </div>
             <div class="modal-footer">
-                <button type="button" @click="$emit('close')">{{module.tt('continue_editing')}}</button>
-                <button type="button" @click="viewList()">{{module.tt('return_to_list')}}</button>
-                <button type="button" @click="viewDash()">{{module.tt('view_dashboard')}}</button>
+                <button type="button" @click="$emit('close')">{{module.tt('saved_modal_continue_editing')}}</button>
+                <button type="button" @click="viewList()">{{module.tt('saved_modal_return_to_list')}}</button>
+                <button type="button" @click="viewDash()">{{module.tt('saved_modal_view_dashboard')}}</button>
             </div>
         </div>
       </div>

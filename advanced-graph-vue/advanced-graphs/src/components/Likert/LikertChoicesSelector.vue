@@ -1,7 +1,7 @@
 <template>
     <div>
         <select v-model="selectedChoices">
-            <option value="" disabled>{{module.tt('select_choices')}}</option>
+            <option value="" disabled>{{module.tt('likert_select_choices')}}</option>
             <option v-for=" (option, index) in options" :key="index" :value="option">{{ option }}</option>
         </select>
     </div>

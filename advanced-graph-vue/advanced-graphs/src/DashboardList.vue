@@ -2,13 +2,13 @@
   <table class="table table-striped" style="width:100%">
     <thead>
       <tr>
-        <th>{{ module.tt('dashboard_title') }}</th>
-        <th>{{ module.tt('report_name') }}</th>
+        <th>{{ module.tt('dashboard_list_dashboard_title') }}</th>
+        <th>{{ module.tt('dashboard_list_report_name') }}</th>
         <th></th>
-        <th>{{ module.tt('public_link') }}</th>
-        <th>{{ module.tt('view') }}</th>
-        <th>{{ module.tt('edit') }}</th>
-        <th>{{ module.tt('delete') }}</th>
+        <th>{{ module.tt('dashboard_list_public_link') }}</th>
+        <th>{{ module.tt('dashboard_list_view') }}</th>
+        <th>{{ module.tt('dashboard_list_edit') }}</th>
+        <th>{{ module.tt('dashboard_list_delete') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -17,21 +17,21 @@
         <td>{{ reportNames[dashboard.report_id] }}</td>
         <td></td>
         <td>
-          <a v-if="dashboard.is_public" :href="getPublicLink(dashboard)" target="_blank">{{ module.tt('public_link_href') }}</a>
+          <a v-if="dashboard.is_public" :href="getPublicLink(dashboard)" target="_blank">{{ module.tt('dashboard_list_public_link_href') }}</a>
         </td>
         <td>
           <button class="btn btn-primary" @click="viewDashboard(dashboard)">
-            {{ module.tt('view_button') }}
+            {{ module.tt('dashboard_list_view_button') }}
           </button>
         </td>
         <td>
           <button class="btn btn-warning" @click="editDashboard(dashboard)">
-            {{ module.tt('edit_button') }}
+            {{ module.tt('dashboard_list_edit_button') }}
           </button>
         </td>
         <td>
           <button class="btn btn-danger" @click="deleteDashboard(index)">
-            {{ module.tt('delete_button') }}
+            {{ module.tt('dashboard_list_delete_button') }}
           </button>
         </td>
       </tr>
@@ -124,11 +124,11 @@ export default {
         if (result) {
           this.localDashboards.splice(index, 1);
         } else {
-          alert(this.module.tt('delete_error'));
+          alert(this.module.tt('dashboard_list_delete_error'));
         }
       } catch (error) {
         console.log(error);
-        alert(this.module.tt('delete_error'));
+        alert(this.module.tt('dashboard_list_delete_error'));
       }
     }
   }

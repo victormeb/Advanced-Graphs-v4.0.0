@@ -2,7 +2,7 @@
 <template>
     <div>
         <select v-model="selectedGraphType">
-            <option :value="null" :selected="true"> {{ module.tt('select_a_graph_type') }} </option>
+            <option :value="null" :selected="true"> -- {{ module.tt('gts_select_a_graph_type') }} --</option>
             <option v-for="(graphType, index) in availableGraphTypes" 
             :key="index" 
             :value="graphType" 

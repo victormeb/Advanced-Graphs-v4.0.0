@@ -1,9 +1,9 @@
 <template>
   <div>
-    <label for="instrument">{{module.tt('select_an_instrument')}}:</label>
+    <label for="instrument">{{module.tt('instrument_selector_label')}}:</label>
       <br>
       <select name="instrument" v-model="selectedInstrument" @change="onInstrumentChange">
-        <option :selected="true" :value="null">--{{module.tt('select_an_instrument')}} --</option>
+        <option :selected="true" :value="null">--{{module.tt('instrument_selector_select_an_instrument')}} --</option>
         <option v-for="(instrument, instrument_name) in availableInstruments" :key="instrument_name" :value="instrument_name" :selected="selectedInstrument===instrument_name">
           {{ instrument.label }}
         </option>

@@ -13,7 +13,7 @@
       <!-- A button to add a row -->
       <div class="AG-editor-row">
         <div class="AG-add-cell-button">
-          <button class="btn btn-primary" @click="addRow">{{module.tt('add_row')}}</button>
+          <button class="btn btn-primary" @click="addRow">{{module.tt('editor_table_add_row')}}</button>
         </div>
       </div>
     </div>

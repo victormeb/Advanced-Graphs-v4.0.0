@@ -3,7 +3,7 @@
     <div>
         <h2>{{ module.tt('map_longitude') }}</h2>
         <select v-model="currentField">
-            <option :value="null" :selected="true"> {{ module.tt('select_a_field') }} </option>
+            <option :value="null" :selected="true"> -- {{ module.tt('map_select_a_field') }} -- </option>
             <option v-for="(field, index) in coordinateFields" 
                 :key="index" 
                 :value="JSON.stringify(field)" 
@@ -13,7 +13,7 @@
         </select>
         <h2>{{ module.tt('map_latitude') }}</h2>
         <select v-model="currentField">
-            <option :value="null" :selected="true"> {{ module.tt('select_a_field') }} </option>
+            <option :value="null" :selected="true"> {{ module.tt('map_select_a_field') }} </option>
             <option v-for="(field, index) in coordinateFields" 
                 :key="index" 
                 :value="JSON.stringify(field)" 

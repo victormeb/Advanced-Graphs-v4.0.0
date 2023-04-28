@@ -4,29 +4,29 @@
         <div class="AG-bar-graph-options-row">
             <div class="AG-bar-graph-options-block">
                 <!-- Show legend -->
-                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
+                <label>{{module.tt("likert_show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
             </div>
         </div>
       <div class="AG-bar-graph-options-row">
         <div class="AG-bar-graph-options-block">
-            <h3>{{module.tt("y_axis")}}</h3>
-            <label>{{module.tt("left_margin")}}:<input ref="left_margin" type="range" min="0" max="400" v-model.number="left_margin" @input="updateParameters" /></label>
-            <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("y_label_wrap")}}:
+            <h3>{{module.tt("likert_y_axis")}}</h3>
+            <label>{{module.tt("likert_left_margin")}}:<input ref="left_margin" type="range" min="0" max="400" v-model.number="left_margin" @input="updateParameters" /></label>
+            <label>{{module.tt("likert_y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("likert_y_label_wrap")}}:
                 <radio-component
                     v-model="y_label_limit"
                     :values="['truncate', 'wrap', 'none']"
-                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
+                    :labels="[module.tt('likert_truncate'), module.tt('likert_wrap'), module.tt('likert_bar_none')]"
                     :defaultValue="'none'"
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
-            <label>{{module.tt("y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("y_rotate")}}:<input ref="y_rotate" type="range" min="-90" max="90" v-model.number="y_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("likert_y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("likert_y_rotate")}}:<input ref="y_rotate" type="range" min="-90" max="90" v-model.number="y_rotate" @input="updateParameters" /></label>
         </div>
         <div class="AG-bar-graph-options-block">
-            <h3>{{module.tt("bar_labels")}}</h3>
-            <label>{{module.tt("bar_label_size")}}:<input ref="bar_label_size" type="range" min="0" max="50" v-model.number="bar_label_size" @input="updateParameters" /></label>
+            <h3>{{module.tt("likert_bar_labels")}}</h3>
+            <label>{{module.tt("likert_bar_label_size")}}:<input ref="bar_label_size" type="range" min="0" max="50" v-model.number="bar_label_size" @input="updateParameters" /></label>
         </div>
       </div>              
   </div>

@@ -32,15 +32,15 @@
               </helpful-parameter>
               <!-- NA Category -->
               <helpful-parameter
-                  :label-text="module.tt('na_category')"
-                  :help-text="module.tt('na_category_help')"
+                  :label-text="module.tt('likert_na_category')"
+                  :help-text="module.tt('likert_na_category_help')"
               >
               <radio-component
                       v-model="formData.na_category"
                       :name="'na_category'"
                       :values="['keep', 'drop']"
                       :defaultValue="'drop'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
+                      :labels="[module.tt('likert_keep'), module.tt('likert_drop')]"
                   ></radio-component>
               </helpful-parameter>
             </div>
@@ -48,8 +48,8 @@
               <!-- Category Checkbox -->
               <helpful-parameter
                   v-if="formData.likert_choices"
-                  :label-text="module.tt('category_checkbox')"
-                  :help-text="module.tt('category_checkbox_help')"
+                  :label-text="module.tt('likert_category_checkbox')"
+                  :help-text="module.tt('likert_category_checkbox_help')"
               >
                 <likert-category-checkbox
                         v-model="formData.category_fields"

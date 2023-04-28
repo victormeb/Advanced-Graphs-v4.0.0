@@ -4,51 +4,51 @@
         <div class="AG-bar-graph-options-row">
             <div class="AG-bar-graph-options-block">
                 <!-- Show legend -->
-                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
+                <label>{{module.tt("bar_show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
             </div>
         </div>
       <div class="AG-bar-graph-options-row">
         <div class="AG-bar-graph-options-block">
-            <h3>{{ module.tt("x_axis") }}</h3>
-            <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" /></label>
-            <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
-            <label>{{module.tt("x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("x_label_wrap")}}:
+            <h3>{{ module.tt("bar_x_axis") }}</h3>
+            <label>{{module.tt("bar_bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_x_label_wrap")}}:
                 <radio-component
                     v-model="x_label_limit"
                     :values="['truncate', 'wrap', 'none']"
-                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
+                    :labels="[module.tt('bar_truncate'), module.tt('bar_wrap'), module.tt('bar_none')]"
                     :defaultValue="'none'"
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
-            <label>{{module.tt("x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
-            <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
         </div>
         <div class="AG-bar-graph-options-block">
-            <h3>{{module.tt("y_axis")}}</h3>
-            <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
-            <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("y_label_wrap")}}:
+            <h3>{{module.tt("bar_y_axis")}}</h3>
+            <label>{{module.tt("bar_y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_y_label_wrap")}}:
                 <radio-component
                     v-model="y_label_limit"
                     :values="['truncate', 'wrap', 'none']"
-                    :labels="[module.tt('truncate'), module.tt('wrap'), module.tt('bar_none')]"
+                    :labels="[module.tt('bar_truncate'), module.tt('bar_wrap'), module.tt('bar_none')]"
                     :defaultValue="'none'"
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
-            <label>{{module.tt("y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
-            <label>{{module.tt("y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
         </div>
       </div>
       <div class="AG-bar-graph-options-row">
         <div class="AG-bar-graph-options-block">
-            <h3>{{module.tt("bar_labels")}}</h3>
-            <label>{{module.tt("bar_label_size")}}:<input ref="bar_label_size" type="range" min="0" max="50" v-model.number="bar_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("bar_label_position")}}:<input ref="bar_label_position" type="range" min="-50" max="50" step="0.1" v-model.number="bar_label_position" @input="updateParameters" /></label>
+            <h3>{{module.tt("bar_bar_labels")}}</h3>
+            <label>{{module.tt("bar_bar_label_size")}}:<input ref="bar_label_size" type="range" min="0" max="50" v-model.number="bar_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("bar_bar_label_position")}}:<input ref="bar_label_position" type="range" min="-50" max="50" step="0.1" v-model.number="bar_label_position" @input="updateParameters" /></label>
         </div>   
       </div>                 
   </div>

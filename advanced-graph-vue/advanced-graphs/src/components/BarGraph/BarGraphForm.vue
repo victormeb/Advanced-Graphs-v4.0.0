@@ -31,7 +31,7 @@
                       :name="'graph_type'"
                       :values="['bar', 'pie']"
                       :defaultValue="'bar'"
-                      :labels="[module.tt('bar'), module.tt('pie')]"
+                      :labels="[module.tt('bar_bar'), module.tt('bar_pie')]"
                   ></radio-component>
               </helpful-parameter>
               <!-- Categorical Field -->
@@ -46,36 +46,36 @@
               </helpful-parameter>
               <!-- NA Category -->
               <helpful-parameter
-                  :label-text="module.tt('na_category')"
-                  :help-text="module.tt('na_category_help')"
+                  :label-text="module.tt('bar_na_category')"
+                  :help-text="module.tt('bar_na_category_help')"
               >
               <radio-component
                       v-model="formData.na_category"
                       :name="'na_category'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
+                      :labels="[module.tt('bar_keep'), module.tt('bar_drop')]"
                   ></radio-component>
               </helpful-parameter>
               <!-- Unused Categories -->
               <helpful-parameter
-                  :label-text="module.tt('unused_categories')"
-                  :help-text="module.tt('unused_categories_help')"
+                  :label-text="module.tt('bar_unused_categories')"
+                  :help-text="module.tt('bar_unused_categories_help')"
               >
               <radio-component
                       v-model="formData.unused_categories"
                       :name="'unused_categories'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
+                      :labels="[module.tt('bar_keep'), module.tt('bar_drop')]"
                   ></radio-component>
               </helpful-parameter>
             </div>
             <div class="AG-pane-right">
               <!-- Numeric Field -->
               <helpful-parameter
-                  :label-text="module.tt('numeric_field')"
-                  :help-text="module.tt('numeric_field_help')"
+                  :label-text="module.tt('bar_numeric_field')"
+                  :help-text="module.tt('bar_numeric_field_help')"
               >
               <numeric-field-selector
                       v-model="formData.numeric_field"
@@ -87,15 +87,15 @@
                   v-if="formData.numeric_field !== null 
                     && typeof formData.numeric_field === 'string' 
                     && formData.is_count != true"
-                  :label-text="module.tt('na_numeric')"
-                  :help-text="module.tt('na_numeric_help')"
+                  :label-text="module.tt('bar_na_numeric')"
+                  :help-text="module.tt('bar_na_numeric_help')"
               >
                 <radio-component
                         v-model="formData.na_numeric"
                         :name="'na_numeric'"
                         :values="['drop', 'replace']"
                         :defaultValue="'drop'"
-                        :labels="[module.tt('drop'), module.tt('replace')]"
+                        :labels="[module.tt('bar_drop'), module.tt('bar_replace')]"
                     ></radio-component>
                 <input type="number" v-if="formData.na_numeric === 'replace'" v-model="formData.na_numeric_value" />
               </helpful-parameter>
@@ -104,8 +104,8 @@
                   v-if="formData.numeric_field !== null 
                     && typeof formData.numeric_field === 'string' 
                     && formData.is_count != true"
-                  :label-text="module.tt('aggregation_function')"
-                  :help-text="module.tt('aggregation_function_help')"
+                  :label-text="module.tt('bar_aggregation_function')"
+                  :help-text="module.tt('bar_aggregation_function_help')"
               >
                 <radio-component
                         v-model="formData.aggregation_function"

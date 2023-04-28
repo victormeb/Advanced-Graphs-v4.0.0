@@ -102,7 +102,7 @@
             return {
                 tableData: countsArray,
                 category: this.data_dictionary[this.parameters.categorical_field].field_label,
-                numeric: this.parameters.is_count ? this.module.tt("count") : this.data_dictionary[this.parameters.numeric_field].field_label,
+                numeric: this.parameters.is_count ? this.module.tt("table_count") : this.data_dictionary[this.parameters.numeric_field].field_label,
                 percents_or_totals: this.parameters.percents_or_totals,
                 d3: d3,
             }

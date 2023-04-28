@@ -3,13 +3,13 @@
     <div id="AG-dashboard-options">
       <table class="AG-dashboard-options">
         <tr>
-          <td class="labelrc">{{ module.tt('dashboard_title') }}:</td>
+          <td class="labelrc">{{ module.tt('dbo_dashboard_title') }}:</td>
           <td class="labelrc">
             <input type="text" name="dash_title" v-model="titleString" />
           </td>
         </tr>
         <tr>
-          <td class="labelrc">{{ module.tt('public') }}:</td>
+          <td class="labelrc">{{ module.tt('dbo_public') }}:</td>
           <td class="labelrc">
             <div class="custom-control custom-switch mt-2">
               <input
@@ -20,7 +20,7 @@
                 v-model="isPublicVal"
               />
               <label class="custom-control-label" for="is_public">
-                {{ module.tt('is_public_description') }}
+                {{ module.tt('dbo_is_public_description') }}
               </label>
             </div>
           </td>

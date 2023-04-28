@@ -17,9 +17,9 @@
       ></editor-table>
       <div class="AG-editor-final-buttons">
         <button @click="saveDashboard" class="btn btn-primary">
-          {{ dashboard ? module.tt('save') : module.tt('create') }}
+          {{ dashboard ? module.tt('dbe_save') : module.tt('dbe_create') }}
         </button>
-        <button class="btn btn-secondary">{{ module.tt('cancel') }}</button>
+        <button class="btn btn-secondary">{{ module.tt('dbe_cancel') }}</button>
       </div>
     </div>
     <saved-modal
@@ -60,7 +60,7 @@
     },
     data() {
         return {
-            title: this.dashboard.title || this.module.tt('new_dashboard'),
+            title: this.dashboard.title || this.module.tt('dbe_new_dashboard'),
             isPublic: this.dashboard.is_public || false,
             body: reactive( 
               this.dashboard.body ? 
@@ -99,8 +99,8 @@
         async removeDashboardRow(index) {
             const confirm = await this.$refs.confirmationModal.show(
                 {
-                  title: this.module.tt('confirm_delete_row'),
-                  message: this.module.tt('confirm_delete_row_message'),
+                  title: this.module.tt('dbe_confirm_delete_row'),
+                  message: this.module.tt('dbe_confirm_delete_row_message'),
                 }
             );
 

@@ -1,4 +1,4 @@
-<!-- BarGraph.vue -->
+<!-- TableComponent.vue -->
 <template>
     <div class="AG-graph-container">
         <div class="AG-graph-title">

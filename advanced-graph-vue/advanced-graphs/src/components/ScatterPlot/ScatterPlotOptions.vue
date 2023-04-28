@@ -4,16 +4,16 @@
         <div class="AG-scatter-plot-options-row">
             <div class="AG-scatter-plot-options-block">
                 <!-- Show legend -->
-<!--                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>-->
+<!--                <label>{{module.tt("scatter_show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>-->
             </div>
         </div>
       <div class="AG-scatter-plot-options-row">
         <div class="AG-scatter-plot-options-block">
-            <h3>{{ module.tt("x_axis") }}</h3>
-            <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" />10</label>
-            <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
-            <label>{{module.tt("x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("x_label_wrap")}}:
+            <h3>{{ module.tt("scatter_x_axis") }}</h3>
+            <label>{{module.tt("scatter_bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" />10</label>
+            <label>{{module.tt("scatter_x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_x_label_wrap")}}:
 <!--                <radio-component-->
 <!--                    v-model="x_label_limit"-->
 <!--                    :values="['truncate', 'wrap', 'none']"-->
@@ -22,31 +22,31 @@
 <!--                    @update:modelValue="updateParameters"-->
 <!--                ></radio-component>-->
             </label>
-            <label>{{module.tt("x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
-            <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
         </div>
         <div class="AG-scatter-plot-options-block">
-            <h3>{{module.tt("y_axis")}}</h3>
-            <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
-            <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("marker_shape")}}:
+            <h3>{{module.tt("scatter_y_axis")}}</h3>
+            <label>{{module.tt("scatter_y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_marker_shape")}}:
                 <radio-component
                     v-model="marker_type"
                     :values="['circle', 'square', 'triangle']"
-                    :labels="[module.tt('circle'), module.tt('diamond'), module.tt('triangle')]"
+                    :labels="[module.tt('scatter_circle'), module.tt('scatter_diamond'), module.tt('scatter_triangle')]"
                     :defaultValue="'circle'"
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
-            <label>{{module.tt("y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
-            <label>{{module.tt("y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("scatter_y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
         </div>
       </div>
       <div class="AG-scatter-plot-options-row">
         <div class="AG-scatter-plot-options-block">
-            <h3>{{module.tt("dot_options")}}</h3>
+            <h3>{{module.tt("scatter_dot_options")}}</h3>
             <label>{{module.tt("scatter_dot_size")}}:<input ref="scatter_dot_size" type="range" min="0" max="50" v-model.number="scatter_dot_size" @input="updateParameters" /></label>
             <label>{{module.tt("scatter_dot_color")}}:<input ref="scatter_dot_color" type="range" min="-50" max="50" step="0.1" v-model.number="scatter_dot_color" @input="updateParameters" /></label>
         </div>
@@ -98,7 +98,7 @@
             // If there are some NA entries for the category in the filtered report
             // if (filteredReport.some(d => d[this.parameters.categorical_field] == ""))
             //     // Add an NA category to choices
-            //     choices[""] = this.module.tt("na");
+            //     choices[""] = this.module.tt("scatter_na");
 
             // todo: change categorical to numeric and implement na replacement
             // If we are using a numeric field and na_numeric is set to drop filter out the rows with missing values for the field specified by the numeric parameter

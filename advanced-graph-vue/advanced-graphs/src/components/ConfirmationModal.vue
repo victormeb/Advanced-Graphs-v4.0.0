@@ -11,8 +11,8 @@
                 {{message}}
             </div>
             <div class="modal-footer">
-                <button type="button" @click="cancel">{{module.tt('cancel')}}</button>
-                <button type="button" @click="confirm">{{module.tt('confirm')}}</button>
+                <button type="button" @click="cancel">{{module.tt('confirmation_modal_confirm')}}</button>
+                <button type="button" @click="confirm">{{module.tt('confirmation_modal_cancel')}}</button>
             </div>
         </div>
       </div>

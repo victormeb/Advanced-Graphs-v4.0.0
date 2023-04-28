@@ -1,8 +1,8 @@
-<!-- CategoricalFieldSelector.vue -->
+<!-- NumericFieldSelector.vue -->
 <template>
     <div>
         <select v-model="currentField">
-            <option :value="null" :selected="true"> {{ module.tt('select_a_field') }} </option>
+            <option :value="null" :selected="true"> {{ module.tt('nfs_select_a_field') }} </option>
             <option v-for="(field, index) in numericFields" 
                 :key="index" 
                 :value="field.field_name" 

@@ -2,11 +2,11 @@
 <template>
     <div>
         <button type="button" @click="showModal = true">
-          {{ module.tt('select_color') }}
+          {{ module.tt('palette_select_color') }}
         </button>
       <slot></slot>
       <help-modal v-if="showModal" @close="showModal = false">
-        <h3>{{ module.tt("palette_selector") }}</h3>
+        <h3>{{ module.tt("palette_palette_selector") }}</h3>
         <div class="palette-container">
           <button type="button" @click="colors.splice(0, 0, '#000000')"><i class="fa fa-plus" aria-hidden="true"></i></button>
           <div class="color-container" v-for="(color, index) in colors" :key="index">

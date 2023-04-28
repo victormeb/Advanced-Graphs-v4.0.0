@@ -212,7 +212,7 @@ export default {
             // const show_legend = parameters.show_legend ? true : false;
 
             // const y_title = parameters.numeric_field ?  getFieldLabel(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
-            const y_title =  getFieldLabel(this.data_dictionary[parameters.numeric_field_y]);  // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
+            const y_title =  getFieldLabel(this.data_dictionary[parameters.numeric_field_y]);  // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count'
 
             var graph = null;
         
@@ -381,13 +381,6 @@ export default {
                 .attr("cy", (d) => yScale(d.y))
                 .attr("r", 3)
                 .attr("fill", "steelblue");
-
-            //return svg.node();
-
-            var errorDiv = document.createElement('p');
-            errorDiv.innerHTML = this.module.tt('Scatterplots are not supported in this version of the module.'+xValues.length+','+yValues.length);
-            //return errorDiv;
-
             return svg.node();
           //   return Object.assign(svg.node());
 

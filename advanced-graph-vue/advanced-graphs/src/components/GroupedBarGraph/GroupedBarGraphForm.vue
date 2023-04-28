@@ -30,7 +30,7 @@
                       :name="'graph_type'"
                       :values="['stacked', 'grouped']"
                       :defaultValue="'stacked'"
-                      :labels="[module.tt('stacked'), module.tt('grouped')]"
+                      :labels="[module.tt('grouped_stacked'), module.tt('grouped_grouped')]"
                   ></radio-component>
               </helpful-parameter>
             </div>
@@ -48,28 +48,28 @@
               </helpful-parameter>
               <!-- NA Category One -->
               <helpful-parameter
-                  :label-text="module.tt('na_category')"
-                  :help-text="module.tt('na_category_help')"
+                  :label-text="module.tt('grouped_na_category')"
+                  :help-text="module.tt('grouped_na_category_help')"
               >
               <radio-component
                       v-model="formData.na_category_one"
                       :name="'na_category_one'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
+                      :labels="[module.tt('grouped_keep'), module.tt('grouped_drop')]"
                   ></radio-component>
               </helpful-parameter>
               <!-- Unused Categories One -->
               <helpful-parameter
-                  :label-text="module.tt('unused_categories_one')"
-                  :help-text="module.tt('unused_categories_help')"
+                  :label-text="module.tt('grouped_unused_categories_one')"
+                  :help-text="module.tt('grouped_unused_categories_help')"
               >
               <radio-component
                       v-model="formData.unused_categories_one"
                       :name="'unused_categories_one'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
+                      :labels="[module.tt('grouped_keep'), module.tt('grouped_drop')]"
                   ></radio-component>
               </helpful-parameter>
             </div>
@@ -86,28 +86,28 @@
               </helpful-parameter>
               <!-- NA Category Two -->
               <helpful-parameter
-                  :label-text="module.tt('na_category')"
-                  :help-text="module.tt('na_category_help')"
+                  :label-text="module.tt('grouped_na_category')"
+                  :help-text="module.tt('grouped_na_category_help')"
               >
               <radio-component
                       v-model="formData.na_category_two"
                       :name="'na_category_two'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
+                      :labels="[module.tt('grouped_keep'), module.tt('grouped_drop')]"
                   ></radio-component>
               </helpful-parameter>
               <!-- Unused Categories Two -->
               <helpful-parameter
-                  :label-text="module.tt('unused_categories_two')"
-                  :help-text="module.tt('unused_categories_help')"
+                  :label-text="module.tt('grouped_unused_categories_two')"
+                  :help-text="module.tt('grouped_unused_categories_help')"
               >
               <radio-component
                       v-model="formData.unused_categories_two"
                       :name="'unused_categories_two'"
                       :values="['keep', 'drop']"
                       :defaultValue="'keep'"
-                      :labels="[module.tt('keep'), module.tt('drop')]"
+                      :labels="[module.tt('grouped_keep'), module.tt('grouped_drop')]"
                   ></radio-component>
               </helpful-parameter>
             </div>
@@ -115,8 +115,8 @@
           <div>
               <!-- Numeric Field -->
               <helpful-parameter
-                  :label-text="module.tt('numeric_field')"
-                  :help-text="module.tt('numeric_field_help')"
+                  :label-text="module.tt('grouped_numeric_field')"
+                  :help-text="module.tt('grouped_numeric_field_help')"
               >
               <numeric-field-selector
                       v-model="formData.numeric_field"
@@ -128,15 +128,15 @@
                   v-if="formData.numeric_field !== null 
                     && typeof formData.numeric_field === 'string' 
                     && formData.is_count != true"
-                  :label-text="module.tt('na_numeric')"
-                  :help-text="module.tt('na_numeric_help')"
+                  :label-text="module.tt('grouped_na_numeric')"
+                  :help-text="module.tt('grouped_na_numeric_help')"
               >
                 <radio-component
                         v-model="formData.na_numeric"
                         :name="'na_numeric'"
                         :values="['drop', 'replace']"
                         :defaultValue="'drop'"
-                        :labels="[module.tt('drop'), module.tt('replace')]"
+                        :labels="[module.tt('grouped_drop'), module.tt('grouped_replace')]"
                     ></radio-component>
                 <input type="number" v-if="formData.na_numeric === 'replace'" v-model="formData.na_numeric_value" />
               </helpful-parameter>
@@ -145,8 +145,8 @@
                   v-if="formData.numeric_field !== null 
                     && typeof formData.numeric_field === 'string' 
                     && formData.is_count != true"
-                  :label-text="module.tt('aggregation_function')"
-                  :help-text="module.tt('aggregation_function_help')"
+                  :label-text="module.tt('grouped_aggregation_function')"
+                  :help-text="module.tt('grouped_aggregation_function_help')"
               >
                 <radio-component
                         v-model="formData.aggregation_function"

@@ -432,7 +432,7 @@ export default {
 
             // Return a paragraph tag element with the error message
             var errorDiv = document.createElement('p');
-            errorDiv.innerHTML = this.module.tt('Pie charts are not supported in this version of the module.');
+            errorDiv.innerHTML = 'Pie charts are not supported in this version of the module.';
             return errorDiv;
         },
     }

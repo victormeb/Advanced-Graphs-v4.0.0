@@ -4,22 +4,22 @@
       <div class="AG-bar-graph-options-row">
             <div class="AG-bar-graph-options-block">
                 <!-- Show legend -->
-                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
+                <label>{{module.tt("pie_show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
             </div>
         </div>
       <div class="AG-bar-graph-options-row">
         <div class="AG-bar-graph-options-block">
-          <h3>{{ module.tt('label_options') }}</h3>
-          <label>{{ module.tt('label_spacing') }}: <input ref="label_spacing" type="range" min="0" max="3" step="0.2" v-model.number="label_spacing" @input="updateParameters" /></label>
-          <label>{{ module.tt('label_size') }}: <input ref="label_size" type="range" min="0" max="50" v-model.number="label_size" @input="updateParameters" /></label>
-          <label>{{ module.tt('value_size') }}: <input ref="value_size" type="range" min="0" max="50" v-model.number="value_size" @input="updateParameters" /></label>
-          <label>{{ module.tt('value_precision') }}: <input ref="value_precision" type="number" min="0" max="10" v-model.number="value_precision" @input="updateParameters" /></label>
+          <h3>{{ module.tt('pie_label_options') }}</h3>
+          <label>{{ module.tt('pie_label_spacing') }}: <input ref="label_spacing" type="range" min="0" max="3" step="0.2" v-model.number="label_spacing" @input="updateParameters" /></label>
+          <label>{{ module.tt('pie_label_size') }}: <input ref="label_size" type="range" min="0" max="50" v-model.number="label_size" @input="updateParameters" /></label>
+          <label>{{ module.tt('pie_value_size') }}: <input ref="value_size" type="range" min="0" max="50" v-model.number="value_size" @input="updateParameters" /></label>
+          <label>{{ module.tt('pie_value_precision') }}: <input ref="value_precision" type="number" min="0" max="10" v-model.number="value_precision" @input="updateParameters" /></label>
         </div>
         <div class="AG-bar-graph-options-block">
-          <h3>{{ module.tt('separation_options') }}</h3>
-          <label>{{ module.tt('separation_force') }}: <input ref="seperation_force" type="range" min="0" max="50" v-model.number="seperation_force" @input="updateParameters" /></label>
-          <label>{{ module.tt('separation_strength') }}: <input ref="seperation_strength" type="range" min="1" max="2" step="0.1" v-model.number="seperation_strength" @input="updateParameters" /></label>
-          <label>{{ module.tt('separation_iterations') }}: <input ref="seperation_iterations" type="range" min="0" max="300" v-model.number="seperation_iterations" @input="updateParameters" /></label>
+          <h3>{{ module.tt('pie_separation_options') }}</h3>
+          <label>{{ module.tt('pie_separation_force') }}: <input ref="seperation_force" type="range" min="0" max="50" v-model.number="seperation_force" @input="updateParameters" /></label>
+          <label>{{ module.tt('pie_separation_strength') }}: <input ref="seperation_strength" type="range" min="1" max="2" step="0.1" v-model.number="seperation_strength" @input="updateParameters" /></label>
+          <label>{{ module.tt('pie_separation_iterations') }}: <input ref="seperation_iterations" type="range" min="0" max="300" v-model.number="seperation_iterations" @input="updateParameters" /></label>
         </div>
       </div>
     </div>

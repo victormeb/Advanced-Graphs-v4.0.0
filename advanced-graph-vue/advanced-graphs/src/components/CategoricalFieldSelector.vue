@@ -2,14 +2,14 @@
 <template>
     <div>
         <select v-model="currentField">
-            <option :value="null" :selected="true"> {{ module.tt('select_a_field') }} </option>
+            <option :value="null" :selected="true"> -- {{ module.tt('cfs_select_a_field') }} -- </option>
             <option v-for="(field, index) in radioFields" 
                 :key="index" 
                 :value="field.field_name" 
                 :selected="currentField==field">
                     {{ stripHtml(field.field_label) }}
             </option>
-            <optgroup v-if="checkboxFields.length" :label="module.tt('checkbox')">
+            <optgroup v-if="checkboxFields.length" :label="module.tt('csf_checkbox')">
                 <option v-for="(field, index) in checkboxFields" 
                 :key="index" 
                 :value="field.field_name" 

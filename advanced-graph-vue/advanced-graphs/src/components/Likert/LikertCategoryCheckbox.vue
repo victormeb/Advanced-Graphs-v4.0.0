@@ -6,7 +6,7 @@
         </div>
         <p>{{ selectedFields }}</p>
         <!-- Select All -->
-        <label>{{ module.tt('select_all') }}</label>
+        <label>{{ module.tt('likert_select_all') }}</label>
         <input type="checkbox" v-model="selectAll" @change="selectAllToggle" />
     </div>
 </template>
