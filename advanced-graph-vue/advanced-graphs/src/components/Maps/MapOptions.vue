@@ -4,7 +4,7 @@
         <div class="AG-bar-graph-options-row">
             <div class="AG-bar-graph-options-block">
                 <!-- Show legend -->
-                <label>{{module.tt("map_show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
+                <label><input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /> {{module.tt("map_show_legend")}}</label>
                 <label>{{module.tt("map_cluster_dots")}}:<input ref="cluster_dots" type="checkbox" v-model="cluster_dots" @change="updateParameters" /></label>
                 <label>{{module.tt("map_node_scaling")}}:<input ref="node_scaling" type="range" min="0" max="5" step="0.1" v-model.number="node_scaling" @input="updateParameters" /></label>
             </div>

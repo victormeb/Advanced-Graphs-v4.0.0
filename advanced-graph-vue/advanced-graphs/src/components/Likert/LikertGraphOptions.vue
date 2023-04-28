@@ -4,7 +4,7 @@
         <div class="AG-bar-graph-options-row">
             <div class="AG-bar-graph-options-block">
                 <!-- Show legend -->
-                <label>{{module.tt("likert_show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
+                <label><input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /> {{module.tt("likert_show_legend")}}</label>
             </div>
         </div>
       <div class="AG-bar-graph-options-row">

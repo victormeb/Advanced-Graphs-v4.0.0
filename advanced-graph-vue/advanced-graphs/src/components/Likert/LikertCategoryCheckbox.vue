@@ -1,8 +1,8 @@
 <template>
     <div>
         <div v-for="field in categoricalFields" :key="field.field_name" >
-            <label>{{ field.field_label }}</label>
             <input type="checkbox" :value="field.field_name" v-model="selectedFields" @change="onCheckboxChange" />
+            <label>{{ field.field_label }}</label>
         </div>
         <p>{{ selectedFields }}</p>
         <!-- Select All -->
