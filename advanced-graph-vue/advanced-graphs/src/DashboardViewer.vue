@@ -1,4 +1,7 @@
 <template>
+  <div>
+    <h1> {{ dahboard.title }}</h1>
+  </div>
   <div class="AG-viewer-dashboard">
     <div 
       v-for="(row, index) in rows" :key="index" class="AG-viewer-row">
