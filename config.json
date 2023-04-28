@@ -52,79 +52,11 @@
 		"advanced_graphs_ajax_public"
 	],
 	"permissions": [
-	"redcap_module_save_configuration",
-	"redcap_every_page_before_render",
-	"redcap_every_page_top",
-	"redcap_module_system_enable"
+		"redcap_module_save_configuration",
+		"redcap_every_page_before_render",
+		"redcap_every_page_top",
+		"redcap_module_system_enable"
 	],
-   "system-settings": [
-		{
-			"key": "r-settings",
-			"name": "R Settings",
-			"required": true,
-			"type": "sub_settings",
-			"repeatable":false,
-			"sub_settings":[
-				{
-					 "key": "r-path",
-					 "name": "RScript path (include Rscript.exe or the name you have)",
-					 "required": true,
-					 "type": "text",
-					 "repeatable": false
-				},
-				{
-					 "key": "pandoc-path",
-					 "name": "Pandoc path (folder name without last slash)",
-					 "required": true,
-					 "type": "text",
-					 "repeatable": false
-				},
-				{
-					 "key": "r-libraries-path",
-					 "name": "Path to R libraries (folder name without last slash)",
-					 "required": true,
-					 "type": "text",
-					 "repeatable": false
-				}
-			]
-		},
-		{
-			"key": "graph_types",
-			"name": "Graph Types: The name of the folder containing the information needed to create a graph form.",
-			"required": true,
-			"type": "text",
-			"repeatable": true
-		},
-		{
-			 "key": "projects-api-tokens-note",
-			 "name": "Tokens to be used by R to get report data. Only projects included in this list can use this module.",
-			 "required": false,
-			 "type": "descriptive",
-			 "repeatable": false
-		},
-		{
-			"key": "projects-api-tokens",
-			"name": "Projects API tokens",
-			"required": true,
-			"type": "sub_settings",
-			"repeatable":true,
-			"sub_settings":[
-				{
-					 "key": "project-pid",
-					 "name": "Project",
-					 "required": true,
-					 "type": "project-id",
-					 "repeatable": false
-				},
-				{
-					 "key": "project-token",
-					 "name": "Token",
-					 "required": true,
-					 "type": "text",
-					 "repeatable": false
-				}
-			]
-		}
-	 ],
+   "system-settings": [],
    "project-settings": []
 }
