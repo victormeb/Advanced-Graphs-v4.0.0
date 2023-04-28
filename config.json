@@ -18,12 +18,17 @@
 		"email": "aciganda@iecs.org.ar",
 		"institution": "IECS"
 	}],
-    "no-auth-pages": ["view_dash_public", "advanced_graphs_ajax_public"],
+	"no-csrf-pages": [
+		"view_dash_public"
+	],
+	"enable-no-auth-logging": true,
 	"auth-ajax-actions": [
 		"newDashboard",
 		"saveDashboard",
+		"deleteDashboard"
+	 ],
+	 "no-auth-ajax-actions": [
 		"getDashboards",
-		"deleteDashboard",
 		"getReportName"
 	 ],
 	"links": {
@@ -50,6 +55,10 @@
 		}
 		]
 	},
+	"no-auth-pages": [
+		"view_dash_public.php", 
+		"advanced_graphs_ajax_public"
+	],
 	"permissions": [
 	"redcap_module_save_configuration",
 	"redcap_every_page_before_render",

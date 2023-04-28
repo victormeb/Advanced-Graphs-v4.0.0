@@ -165,6 +165,8 @@ class AdvancedGraphsInteractive extends \ExternalModules\AbstractExternalModule
 		// 		return(null);
 		// }
 
+		echo json_encode($link);
+
 		return($link);
 
 
