@@ -26,10 +26,10 @@
                           :label-text="module.tt('scatter_field_x')"
                           :help-text="module.tt('scatter_field_help')"
                   >
-                      <numeric-field-selector
+                      <scatter-field-selector
                               v-model="formData.numeric_field"
                               :fields="report_fields_by_repeat_instrument[formData.instrument].fields"
-                      ></numeric-field-selector>
+                      ></scatter-field-selector>
                   </helpful-parameter>
               </div>
             <div class="AG-pane-right">
@@ -38,10 +38,10 @@
                   :label-text="module.tt('scatter_field_y')"
                   :help-text="module.tt('scatter_field_help')"
               >
-              <numeric-field-selector
+              <scatter-field-selector
                       v-model="formData.numeric_field_y"
                       :fields="report_fields_by_repeat_instrument[formData.instrument].fields"
-                  ></numeric-field-selector>
+                  ></scatter-field-selector>
               </helpful-parameter>
               <!-- NA Numeric -->
               <helpful-parameter
@@ -80,18 +80,17 @@
   import InstrumentSelector from "@/components/InstrumentSelector.vue";
   import RadioComponent from "@/components/RadioComponent.vue";
   //import CategoricalFieldSelector from "@/components/CategoricalFieldSelector.vue";
-  import NumericFieldSelector from "@/components/NumericFieldSelector.vue";
+  import ScatterFieldSelector from "./ScatterFieldSelector.vue";
   import PaletteSelector from "@/components/PaletteSelector.vue";
   //import { isCategoricalField } from "@/utils";
-  import { isNumericField } from "@/utils";
+  import { isDateField, isNumericField } from "@/utils";
 
   export default {
     components: {
       HelpfulParameter,
       InstrumentSelector,
       RadioComponent,
-    //  CategoricalFieldSelector,
-      NumericFieldSelector,
+      ScatterFieldSelector,
       PaletteSelector,
     },
     inject: ["module", "report_fields_by_repeat_instrument"],
@@ -178,7 +177,9 @@
       },
       instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
         // If there is a categorical field
-        if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isNumericField(field))) {
+        if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isNumericField(field))
+            || report_fields_by_repeat_instrument[instrument_name].fields.some(field => isDateField(field))
+        ) {
           // Return true
           return true;
         }

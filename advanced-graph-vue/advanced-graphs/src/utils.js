@@ -100,6 +100,12 @@ export function isTextField(field) {
     return field.field_type == 'text';
 }
 
+export function isDateField(field) {
+    return field.field_type == 'text' 
+    // And the first 4 characters of the text_validation_type_or_show_slider_number is date
+    && field.text_validation_type_or_show_slider_number.substring(0, 4) == 'date';
+}
+
 
 export function instrumentCanCreate(instrument, validationFunction) {
     return validationFunction(instrument);
@@ -119,6 +125,10 @@ export function getNumericFields(fields) {
 
 export function getTextFields(fields) {
     return fields.filter(isTextField);
+}
+
+export function getDateFields(fields) {
+    return fields.filter(isDateField);
 }
 
 export function getCoordinateFields(fields) {
