@@ -11,15 +11,12 @@
 	$dashboards = $module->getDashboards($project_id);
 
 
-	$module->loadJS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.umd.js');
-	$module->loadCSS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.css');
+	$module->loadJS('advanced-graphs/dist/AdvancedGraphs.umd.js');
+	$module->loadCSS('advanced-graphs/dist/AdvancedGraphs.css');
 
 	$js_module = $module->initializeJavascriptModuleObject();
 	$module->tt_transferToJavascriptModuleObject();
 ?>
-
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
 
 <div id="advanced_graphs">
     

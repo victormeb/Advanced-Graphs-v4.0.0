@@ -8,9 +8,9 @@ $project_id = $_GET['pid'];
 $dash_title = $module->getDashboardName($pid, $dash_id);
 
 // Page header
-// $objHtmlPage = new HtmlPage();
-// $objHtmlPage->setPageTitle(remBr(br2nl($app_title))." | REDCap");
-// $objHtmlPage->PrintHeader(false);
+$objHtmlPage = new HtmlPage();
+$objHtmlPage->setPageTitle(remBr(br2nl($app_title))." | REDCap");
+$objHtmlPage->PrintHeader(false);
 $dashboard = $module->getDashboards($pid, $dash_id)[0];
 
 
@@ -22,25 +22,6 @@ if ($dashboard['is_public'] != "1") {
 // Get the associated report ID from the dashboard
 if (isset($dashboard['report_id'])) {
     $report_id = $dashboard['report_id'];
-} else {
-    // // Get the reffering URL
-    // $referring_url = $_SERVER['HTTP_REFERER'];
-    
-    // // parse the URL
-    // $url_parts = parse_url($referring_url);
-
-    // // Get the query string
-    // $query_string = $url_parts['query'];
-
-    // // Parse the query string
-    // parse_str($query_string, $query_parts);
-
-    // // Get the report ID if there is one
-    // if (isset($query_parts['report_id'])) {
-    //     $report_id = $query_parts['report_id'];
-    // } else {
-    //     $report_id = null;
-    // }
 }
 
 // If the report ID is null, then we need to alert the user that they need to create a report first.
@@ -73,8 +54,8 @@ $js_module = $module->initializeJavascriptModuleObject();
 
 $module->tt_transferToJavascriptModuleObject();
 
-$module->loadJS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.umd.js');
-$module->loadCSS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.css');
+$module->loadJS('advanced-graphs/dist/AdvancedGraphs.umd.js');
+$module->loadCSS('advanced-graphs/dist/AdvancedGraphs.css');
 
 ?>
 

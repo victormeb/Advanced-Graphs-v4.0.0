@@ -1,3 +1,0 @@
-function setInteractions(form) {
-
-}

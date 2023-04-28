@@ -62,8 +62,6 @@ if ($report_id == null) {
 $report_name = $module->getReportName($project_id, $report_id);
 
 // Get the report
-// $report = $module->getReport($project_id, $report_id);
-// $report = $module->get_report($project_id, $report_id, array(), null, "array");
 $report = $module->getReport($report_id);
 
 // Get the report fields
@@ -75,22 +73,12 @@ $data_dictionary = $module->getDataDictionary($project_id);
 // Get the report fields by the repeating instruments
 $report_fields_by_reapeat_instrument = $module->getReportFieldsByRepeatInstrument($project_id, $report_id);
 
-// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-vendors.js');
-// $module->loadJS('advanced-graph-vue/advanced-graphs/dist/js/chunk-common.js');
-// $module->loadCSS('advanced-graph-vue/advanced-graphs/dist/css/chunk-vendors.css');
-
 $js_module = $module->initializeJavascriptModuleObject();
 
 $module->tt_transferToJavascriptModuleObject();
-?>
-<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
 
-<?php 
-$module->loadJS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.umd.js');
-$module->loadCSS('advanced-graph-vue/advanced-graphs/dist/AdvancedGraphs.css');
-
+$module->loadJS('advanced-graphs/dist/AdvancedGraphs.umd.js');
+$module->loadCSS('advanced-graphs/dist/AdvancedGraphs.css');
 ?>
 
 <div id="advanced_graphs">
