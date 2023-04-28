@@ -12,6 +12,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
     "@fortawesome/free-solid-svg-icons": "^6.4.0",
     "@fortawesome/vue-fontawesome": "^3.0.3",
+    "@observablehq/plot": "^0.6.6",
     "bootstrap": "^5.2.3",
     "core-js": "^3.8.3",
     "d3": "^7.8.3",
