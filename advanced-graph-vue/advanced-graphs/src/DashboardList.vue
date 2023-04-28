@@ -90,7 +90,8 @@ export default {
     getPublicLink(dashboard) {
       // If the dashboard is public, then return the public link
       if (dashboard.is_public) {
-        return this.module.getUrl('view_dash_public.php') 
+        return this.module.getUrl('view_dash_public.php')
+        + '&NOAUTH'
         + '&report_id=' + dashboard.report_id 
         + '&dash_id=' + dashboard.dash_id;
       

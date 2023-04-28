@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1> {{ dahboard.title }}</h1>
+    <h1> {{ dashboard.title }}</h1>
   </div>
   <div class="AG-viewer-dashboard">
     <div 

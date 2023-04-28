@@ -1,4 +1,4 @@
-<!-- ScatterPlotForm.vue -->
+<!-- NetworkGraphForm.vue -->
 <template>
     <form>
       <!-- Your form elements for gathering the required parameters -->
@@ -15,7 +15,7 @@
                   :help-text="module.tt('title_help')">
                   <input type="text" v-model="formData.title">
               </helpful-parameter>
-              <!-- Graph Type: scatter or network -->
+              <!-- Graph Type: network -->
                   <helpful-parameter
                           :label-text="module.tt('graph_type')"
                           :help-text="module.tt('graph_type_help')"
@@ -23,9 +23,9 @@
                       <radio-component
                               v-model="formData.graph_type"
                               :name="'graph_type'"
-                              :values="['scatter','network']"
-                              :defaultValue="'scatter'"
-                              :labels="[module.tt('scatter','network')]"
+                              :values="['network_graph']"
+                              :defaultValue="'network_graph'"
+                              :labels="[module.tt('network_graph')]"
                       ></radio-component>
                   </helpful-parameter>
               <!-- Description -->
@@ -58,8 +58,8 @@
               </helpful-parameter>
               <!-- NA Numeric -->
               <helpful-parameter
-                  v-if="formData.numeric_field !== null 
-                    && typeof formData.numeric_field === 'string' 
+                  v-if="formData.numeric_field !== null
+                    && typeof formData.numeric_field === 'string'
                     && formData.is_count != true"
                   :label-text="module.tt('na_numeric')"
                   :help-text="module.tt('na_numeric_help')"
@@ -87,7 +87,7 @@
         </div>
       </form>
   </template>
-  
+
   <script>
   import HelpfulParameter from "@/components/HelpfulParameter.vue";
   import InstrumentSelector from "@/components/InstrumentSelector.vue";
