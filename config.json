@@ -32,14 +32,6 @@
 		"getReportName"
 	 ],
 	"links": {
-		"control-center": [
-			{
-				"name": "Advanced Graphs Configuration",
-				"icon": "gear",
-				"url": "advanced_graphs_config.php",
-				"id": "advanced_graphs_config"
-			}
-		],
 		"project": [
 		{
 			"name": "New Advanced Graphs Dashboard",
