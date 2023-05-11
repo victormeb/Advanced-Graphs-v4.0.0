@@ -387,10 +387,10 @@ export default {
         .force("link", d3.forceLink().id(function(d) { return d.id; }))
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("x", d3.forceX(width / 2).strength(0.1))
-        .force("y", d3.forceY(height / 2).strength(0.1))
-        .force("collide", d3.forceCollide().radius(20).strength(0.75).iterations(1))
-        .force("charge", d3.forceManyBody().strength(-50));
+        .force("x", d3.forceX(width / 2).strength(parameters.x_rotate * 0.001 ) )
+        .force("y", d3.forceY(height / 2).strength(parameters.y_rotate * 0.001 ) )
+        .force("collide", d3.forceCollide().radius(parameters.x_label_length).strength(parameters.y_label_length*.06).iterations(1))    // 20,  0.75
+        .force("charge", d3.forceManyBody().strength(-50));  //-50
 
       svg.append('defs').append('marker')
         .attr('id', 'arrowhead')

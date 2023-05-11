@@ -22,8 +22,8 @@
 <!--                    @update:modelValue="updateParameters"-->
 <!--                ></radio-component>-->
             </label>
-            <label>{{module.tt("x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("collision_radius")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("x_force")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
             <label>{{module.tt("x_title_offset")}}:<input ref="x_title_offset" type="range" :min="0" :max="bottom_margin" v-model.number="x_title_offset" @input="updateParameters" /></label>
         </div>
         <div class="AG-network-plot-options-block">
@@ -39,8 +39,8 @@
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
-            <label>{{module.tt("y_label_length")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("y_rotate")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("collision_strength")}}:<input ref="y_label_length" type="range" min="0" max="50" v-model.number="y_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("y_force")}}:<input ref="y_rotate" type="range" min="0" max="360" v-model.number="y_rotate" @input="updateParameters" /></label>
             <label>{{module.tt("y_title_offset")}}:<input ref="y_title_offset" type="range" min="0" max="100" v-model.number="y_title_offset" @input="updateParameters" /></label>
         </div>
       </div>
@@ -142,7 +142,7 @@
             const x_title_size = this.parameters.x_title_size ? Number(this.parameters.x_title_size) : 15;
             const x_label_size = this.parameters.x_label_size ? Number(this.parameters.x_label_size) : 10;
             const x_label_limit = this.parameters.x_label_limit ? Number(this.parameters.x_label_limit) : null;
-            const x_label_length =  this.parameters.x_label_length ? Number(this.parameters.x_label_length)  : 10; // Math.max(...domain.map(d => choices[d].length));
+            const x_label_length =  this.parameters.x_label_length ? Number(this.parameters.x_label_length)  : 20; // Math.max(...domain.map(d => choices[d].length));
 
             // Get the x tick format
             // var x_tick_format = d => choices[d];
@@ -158,12 +158,12 @@
 
             const x_rotate = this.parameters.x_rotate ? Number(this.parameters.x_rotate) : (x_label_length * x_label_size * 1.2 > 32) ? 90 : 0;   //Number(this.parameters.x_rotate);
             const x_title_offset = this.parameters.x_title_offset ? Number(this.parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
-            const bottom_margin = this.parameters.bottom_margin ? Number(this.parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
+            const bottom_margin = this.parameters.bottom_margin ? Number(this.parameters.bottom_margin) : 50; //x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
 
             const y_title_size = this.parameters.y_title_size ? Number(this.parameters.y_title_size) : 15;
             const y_label_size = this.parameters.y_label_size ? Number(this.parameters.y_label_size) : 10;
             const marker_type = this.parameters.marker_type ? Number(this.parameters.marker_type) : null;
-            const y_label_length = Number(this.parameters.y_label_length);   //this.parameters.y_label_length ? Number(this.parameters.y_label_length) : Math.max(...barHeights.map(d => d.value.toString().length));
+            const y_label_length = this.parameters.y_label_length ? Number(this.parameters.y_label_length) : 7.5 ;   //this.parameters.y_label_length ? Number(this.parameters.y_label_length) : Math.max(...barHeights.map(d => d.value.toString().length));
 
             // Get the y tick format
             var y_tick_format = d => d;1
@@ -185,7 +185,7 @@
             const dot_color = this.parameters.dot_color ? Number(this.parameters.dot_color) : 4.5;
 
 
-            const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
+            const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 100;
             const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
 
             const show_legend = this.parameters.show_legend === true ? true : false;
