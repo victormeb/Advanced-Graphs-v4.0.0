@@ -376,7 +376,7 @@ export default {
 
       // Create the network graph using D3.js
       var width = 600;
-      var height = 400;
+      var height = 600 - parameters.bottom_margin;
 
       var svg = d3.select("body")
         .append("svg")
@@ -392,29 +392,88 @@ export default {
         .force("collide", d3.forceCollide().radius(20).strength(0.75).iterations(1))
         .force("charge", d3.forceManyBody().strength(-50));
 
+      svg.append('defs').append('marker')
+        .attr('id', 'arrowhead')
+        .attr('viewBox', '-0 -5 10 10')
+        .attr('refX', 13)
+        .attr('refY', 0)
+        .attr('orient', 'auto')
+        .attr('markerWidth', 13)
+        .attr('markerHeight', 13)
+        .attr('xoverflow', 'visible')
+        .append('svg:path')
+        .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+        .attr('fill', '#999')
+        .style('stroke','none');
+
       /*var link = svg.selectAll(".link")
         .data(edges)
         .enter().append("line")
         .attr("class", "link");*/
       // draw line for each link, color it black, make it 1px wide
-      var link = svg.selectAll(".link")
-        .data(edges)
-        .enter().append("line")
-        .attr("class", "link")
-        .style("stroke", "black")
-        .style("stroke-width", "1px");
 
-      var node = svg.selectAll(".node")
-        .data(nodes)
-        .enter().append("circle")
-        //  .enter().append("path")
-        //  .attr("d", d3.symbol().type(d3.symbolTriangle))
-        .attr("class", "node")
-        .attr("fill", colorScale(parameters.dot_color*12))
-        .attr("r", parameters.dot_size+2);
 
-      node.append("title")
-        .text(function(d) { return d.label; });
+      var link;
+      if (parameters.marker_type == "directed") {
+          link = svg.selectAll(".link")
+              .data(edges)
+              .enter().append("line")
+              .attr("class", "link")
+              .style("stroke", "black")
+              .style("stroke-width", "1px")
+              .attr('marker-end', 'url(#arrowhead)');
+      } else {
+          link = svg.selectAll(".link")
+              .data(edges)
+              .enter().append("line")
+              .attr("class", "link")
+              .style("stroke", "black")
+              .style("stroke-width", "1px");
+      }
+
+        //     var node = svg.selectAll(".node")
+  //       .data(nodes)
+  //       .enter().append("circle")
+  //       //  .enter().append("path")
+  //       //  .attr("d", d3.symbol().type(d3.symbolTriangle))
+  //       .attr("class", "node")
+  //         .text("12345")
+  // //      .attr("fill", colorScale(parameters.dot_color*12))
+  //       .attr("r", parameters.dot_size+2);
+
+        let node = svg.selectAll(".node")
+            .data(nodes)
+            .enter().append("g");
+
+        node.append("circle")
+            // enter().append("circle")
+            .attr("class", "node")
+            .attr("fill", colorScale(parameters.dot_color*12))
+            .attr("r", parameters.dot_size+2)
+            .attr("dx", 0)  // offset the label to the right of the node
+            .attr("dy", 0);  // vertically align the label with the node
+
+        if(parameters.show_legend) {
+            node.append("text")
+                .text(function (d) {
+                    return d.id;  // replace 'id' with the property name for your label
+                })
+                .style("font-size", parameters.x_label_size + "px")  // control the font size here
+
+                .attr("dx", 2)  // offset the label to the right of the node
+                .attr("dy", ".35em");  // vertically align the label with the node
+        }
+
+      // node.append("title")
+      //   .text(function(d) { return d.id; }); //  .. .label; });
+
+      // // Append "text" elements to the nodes
+      // node.append("label")
+      //   .text("test123") //function(d) {
+      //   //   return d.id;
+      //   // })
+      //   .attr('x', 39)
+      //   .attr('y', 69);
 
       simulation.nodes(nodes)
         .on("tick", ticked);
@@ -450,12 +509,15 @@ export default {
           });
 
         node
-          .attr("cx", function (d) {
-            return d.x;
-          })
-          .attr("cy", function (d) {
-            return d.y;
-          });
+          // .attr("cx", function (d) {
+          //   return d.x;
+          // })
+          // .attr("cy", function (d) {
+          //   return d.y;
+          // });
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
 
       }
 

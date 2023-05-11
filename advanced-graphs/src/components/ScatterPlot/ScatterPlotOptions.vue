@@ -254,7 +254,7 @@
                 this.$refs.y_label_length.value = this.y_label_length;
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
-                this.$refs.left_margin.value = this.left_margin;
+                // this.$refs.left_margin.value = this.left_margin;
                 this.$refs.scatter_dot_size.value = this.scatter_dot_size;
                 this.$refs.scatter_dot_color.value = this.scatter_dot_color;
                 // this.$refs.show_legend.checked = this.show_legend;

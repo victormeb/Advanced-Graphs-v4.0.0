@@ -4,7 +4,7 @@
         <div class="AG-network-plot-options-row">
             <div class="AG-network-plot-options-block">
                 <!-- Show legend -->
-<!--                <label>{{module.tt("show_legend")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>-->
+                <label>{{module.tt("show_labels")}}:<input ref="show_legend" type="checkbox" v-model="show_legend" @change="updateParameters" /></label>
             </div>
         </div>
       <div class="AG-network-plot-options-row">
@@ -12,7 +12,7 @@
             <h3>{{ module.tt("x_axis") }}</h3>
             <label>{{module.tt("bottom_margin")}}:<input ref="bottom_margin" type="number" v-model.number="bottom_margin" @input="updateParameters" />10</label>
             <label>{{module.tt("x_title_size")}}:<input ref="x_title_size" type="range" min="0" max="50" v-model.number="x_title_size" @input="updateParameters" /></label>
-            <label>{{module.tt("x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("node_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
             <label>{{module.tt("x_label_wrap")}}:
 <!--                <radio-component-->
 <!--                    v-model="x_label_limit"-->
@@ -30,12 +30,12 @@
             <h3>{{module.tt("y_axis")}}</h3>
             <label>{{module.tt("y_title_size")}}:<input ref="y_title_size" type="range" min="0" max="50" v-model.number="y_title_size" @input="updateParameters" /></label>
             <label>{{module.tt("y_label_size")}}:<input ref="y_label_size" type="range" min="0" max="50" v-model.number="y_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("marker_shape")}}:
+            <label>{{module.tt("edge_type")}}:
                 <radio-component
                     v-model="marker_type"
-                    :values="['circle', 'square', 'triangle']"
-                    :labels="[module.tt('circle'), module.tt('diamond'), module.tt('triangle')]"
-                    :defaultValue="'circle'"
+                    :values="['directed', 'undirected']"
+                    :labels="[module.tt('directed'), module.tt('undirected')]"
+                    :defaultValue="'directed'"
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
@@ -188,7 +188,7 @@
             const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
             const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
 
-            // const show_legend = this.parameters.show_legend === true ? true : false;
+            const show_legend = this.parameters.show_legend === true ? true : false;
 
             return {
                 x_title_size,
@@ -208,7 +208,7 @@
                 y_title_offset,
                 dot_size,
                 dot_color,
-                // show_legend,
+                show_legend,
             }
         },
         methods: {
@@ -231,7 +231,7 @@
                 y_title_offset: this.y_title_offset,
                 dot_size: this.dot_size,
                 dot_color: this.dot_color,
-                // show_legend: this.show_legend,
+                show_legend: this.show_legend,
                 });
             },
         },
@@ -252,7 +252,7 @@
                 this.$refs.y_title_offset.value = this.y_title_offset;
                 this.$refs.dot_size.value = this.dot_size;
                 this.$refs.dot_color.value = this.dot_color;
-                // this.$refs.show_legend.checked = this.show_legend;
+                this.$refs.show_legend.checked = this.show_legend;
             });
 
             // emit the parameters to the parent with the new values, keeping the unchanged values
