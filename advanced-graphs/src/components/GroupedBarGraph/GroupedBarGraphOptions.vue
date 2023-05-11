@@ -293,7 +293,7 @@
                 this.$refs.y_label_length.value = this.y_label_length;
                 this.$refs.y_rotate.value = this.y_rotate;
                 this.$refs.y_title_offset.value = this.y_title_offset;
-                this.$refs.left_margin.value = this.left_margin;
+                // this.$refs.left_margin.value = this.left_margin;
                 this.$refs.bar_label_size.value = this.bar_label_size;
                 this.$refs.bar_label_position.value = this.bar_label_position;
                 this.$refs.show_legend.checked = this.show_legend;
