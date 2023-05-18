@@ -251,7 +251,7 @@ export default {
                 type: 'band',
                 tickFormat: x_tick_format,
                 tickRotate:  x_rotate,
-                fontSize: x_label_size, 
+                fontSize: 88, //x_label_size,
             });
 
             // Create x axis title
@@ -332,7 +332,7 @@ export default {
                         range: colorDomain.map(d => colorScale(d)),
                         title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
                         format: x_tick_format,
-                        legend: show_legend ? true : true,
+                        legend: show_legend ? true : false,
                     },
                     marks: [
                         yAxisTitle,
@@ -370,12 +370,13 @@ export default {
                 const color_label_rotate = parameters.color_label_rotate ? Number(parameters.color_label_rotate) : 0;
                 const color_label_size = parameters.color_label_size ? Number(parameters.color_label_size) : 10;
 
+                console.log(color_label_size,color_label_rotate);
                 xAxisLabels = Plot.axisX(colorDomain, {
                     domain: colorDomain,
                     type: 'band',
                     tickFormat: color_tick_format,
-                    tickRotate:  color_label_rotate,
-                    fontSize: color_label_size, 
+                    tickRotate:  x_rotate,
+                    fontSize: x_label_size,
                 });
 
                 barLabels = Plot.text(
