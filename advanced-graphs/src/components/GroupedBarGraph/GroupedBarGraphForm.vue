@@ -30,7 +30,7 @@
                       :name="'graph_type'"
                       :values="['stacked', 'grouped']"
                       :defaultValue="'stacked'"
-                      :labels="[module.tt('grouped__stacked_stacked'), module.tt('grouped_grouped')]"
+                      :labels="[module.tt('grouped_stacked_stacked'), module.tt('grouped_grouped')]"
                   ></radio-component>
               </helpful-parameter>
             </div>
