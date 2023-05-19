@@ -25,7 +25,8 @@
 	"auth-ajax-actions": [
 		"newDashboard",
 		"saveDashboard",
-		"deleteDashboard"
+		"deleteDashboard",
+		"getReportName"
 	 ],
 	 "no-auth-ajax-actions": [
 		"getDashboards",
