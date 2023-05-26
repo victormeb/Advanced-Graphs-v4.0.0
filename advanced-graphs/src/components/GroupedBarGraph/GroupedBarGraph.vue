@@ -251,7 +251,7 @@ export default {
                 type: 'band',
                 tickFormat: x_tick_format,
                 tickRotate:  x_rotate,
-                fontSize: 88, //x_label_size,
+                fontSize: x_label_size,
             });
 
             // Create x axis title
