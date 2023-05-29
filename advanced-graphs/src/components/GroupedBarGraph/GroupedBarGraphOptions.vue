@@ -18,7 +18,7 @@
                 <radio-component
                     v-model="x_label_limit"
                     :values="['truncate', 'wrap', 'none']"
-                    :labels="[module.tt('grouped_truncate'), module.tt('grouped_wrap'), module.tt('grouped_bar_none')]"
+                    :labels="[module.tt('grouped_truncate'), module.tt('grouped_wrap'), module.tt('grouped_none')]"
                     :defaultValue="'none'"
                     @update:modelValue="updateParameters"
                 ></radio-component>
