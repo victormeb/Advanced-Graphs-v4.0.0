@@ -31,7 +31,7 @@
     props: {
       modelValue: {
         type: Array,
-        default: () => ["#3E4A89", "#31688E", "#26828E", "#1F9E89", "#35B779", "#6DCD59"],
+        default: () => ["#7734EA", "#00A7EA", "#8AE800", "#FAF100", "#FFAA00", "#FF0061"],
       }
     },
     data() {
