@@ -31413,31 +31413,31 @@ function NumericFieldSelectorvue_type_template_id_31d96034_scoped_true_render(_c
 const NumericFieldSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(NumericFieldSelectorvue_type_script_lang_js, [['render',NumericFieldSelectorvue_type_template_id_31d96034_scoped_true_render],['__scopeId',"data-v-31d96034"]])
 
 /* harmony default export */ var NumericFieldSelector = (NumericFieldSelector_exports_);
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=template&id=60186e0d&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=template&id=2077da49&scoped=true
 
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId = n => (pushScopeId("data-v-60186e0d"), n = n(), popScopeId(), n);
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_1 = {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId = n => (pushScopeId("data-v-2077da49"), n = n(), popScopeId(), n);
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_1 = {
   class: "palette-container"
 };
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_2 = /*#__PURE__*/PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_2 = /*#__PURE__*/PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
   class: "fa fa-plus",
   "aria-hidden": "true"
 }, null, -1));
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_3 = [PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_2];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_4 = ["onClick"];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_5 = /*#__PURE__*/PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_3 = [PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_2];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_4 = ["onClick"];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_5 = /*#__PURE__*/PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
   class: "fa fa-times",
   "aria-hidden": "true"
 }, null, -1));
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_6 = [PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_5];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_7 = ["onUpdate:modelValue"];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_8 = ["onClick"];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_9 = /*#__PURE__*/PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_6 = [PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_5];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_7 = ["onUpdate:modelValue"];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_8 = ["onClick"];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_9 = /*#__PURE__*/PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
   class: "fa fa-plus",
   "aria-hidden": "true"
 }, null, -1));
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_10 = [PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_9];
-function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_10 = [PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_9];
+function PaletteSelectorvue_type_template_id_2077da49_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_help_modal = resolveComponent("help-modal");
   return openBlock(), createElementBlock("div", null, [createBaseVNode("button", {
     type: "button",
@@ -31446,28 +31446,28 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
     key: 0,
     onClose: _cache[2] || (_cache[2] = $event => $data.showModal = false)
   }, {
-    default: withCtx(() => [createBaseVNode("h3", null, toDisplayString($options.module.tt("palette_palette_selector")), 1), createBaseVNode("div", PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_1, [createBaseVNode("button", {
+    default: withCtx(() => [createBaseVNode("h3", null, toDisplayString($options.module.tt("palette_palette_selector")), 1), createBaseVNode("div", PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_1, [createBaseVNode("button", {
       type: "button",
       onClick: _cache[1] || (_cache[1] = $event => $data.colors.splice(0, 0, '#000000'))
-    }, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_3), (openBlock(true), createElementBlock(runtime_core_esm_bundler_Fragment, null, renderList($data.colors, (color, index) => {
+    }, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_3), (openBlock(true), createElementBlock(runtime_core_esm_bundler_Fragment, null, renderList($data.colors, (color, index) => {
       return openBlock(), createElementBlock("div", {
         class: "color-container",
         key: index
       }, [createBaseVNode("button", {
         type: "button",
         onClick: $event => $data.colors.splice(index, 1)
-      }, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_6, 8, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_4), withDirectives(createBaseVNode("input", {
+      }, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_6, 8, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_4), withDirectives(createBaseVNode("input", {
         type: "color",
         "onUpdate:modelValue": $event => $data.colors[index] = $event
-      }, null, 8, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_7), [[vModelText, $data.colors[index]]]), createBaseVNode("button", {
+      }, null, 8, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_7), [[vModelText, $data.colors[index]]]), createBaseVNode("button", {
         type: "button",
         onClick: $event => $data.colors.splice(index + 1, 0, '#000000')
-      }, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_10, 8, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_8)]);
+      }, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_10, 8, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_8)]);
     }), 128))])]),
     _: 1
   })) : createCommentVNode("", true)]);
 }
-;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=template&id=60186e0d&scoped=true
+;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=template&id=2077da49&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=script&lang=js
 
@@ -31480,7 +31480,7 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
   props: {
     modelValue: {
       type: Array,
-      default: () => ["#3E4A89", "#31688E", "#26828E", "#1F9E89", "#35B779", "#6DCD59"]
+      default: () => ["#7734EA", "#00A7EA", "#8AE800", "#FAF100", "#FFAA00", "#FF0061"]
     }
   },
   data() {
@@ -31500,10 +31500,10 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
 });
 ;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=style&index=0&id=60186e0d&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=style&index=0&id=2077da49&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=style&index=0&id=60186e0d&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=style&index=0&id=2077da49&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue
 
@@ -31513,7 +31513,7 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
 ;
 
 
-const PaletteSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(PaletteSelectorvue_type_script_lang_js, [['render',PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render],['__scopeId',"data-v-60186e0d"]])
+const PaletteSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(PaletteSelectorvue_type_script_lang_js, [['render',PaletteSelectorvue_type_template_id_2077da49_scoped_true_render],['__scopeId',"data-v-2077da49"]])
 
 /* harmony default export */ var PaletteSelector = (PaletteSelector_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphForm.vue?vue&type=script&lang=js
@@ -63170,42 +63170,42 @@ function outerRange(scale) {
   return [x1, x2 + scale.bandwidth()];
 }
 
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=46abc3ec&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=1195c026&scoped=true
 
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_withScopeId = n => (_pushScopeId("data-v-46abc3ec"), n = n(), _popScopeId(), n);
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_1 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_withScopeId = n => (_pushScopeId("data-v-1195c026"), n = n(), _popScopeId(), n);
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_1 = {
   class: "AG-bar-graph-options"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_2 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_2 = {
   class: "AG-bar-graph-options-row"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_3 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_3 = {
   class: "AG-bar-graph-options-block"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_4 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_4 = {
   class: "AG-bar-graph-options-row"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_5 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_5 = {
   class: "AG-bar-graph-options-block"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_6 = ["max"];
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_7 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_6 = ["max"];
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_7 = {
   class: "AG-bar-graph-options-block"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_8 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_8 = {
   class: "AG-bar-graph-options-row"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_9 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_9 = {
   class: "AG-bar-graph-options-block"
 };
-function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+function BarGraphOptionsvue_type_template_id_1195c026_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_radio_component = resolveComponent("radio-component");
-  return openBlock(), createElementBlock("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_1, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_2, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_3, [createBaseVNode("label", null, [withDirectives(createBaseVNode("input", {
+  return openBlock(), createElementBlock("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_1, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_2, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_3, [createBaseVNode("label", null, [withDirectives(createBaseVNode("input", {
     ref: "show_legend",
     type: "checkbox",
     "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => $data.show_legend = $event),
     onChange: _cache[1] || (_cache[1] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 544), [[vModelCheckbox, $data.show_legend]]), createTextVNode(" " + toDisplayString($options.module.tt("bar_show_legend")), 1)])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_4, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_5, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_x_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bottom_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }, null, 544), [[vModelCheckbox, $data.show_legend]]), createTextVNode(" " + toDisplayString($options.module.tt("bar_show_legend")), 1)])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_4, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_5, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_x_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bottom_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bottom_margin",
     type: "number",
     "onUpdate:modelValue": _cache[2] || (_cache[2] = $event => $data.bottom_margin = $event),
@@ -63219,7 +63219,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     max: $data.bottom_margin,
     "onUpdate:modelValue": _cache[4] || (_cache[4] = $event => $data.x_title_offset = $event),
     onInput: _cache[5] || (_cache[5] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 40, BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_6), [[vModelText, $data.x_title_offset, void 0, {
+  }, null, 40, BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_6), [[vModelText, $data.x_title_offset, void 0, {
     number: true
   }]])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_x_title_size")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "x_title_size",
@@ -63263,7 +63263,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     onInput: _cache[14] || (_cache[14] = (...args) => $options.updateParameters && $options.updateParameters(...args))
   }, null, 544), [[vModelText, $data.x_rotate, void 0, {
     number: true
-  }]])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_7, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_y_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_left_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }]])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_7, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_y_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_left_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bottom_margin",
     type: "number",
     "onUpdate:modelValue": _cache[15] || (_cache[15] = $event => $data.left_margin = $event),
@@ -63321,7 +63321,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     onInput: _cache[27] || (_cache[27] = (...args) => $options.updateParameters && $options.updateParameters(...args))
   }, null, 544), [[vModelText, $data.y_rotate, void 0, {
     number: true
-  }]])])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_8, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_9, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_bar_labels")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bar_label_size")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }]])])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_8, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_9, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_bar_labels")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bar_label_size")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bar_label_size",
     type: "range",
     min: "0",
@@ -63342,7 +63342,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     number: true
   }]])])])])]);
 }
-;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=46abc3ec&scoped=true
+;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=1195c026&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=script&lang=js
 
@@ -63471,8 +63471,8 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     // if (typeof y_label_limit != 'undefined' && y_label_limit != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
     //     y_tick_format = d => d3.format(y_label_limit)(d);
     // }
-    const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 10;
-    const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 4.5;
+    const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 15;
+    const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 7;
     const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
     const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
     const left_margin = this.parameters.left_margin ? Number(this.parameters.left_margin) : y_label_length * y_label_size * Math.sin(y_rotate * Math.PI / 180) * 0.5 + y_title_size * 2 + 20;
@@ -63551,10 +63551,10 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
 });
 ;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=46abc3ec&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=1195c026&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=46abc3ec&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=1195c026&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue
 
@@ -63564,7 +63564,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
 ;
 
 
-const BarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(BarGraphOptionsvue_type_script_lang_js, [['render',BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render],['__scopeId',"data-v-46abc3ec"]])
+const BarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(BarGraphOptionsvue_type_script_lang_js, [['render',BarGraphOptionsvue_type_template_id_1195c026_scoped_true_render],['__scopeId',"data-v-1195c026"]])
 
 /* harmony default export */ var BarGraphOptions = (BarGraphOptions_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/PieGraphOptions.vue?vue&type=template&id=6665c51e&scoped=true
