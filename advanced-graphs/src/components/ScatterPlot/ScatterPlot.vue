@@ -179,12 +179,12 @@ export default {
             const x_rotate = parameters.x_rotate ; //|| parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
             const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
             const bottom_margin = parameters.bottom_margin ? Number(parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
-            
+
             const y_title_size = parameters.y_title_size ? Number(parameters.y_title_size) : 15;
             const y_label_size = parameters.y_label_size ? Number(parameters.y_label_size) : 10;
             // const y_label_limit = parameters.y_label_limit ? parameters.y_label_limit : null;
             // const y_label_length = parameters.y_label_length ; //? Number(parameters.y_label_length) : Math.max(...domain.map(d => choices[d].length));
-            
+
             // Get the y tick format
             // var y_tick_format = d => d;
 
@@ -215,13 +215,14 @@ export default {
             const y_title =  getFieldLabel(this.data_dictionary[parameters.numeric_field_y]);  // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count'
 
             var graph = null;
-        
+
             const xAxisLabels = Plot.axisX( {
                 //domain: domain,
                 type: 'band',
                 // tickFormat: x_tick_format,
                 tickRotate:  x_rotate,
                 fontSize: x_label_size,
+                label: null,
             });
 
             // Create x axis title
@@ -230,8 +231,8 @@ export default {
                 type: 'band',
                 label:  getFieldLabel(this.data_dictionary[parameters.numeric_field]),
                 labelOffset: x_title_offset,
-                ticks: null,
-                tickFormat: null,
+                tick: null,
+                tickFormat: () => '',
                 fontSize: x_title_size
             });
 
@@ -318,7 +319,15 @@ export default {
 
                 fill: colorScale(parameters.scatter_dot_color*10)
             });
-
+            console.log("yAxisLabels")
+            console.log(yAxisLabels)
+            //calc min and max of x axis
+            let minx = Math.min(...xValues);
+            let maxx = Math.max(...xValues);
+            let domainX = [minx, maxx];
+            let miny = Math.min(...yValues);
+            let maxy = Math.max(...yValues);
+            let domainY = [miny, maxy];
             graph = Plot.plot({
                 marks: [ (parameters.marker_type == "circle")? dotPlot :
                     (parameters.marker_type == "square")?squarePlot:squarePlot,
@@ -331,10 +340,16 @@ export default {
                     marginBottom: bottom_margin,
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
                 x: {
+                    //label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                    domain: domainX,
+                    //tickRotate: x_rotate,
+                },
+                y: {
                     label: '',
+                    domain: domainY,
                 },
             });
-
+            console.log("xAxisTitle",xAxisTitle)
             // return scatterplot;
             return graph;
         },
