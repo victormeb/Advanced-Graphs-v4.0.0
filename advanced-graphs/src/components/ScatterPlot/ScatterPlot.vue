@@ -31,6 +31,69 @@ import ScatterPlotOptions from './ScatterPlotOptions.vue';
 import { markRaw } from 'vue';
 //import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
 
+/////////////////////////////////////
+// Usage example
+// const startDate = "2023-01-01";
+// const endDate = "2023-12-31";
+// const evenlySpacedDates = getEvenlySpacedDates(startDate, endDate);
+function getEvenlySpacedDates(startDate, endDate) {
+    const dates = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const interval = Math.floor((end - start) / 9); // Calculate interval between dates
+
+    for (let i = 0; i < 10; i++) {
+        const date = new Date(start.getTime() + i * interval);
+        const formattedDate = date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+        dates.push(formattedDate);
+    }
+
+    return dates;
+}
+
+
+// Example usage
+// const dates = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const { oldestDate, newestDate } = getOldestAndNewestDates(dates);
+function getOldestAndNewestDates(dates) {
+    const sortedDates = dates.slice().sort();
+    const oldestDate = sortedDates[0];
+    const newestDate = sortedDates[sortedDates.length - 1];
+    return { oldestDate, newestDate };
+}
+
+// Example usage
+// const sortedValues = sortValuesByDate(xValues, yValues);
+function sortValuesByDate(xValues, yValues) {
+    const combinedValues = xValues.map((value, index) => ({
+        x: value,
+        y: yValues[index]
+    }));
+
+    combinedValues.sort((a, b) => {
+        const dateA = new Date(a.x);
+        const dateB = new Date(b.x);
+        return dateA - dateB;
+    });
+
+    const sortedXValues = combinedValues.map(value => value.x);
+    const sortedYValues = combinedValues.map(value => value.y);
+
+    return {
+        xValues: sortedXValues,
+        yValues: sortedYValues
+    };
+}
+
+// const xValues = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const yValues = ["2", "5", "3", "8"];
+
+// const sortedXValues = sortedValues.xValues;
+// const sortedYValues = sortedValues.yValues;
+// console.log("Sorted X Values:", sortedXValues);
+// console.log("Sorted Y Values:", sortedYValues);
+
+
 export default {
     name: 'ScatterPlot',
     components: {
@@ -321,13 +384,44 @@ export default {
             });
             console.log("yAxisLabels")
             console.log(yAxisLabels)
+
+
             //calc min and max of x axis
             let minx = Math.min(...xValues);
             let maxx = Math.max(...xValues);
-            let domainX = [minx, maxx];
+            let domainX = null; //[minx, maxx];
             let miny = Math.min(...yValues);
             let maxy = Math.max(...yValues);
-            let domainY = [miny, maxy];
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD format
+            // const isValidDateX = dateRegex.test(xValues[0]);
+            // const isValidDateY = dateRegex.test(yValues[0]);
+            let domainY = null; //[miny, maxy];
+            // console.log("isValidDate",isValidDate);
+            // console.log("minx",minx);
+            // console.log("maxx",maxx);
+            // console.log("miny",miny);
+            // console.log("maxy",maxy);
+
+            if (dateRegex.test( yValues[0])) {
+                const sortedValues = sortValuesByDate(yValues, xValues);
+                xValues = sortedValues.yValues;
+                yValues = sortedValues.xValues;
+                domainY = yValues;
+            } else {
+                domainY = [miny, maxy];
+            }            if (dateRegex.test(xValues[0])) {
+                // domainX = [new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+                const { oldestDate, newestDate } = getOldestAndNewestDates(xValues);
+                domainX = getEvenlySpacedDates(oldestDate, newestDate, 10);
+                const sortedValues = sortValuesByDate(xValues, yValues);
+                xValues = sortedValues.xValues;
+                yValues = sortedValues.yValues;
+
+                domainX = xValues; //[new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+            } else {
+                domainX = [minx, maxx];
+            }
+
             graph = Plot.plot({
                 marks: [ (parameters.marker_type == "circle")? dotPlot :
                     (parameters.marker_type == "square")?squarePlot:squarePlot,
