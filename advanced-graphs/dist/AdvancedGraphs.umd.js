@@ -64504,30 +64504,30 @@ function GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_render(_ct
 const GroupedBarGraphForm_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphFormvue_type_script_lang_js, [['render',GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_render],['__scopeId',"data-v-3584a69a"]])
 
 /* harmony default export */ var GroupedBarGraphForm = (GroupedBarGraphForm_exports_);
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=224401d4&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=18ec16e6&scoped=true
 
-const GroupedBarGraphvue_type_template_id_224401d4_scoped_true_withScopeId = n => (_pushScopeId("data-v-224401d4"), n = n(), _popScopeId(), n);
-const GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_1 = {
+const GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_withScopeId = n => (_pushScopeId("data-v-18ec16e6"), n = n(), _popScopeId(), n);
+const GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_1 = {
   class: "AG-graph-container"
 };
-const GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_2 = {
+const GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_2 = {
   class: "AG-graph-title"
 };
-const GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_3 = {
+const GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_3 = {
   ref: "graphContainer",
   class: "AG-graphContainer"
 };
-const GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_4 = {
+const GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_4 = {
   class: "AG-graph-description"
 };
-function GroupedBarGraphvue_type_template_id_224401d4_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("div", GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_1, [createBaseVNode("div", GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_3, null, 512), createBaseVNode("div", GroupedBarGraphvue_type_template_id_224401d4_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
+function GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("div", GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_1, [createBaseVNode("div", GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_3, null, 512), createBaseVNode("div", GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
     key: 0,
     parameters: $props.parameters,
     onUpdateParameters: _cache[0] || (_cache[0] = $event => $options.updateParameters($event))
   }, null, 40, ["parameters"])) : createCommentVNode("", true)]);
 }
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=224401d4&scoped=true
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=18ec16e6&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=template&id=1f378d9c&scoped=true
 
@@ -65595,7 +65595,7 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
       const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
       const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...barDomain.map(d => choices_one[d].length));
 
-      // Get the x tick format
+      // Get the x tick format            
       var x_tick_format = d => choices_one[d];
 
       // If x_label_limit is set to truncate, truncate the labels
@@ -65648,7 +65648,7 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
         type: 'band',
         label: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field_one]),
         labelOffset: x_title_offset,
-        ticks: null,
+        tick: null,
         tickFormat: null,
         fontSize: x_title_size
       });
@@ -65783,7 +65783,7 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
             range: colorDomain.map(d => colorScale(d)),
             title: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field_two]),
             format: x_tick_format,
-            legend: show_legend ? true : true
+            legend: show_legend
           },
           facet: {
             data: countsFlattened,
@@ -65808,10 +65808,10 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
 });
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=224401d4&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=18ec16e6&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=224401d4&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=18ec16e6&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue
 
@@ -65821,7 +65821,7 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
 ;
 
 
-const GroupedBarGraph_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphvue_type_script_lang_js, [['render',GroupedBarGraphvue_type_template_id_224401d4_scoped_true_render],['__scopeId',"data-v-224401d4"]])
+const GroupedBarGraph_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphvue_type_script_lang_js, [['render',GroupedBarGraphvue_type_template_id_18ec16e6_scoped_true_render],['__scopeId',"data-v-18ec16e6"]])
 
 /* harmony default export */ var GroupedBarGraph = (GroupedBarGraph_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/Likert/LikertGraphForm.vue?vue&type=template&id=654a2964&scoped=true
@@ -66999,30 +66999,30 @@ const ScatterFieldSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.
 const ScatterPlotForm_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(ScatterPlotFormvue_type_script_lang_js, [['render',ScatterPlotFormvue_type_template_id_f27940ec_scoped_true_render],['__scopeId',"data-v-f27940ec"]])
 
 /* harmony default export */ var ScatterPlotForm = (ScatterPlotForm_exports_);
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=b18072d0&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=9ccbd29c&scoped=true
 
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_withScopeId = n => (_pushScopeId("data-v-b18072d0"), n = n(), _popScopeId(), n);
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_1 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_withScopeId = n => (_pushScopeId("data-v-9ccbd29c"), n = n(), _popScopeId(), n);
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_1 = {
   class: "AG-graph-container"
 };
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_2 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_2 = {
   class: "AG-graph-title"
 };
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_3 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_3 = {
   ref: "graphContainer",
   class: "AG-graphContainer"
 };
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_4 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_4 = {
   class: "AG-graph-description"
 };
-function ScatterPlotvue_type_template_id_b18072d0_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_1, [createBaseVNode("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_3, null, 512), createBaseVNode("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
+function ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_1, [createBaseVNode("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_3, null, 512), createBaseVNode("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
     key: 0,
     parameters: $props.parameters,
     onUpdateParameters: _cache[0] || (_cache[0] = $event => $options.updateParameters($event))
   }, null, 40, ["parameters"])) : createCommentVNode("", true)]);
 }
-;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=b18072d0&scoped=true
+;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=9ccbd29c&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/@observablehq/plot/src/marks/dot.js
 
@@ -67567,6 +67567,7 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=script&lang=js
 
 
+
 //import * as d3Force from 'd3-force';
 // import {PieChart} from "@d3/pie-chart";
 // import {parseChoicesOrCalculations, isCheckboxField, getCheckboxReport, getFieldLabel, wrapString, truncateString} from '@/utils';
@@ -67575,6 +67576,66 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 
 
 //import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
+
+/////////////////////////////////////
+// Usage example
+// const startDate = "2023-01-01";
+// const endDate = "2023-12-31";
+// const evenlySpacedDates = getEvenlySpacedDates(startDate, endDate);
+function getEvenlySpacedDates(startDate, endDate) {
+  const dates = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const interval = Math.floor((end - start) / 9); // Calculate interval between dates
+
+  for (let i = 0; i < 10; i++) {
+    const date = new Date(start.getTime() + i * interval);
+    const formattedDate = date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+    dates.push(formattedDate);
+  }
+  return dates;
+}
+
+// Example usage
+// const dates = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const { oldestDate, newestDate } = getOldestAndNewestDates(dates);
+function getOldestAndNewestDates(dates) {
+  const sortedDates = dates.slice().sort();
+  const oldestDate = sortedDates[0];
+  const newestDate = sortedDates[sortedDates.length - 1];
+  return {
+    oldestDate,
+    newestDate
+  };
+}
+
+// Example usage
+// const sortedValues = sortValuesByDate(xValues, yValues);
+function sortValuesByDate(xValues, yValues) {
+  const combinedValues = xValues.map((value, index) => ({
+    x: value,
+    y: yValues[index]
+  }));
+  combinedValues.sort((a, b) => {
+    const dateA = new Date(a.x);
+    const dateB = new Date(b.x);
+    return dateA - dateB;
+  });
+  const sortedXValues = combinedValues.map(value => value.x);
+  const sortedYValues = combinedValues.map(value => value.y);
+  return {
+    xValues: sortedXValues,
+    yValues: sortedYValues
+  };
+}
+
+// const xValues = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const yValues = ["2", "5", "3", "8"];
+
+// const sortedXValues = sortedValues.xValues;
+// const sortedYValues = sortedValues.yValues;
+// console.log("Sorted X Values:", sortedXValues);
+// console.log("Sorted Y Values:", sortedYValues);
 
 /* harmony default export */ var ScatterPlotvue_type_script_lang_js = ({
   name: 'ScatterPlot',
@@ -67769,7 +67830,8 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
         type: 'band',
         // tickFormat: x_tick_format,
         tickRotate: x_rotate,
-        fontSize: x_label_size
+        fontSize: x_label_size,
+        label: null
       });
 
       // Create x axis title
@@ -67778,8 +67840,8 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
         type: 'band',
         label: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.numeric_field]),
         labelOffset: x_title_offset,
-        ticks: null,
-        tickFormat: null,
+        tick: null,
+        tickFormat: () => '',
         fontSize: x_title_size
       });
 
@@ -67864,15 +67926,63 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
         anchor: "start",
         fill: colorScale(parameters.scatter_dot_color * 10)
       });
+      console.log("yAxisLabels");
+      console.log(yAxisLabels);
+
+      //calc min and max of x axis
+      let minx = Math.min(...xValues);
+      let maxx = Math.max(...xValues);
+      let domainX = null; //[minx, maxx];
+      let miny = Math.min(...yValues);
+      let maxy = Math.max(...yValues);
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD format
+      // const isValidDateX = dateRegex.test(xValues[0]);
+      // const isValidDateY = dateRegex.test(yValues[0]);
+      let domainY = null; //[miny, maxy];
+      // console.log("isValidDate",isValidDate);
+      // console.log("minx",minx);
+      // console.log("maxx",maxx);
+      // console.log("miny",miny);
+      // console.log("maxy",maxy);
+
+      if (dateRegex.test(yValues[0])) {
+        const sortedValues = sortValuesByDate(yValues, xValues);
+        xValues = sortedValues.yValues;
+        yValues = sortedValues.xValues;
+        domainY = yValues;
+      } else {
+        domainY = [miny, maxy];
+      }
+      if (dateRegex.test(xValues[0])) {
+        // domainX = [new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+        const {
+          oldestDate,
+          newestDate
+        } = getOldestAndNewestDates(xValues);
+        domainX = getEvenlySpacedDates(oldestDate, newestDate, 10);
+        const sortedValues = sortValuesByDate(xValues, yValues);
+        xValues = sortedValues.xValues;
+        yValues = sortedValues.yValues;
+        domainX = xValues; //[new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+      } else {
+        domainX = [minx, maxx];
+      }
       graph = plot({
         marks: [parameters.marker_type == "circle" ? dotPlot : parameters.marker_type == "square" ? squarePlot : squarePlot, parameters.marker_type == "square" ? squarePlot2 : trianglePlot, yAxisTitle, yAxisLabels, xAxisTitle, xAxisLabels],
         marginBottom: bottom_margin,
         marginLeft: parameters.left_margin ? parameters.left_margin : 80,
         x: {
-          label: ''
+          //label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+          domain: domainX
+          //tickRotate: x_rotate,
+        },
+
+        y: {
+          label: '',
+          domain: domainY
         }
       });
-
+      console.log("xAxisTitle", xAxisTitle);
       // return scatterplot;
       return graph;
     },
@@ -67907,10 +68017,10 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 });
 ;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=b18072d0&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=9ccbd29c&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=b18072d0&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=9ccbd29c&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue
 
@@ -67920,7 +68030,7 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 ;
 
 
-const ScatterPlot_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(ScatterPlotvue_type_script_lang_js, [['render',ScatterPlotvue_type_template_id_b18072d0_scoped_true_render],['__scopeId',"data-v-b18072d0"]])
+const ScatterPlot_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(ScatterPlotvue_type_script_lang_js, [['render',ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_render],['__scopeId',"data-v-9ccbd29c"]])
 
 /* harmony default export */ var ScatterPlot = (ScatterPlot_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/Tables/TableComponent.vue?vue&type=template&id=63c8ea48&scoped=true
