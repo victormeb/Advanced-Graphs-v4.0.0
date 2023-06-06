@@ -199,12 +199,12 @@ export default {
             const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
             const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...barDomain.map(d => choices_one[d].length));
                 
-            // Get the x tick format
+            // Get the x tick format            
             var x_tick_format = d => choices_one[d];
 
             // If x_label_limit is set to truncate, truncate the labels
             if (x_label_limit == 'truncate') {
-                x_tick_format = d => truncateString(choices_one[d], x_label_length);
+                x_tick_format = d => truncateString(choices_one[d], x_label_length);               
             }
             // If x_label_limit is set to wrap, wrap the labels
             if (x_label_limit == 'wrap') {
@@ -260,7 +260,7 @@ export default {
                 type: 'band',
                 label:  getFieldLabel(this.data_dictionary[parameters.categorical_field_one]),
                 labelOffset: x_title_offset,
-                ticks: null,
+                tick: null,
                 tickFormat: null,
                 fontSize: x_title_size
             });
@@ -390,7 +390,7 @@ export default {
                         fontSize: bar_label_size, // Set the font size for the bar labels
                         text: d => y_tick_format(d.value)
                     });
-
+                
                 graph = Plot.plot({
                     width: 640,
                     height: 480,
@@ -407,7 +407,7 @@ export default {
                         range: colorDomain.map(d => colorScale(d)),
                         title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
                         format: x_tick_format,
-                        legend: show_legend ? true : true,
+                        legend: show_legend
                     },
                     facet: {
                         data: countsFlattened,
