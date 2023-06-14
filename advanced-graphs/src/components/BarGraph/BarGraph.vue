@@ -86,32 +86,9 @@ export default {
             this.$refs.graphContainer.appendChild(this.graph);
         },
         getGraph(parameters) {
-            var choices;
-
-            var field = this.data_dictionary[parameters.categorical_field];
-            if(field.field_type === 'yesno' || field.field_type === 'truefalse')
-            {
-                if(field.field_type == 'truefalse')
-                {
-                    choices = {
-                        '0': module.tt('false_val'),
-                        '1': module.tt('true_val')
-                    }
-                }
-                else
-                {
-                    choices = {
-                        '0': module.tt('no_val'),
-                        '1': module.tt('yes_val')
-                    }
-                }
-            }
-            else
-            {
             // Get the choices for the category
-                choices = parseChoicesOrCalculations(this.data_dictionary[parameters.categorical_field]);
-            } 
-               
+            var choices = parseChoicesOrCalculations(this.data_dictionary[parameters.categorical_field]);
+
             var this_report = this.report;
 
             // If the category is a checkbox field, get a checkbox field report
