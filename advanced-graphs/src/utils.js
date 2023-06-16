@@ -20,7 +20,15 @@ export function parseChoicesOrCalculations(field) {
 
     // If the choices or calculations string is empty, return an empty array
     if (choices_or_calculations === '') {
-        if (field.field_type === 'yesno') {
+        if (field.field_type === 'yesno')
+        {
+            return {0: 'No', 1: 'Yes'};
+        }
+        if (field.field_type === 'yesno')
+        {
+            return {0: 'False', 1: 'True'};
+        }
+      /*  if (field.field_type === 'yesno') {
             return {
                 '0': module.tt('no_val'),
                 '1': module.tt('yes_val')
@@ -32,7 +40,7 @@ export function parseChoicesOrCalculations(field) {
                 '0': module.tt('false_val'),
                 '1': module.tt('true_val')
             }
-        }
+        } */
 
         return {};
     }

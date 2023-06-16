@@ -375,8 +375,8 @@ export default {
                     domain: colorDomain,
                     type: 'band',
                     tickFormat: color_tick_format,
-                    tickRotate:  color_label_rotate,
-                    fontSize: color_label_size,
+                    tickRotate:  x_rotate,
+                    fontSize: x_label_size,
                 });
 
                 barLabels = Plot.text(
@@ -427,7 +427,7 @@ export default {
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
                     marginBottom: bottom_margin
                 });
-                    d3.select(graph).attr('font-size', x_label_size);
+                    d3.select(graph).attr('font-size', color_label_size);
                     
                 return graph;
             }
