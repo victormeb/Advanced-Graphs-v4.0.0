@@ -31,6 +31,69 @@ import ScatterPlotOptions from './ScatterPlotOptions.vue';
 import { markRaw } from 'vue';
 //import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
 
+/////////////////////////////////////
+// Usage example
+// const startDate = "2023-01-01";
+// const endDate = "2023-12-31";
+// const evenlySpacedDates = getEvenlySpacedDates(startDate, endDate);
+function getEvenlySpacedDates(startDate, endDate) {
+    const dates = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const interval = Math.floor((end - start) / 9); // Calculate interval between dates
+
+    for (let i = 0; i < 10; i++) {
+        const date = new Date(start.getTime() + i * interval);
+        const formattedDate = date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+        dates.push(formattedDate);
+    }
+
+    return dates;
+}
+
+
+// Example usage
+// const dates = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const { oldestDate, newestDate } = getOldestAndNewestDates(dates);
+function getOldestAndNewestDates(dates) {
+    const sortedDates = dates.slice().sort();
+    const oldestDate = sortedDates[0];
+    const newestDate = sortedDates[sortedDates.length - 1];
+    return { oldestDate, newestDate };
+}
+
+// Example usage
+// const sortedValues = sortValuesByDate(xValues, yValues);
+function sortValuesByDate(xValues, yValues) {
+    const combinedValues = xValues.map((value, index) => ({
+        x: value,
+        y: yValues[index]
+    }));
+
+    combinedValues.sort((a, b) => {
+        const dateA = new Date(a.x);
+        const dateB = new Date(b.x);
+        return dateA - dateB;
+    });
+
+    const sortedXValues = combinedValues.map(value => value.x);
+    const sortedYValues = combinedValues.map(value => value.y);
+
+    return {
+        xValues: sortedXValues,
+        yValues: sortedYValues
+    };
+}
+
+// const xValues = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const yValues = ["2", "5", "3", "8"];
+
+// const sortedXValues = sortedValues.xValues;
+// const sortedYValues = sortedValues.yValues;
+// console.log("Sorted X Values:", sortedXValues);
+// console.log("Sorted Y Values:", sortedYValues);
+
+
 export default {
     name: 'ScatterPlot',
     components: {
@@ -179,12 +242,12 @@ export default {
             const x_rotate = parameters.x_rotate ; //|| parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
             const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size + 20;
             const bottom_margin = parameters.bottom_margin ? Number(parameters.bottom_margin) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180)*0.5 + x_title_size * 2 + 20;
-            
+
             const y_title_size = parameters.y_title_size ? Number(parameters.y_title_size) : 15;
             const y_label_size = parameters.y_label_size ? Number(parameters.y_label_size) : 10;
             // const y_label_limit = parameters.y_label_limit ? parameters.y_label_limit : null;
             // const y_label_length = parameters.y_label_length ; //? Number(parameters.y_label_length) : Math.max(...domain.map(d => choices[d].length));
-            
+
             // Get the y tick format
             // var y_tick_format = d => d;
 
@@ -215,13 +278,14 @@ export default {
             const y_title =  getFieldLabel(this.data_dictionary[parameters.numeric_field_y]);  // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count'
 
             var graph = null;
-        
+
             const xAxisLabels = Plot.axisX( {
                 //domain: domain,
                 type: 'band',
                 // tickFormat: x_tick_format,
                 tickRotate:  x_rotate,
                 fontSize: x_label_size,
+                label: null,
             });
 
             // Create x axis title
@@ -230,8 +294,8 @@ export default {
                 type: 'band',
                 label:  getFieldLabel(this.data_dictionary[parameters.numeric_field]),
                 labelOffset: x_title_offset,
-                ticks: null,
-                tickFormat: null,
+                tick: null,
+                tickFormat: () => '',
                 fontSize: x_title_size
             });
 
@@ -318,6 +382,45 @@ export default {
 
                 fill: colorScale(parameters.scatter_dot_color*10)
             });
+            console.log("yAxisLabels")
+            console.log(yAxisLabels)
+
+
+            //calc min and max of x axis
+            let minx = Math.min(...xValues);
+            let maxx = Math.max(...xValues);
+            let domainX = null; //[minx, maxx];
+            let miny = Math.min(...yValues);
+            let maxy = Math.max(...yValues);
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD format
+            // const isValidDateX = dateRegex.test(xValues[0]);
+            // const isValidDateY = dateRegex.test(yValues[0]);
+            let domainY = null; //[miny, maxy];
+            // console.log("isValidDate",isValidDate);
+            // console.log("minx",minx);
+            // console.log("maxx",maxx);
+            // console.log("miny",miny);
+            // console.log("maxy",maxy);
+
+            if (dateRegex.test( yValues[0])) {
+                const sortedValues = sortValuesByDate(yValues, xValues);
+                xValues = sortedValues.yValues;
+                yValues = sortedValues.xValues;
+                domainY = yValues;
+            } else {
+                domainY = [miny, maxy];
+            }            if (dateRegex.test(xValues[0])) {
+                // domainX = [new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+                const { oldestDate, newestDate } = getOldestAndNewestDates(xValues);
+                domainX = getEvenlySpacedDates(oldestDate, newestDate, 10);
+                const sortedValues = sortValuesByDate(xValues, yValues);
+                xValues = sortedValues.xValues;
+                yValues = sortedValues.yValues;
+
+                domainX = xValues; //[new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+            } else {
+                domainX = [minx, maxx];
+            }
 
             graph = Plot.plot({
                 marks: [ (parameters.marker_type == "circle")? dotPlot :
@@ -331,10 +434,16 @@ export default {
                     marginBottom: bottom_margin,
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
                 x: {
+                    //label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+                    domain: domainX,
+                    //tickRotate: x_rotate,
+                },
+                y: {
                     label: '',
+                    domain: domainY,
                 },
             });
-
+            console.log("xAxisTitle",xAxisTitle)
             // return scatterplot;
             return graph;
         },

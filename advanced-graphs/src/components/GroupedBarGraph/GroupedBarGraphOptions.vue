@@ -16,18 +16,6 @@
             <label>{{module.tt("grouped_x_label_size")}}:<input ref="x_label_size" type="range" min="0" max="50" v-model.number="x_label_size" @input="updateParameters" /></label>
             <label>{{module.tt("grouped_x_label_wrap")}}:
                 <radio-component
-                    v-model="x_label_limit"
-                    :values="['truncate', 'wrap', 'none']"
-                    :labels="[module.tt('grouped_truncate'), module.tt('grouped_wrap'), module.tt('grouped_bar_none')]"
-                    :defaultValue="'none'"
-                    @update:modelValue="updateParameters"
-                ></radio-component>
-            </label>
-            <label>{{module.tt("grouped_x_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
-            <label>{{module.tt("grouped_x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
-            <label>{{module.tt("grouped_color_label_size")}}:<input ref="color_label_size" type="range" min="0" max="50" v-model.number="color_label_size" @input="updateParameters" /></label>
-            <label>{{module.tt("grouped_color_label_wrap")}}:
-                <radio-component
                     v-model="color_tick_limit"
                     :values="['truncate', 'wrap', 'none']"
                     :labels="[module.tt('grouped_truncate'), module.tt('grouped_wrap'), module.tt('grouped_none')]"
@@ -35,7 +23,21 @@
                     @update:modelValue="updateParameters"
                 ></radio-component>
             </label>
-            <label>{{module.tt("grouped_color_label_length")}}:<input ref="color_label_length" type="range" min="0" max="50" v-model.number="color_label_length" @input="updateParameters" /></label>
+            <label>{{module.tt("grouped_x_label_length")}}:<input ref="color_label_length" type="range" min="0" max="50" v-model.number="color_label_length" @input="updateParameters" /></label>
+
+            <label>{{module.tt("grouped_x_rotate")}}:<input ref="x_rotate" type="range" min="0" max="360" v-model.number="x_rotate" @input="updateParameters" /></label>
+            <label>{{module.tt("grouped_color_label_size")}}:<input ref="color_label_size" type="range" min="0" max="50" v-model.number="color_label_size" @input="updateParameters" /></label>
+            <label>{{module.tt("grouped_color_label_wrap")}}:
+                <radio-component
+                    v-model="x_label_limit"
+                    :values="['truncate', 'wrap', 'none']"
+                    :labels="[module.tt('grouped_truncate'), module.tt('grouped_wrap'), module.tt('grouped_none')]"
+                    :defaultValue="'none'"
+                    @update:modelValue="updateParameters"
+                ></radio-component>
+            </label>
+            <label>{{module.tt("grouped_color_label_length")}}:<input ref="x_label_length" type="range" min="0" max="50" v-model.number="x_label_length" @input="updateParameters" /></label>
+
             <label>{{module.tt("grouped_color_label_rotate")}}:<input ref="color_label_rotate" type="range" min="0" max="360" v-model.number="color_label_rotate" @input="updateParameters" /></label>
         </div>
         <div class="AG-bar-graph-options-block">

@@ -18691,254 +18691,6 @@ $({ target: 'Array', proto: true, arity: 1, forced: FORCED }, {
 
 /***/ }),
 
-/***/ 1262:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Cy": function() { return /* binding */ getRadioFields; },
-/* harmony export */   "FE": function() { return /* binding */ getCheckboxReport; },
-/* harmony export */   "H7": function() { return /* binding */ isNumericField; },
-/* harmony export */   "N3": function() { return /* binding */ getFieldLabel; },
-/* harmony export */   "Oz": function() { return /* binding */ getCoordinateFields; },
-/* harmony export */   "U": function() { return /* binding */ getCheckboxFields; },
-/* harmony export */   "Vt": function() { return /* binding */ stripHtml; },
-/* harmony export */   "Vx": function() { return /* binding */ isCategoricalField; },
-/* harmony export */   "YA": function() { return /* binding */ getNumericFields; },
-/* harmony export */   "aS": function() { return /* binding */ truncateString; },
-/* harmony export */   "ht": function() { return /* binding */ getDateFields; },
-/* harmony export */   "jP": function() { return /* binding */ wrapString; },
-/* harmony export */   "lU": function() { return /* binding */ isCheckboxField; },
-/* harmony export */   "pB": function() { return /* binding */ getUuid; },
-/* harmony export */   "uJ": function() { return /* binding */ parseChoicesOrCalculations; },
-/* harmony export */   "uV": function() { return /* binding */ stripChoicesOrCalculations; },
-/* harmony export */   "y2": function() { return /* binding */ isDateField; }
-/* harmony export */ });
-/* unused harmony exports isRadioField, isTextField, instrumentCanCreate, getTextFields */
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7658);
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0__);
-/* module decorator */ module = __webpack_require__.hmd(module);
-
-// Utils.js
-
-// A function that gets the text from an HTML string 
-function stripHtml(html) {
-  let tmp = document.createElement("DIV");
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || "";
-}
-
-// A function that parses a fields select_choices_or_calculations string into an object
-function parseChoicesOrCalculations(field) {
-  // If the field is not a radio field, return an empty object
-  if (!isRadioField(field) && !isCheckboxField(field)) {
-    return {};
-  }
-
-  // Get the choices or calculations string
-  var choices_or_calculations = field.select_choices_or_calculations;
-
-  // If the choices or calculations string is empty, return an empty array
-  if (choices_or_calculations === '') {
-    if (field.field_type === 'yesno') {
-      return {
-        '0': module.tt('no_val'),
-        '1': module.tt('yes_val')
-      };
-    }
-    if (field.field_type === 'truefalse') {
-      return {
-        '0': module.tt('false_val'),
-        '1': module.tt('true_val')
-      };
-    }
-    return {};
-  }
-  // If the choices or calculations string is not empty, return the parsed choices or calculations
-  return stripChoicesOrCalculations(choices_or_calculations);
-}
-function stripChoicesOrCalculations(choiceString) {
-  // Split the choices or calculations string by |
-  var choices_or_calculations_array = choiceString.split('|');
-
-  // Create an array to hold the parsed choices or calculations
-  var parsed_choices_or_calculations = {};
-
-  // Parse the choices or calculations
-  for (var i = 0; i < choices_or_calculations_array.length; i++) {
-    // Split the choice or calculation by ,
-    var choice_or_calculation = choices_or_calculations_array[i].split(',');
-    var choice_or_calculation_value = choice_or_calculation[0];
-    var choice_or_calculation_label = choice_or_calculation[1];
-
-    // remove the leading and trailing spaces from the value and label
-    choice_or_calculation_value = choice_or_calculation_value.trim();
-    choice_or_calculation_label = stripHtml(choice_or_calculation_label.trim());
-
-    // Add the parsed choice or calculation to the array
-    parsed_choices_or_calculations[choice_or_calculation_value] = choice_or_calculation_label;
-  }
-  return parsed_choices_or_calculations;
-}
-
-// A function that returns whether or not a field is a radio field
-function isRadioField(field) {
-  var radio_field_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
-
-  // Return whether or not the field is a radio field
-  return radio_field_types.includes(field.field_type);
-}
-
-// A function that returns whether or not a field is a checkbox field
-function isCheckboxField(field) {
-  var checkbox_field_types = ['checkbox'];
-
-  // Return whether or not the field is a checkbox field
-  return checkbox_field_types.includes(field.field_type);
-}
-
-// A function that returns whether or not a field is a categorical field
-function isCategoricalField(field) {
-  return isRadioField(field) || isCheckboxField(field);
-}
-
-// A function that returns whether or not a field is a numeric field
-function isNumericField(field) {
-  var non_numeric_field_names = ['record_id', 'redcap_event_name', 'redcap_repeat_instrument', 'redcap_repeat_instance', 'longitude', 'longitud', 'Longitude', 'Longitud', 'latitude', 'latitud', 'Latitude', 'Latitud'];
-  var numeric_field_text_validation_types = ['number', 'integer', 'float', 'decimal'];
-  return !non_numeric_field_names.some(v => field.field_name.includes(v)) && (field.field_type == 'text' && numeric_field_text_validation_types.includes(field['text_validation_type_or_show_slider_number']) || field['field_type'] == 'calc');
-}
-function isTextField(field) {
-  return field.field_type == 'text';
-}
-function isDateField(field) {
-  return field.field_type == 'text'
-  // And the first 4 characters of the text_validation_type_or_show_slider_number is date
-  && field.text_validation_type_or_show_slider_number.substring(0, 4) == 'date';
-}
-function instrumentCanCreate(instrument, validationFunction) {
-  return validationFunction(instrument);
-}
-function getRadioFields(fields) {
-  return fields.filter(isRadioField);
-}
-function getCheckboxFields(fields) {
-  return fields.filter(isCheckboxField);
-}
-function getNumericFields(fields) {
-  return fields.filter(isNumericField);
-}
-function getTextFields(fields) {
-  return fields.filter(isTextField);
-}
-function getDateFields(fields) {
-  return fields.filter(isDateField);
-}
-function getCoordinateFields(fields) {
-  const longitude_keywords = ['longitude', 'longitud', 'Longitude', 'Longitud'];
-  const latitude_keywords = ['latitude', 'latitud', 'Latitude', 'Latitud'];
-  var coordinate_fields = {};
-  for (var i = 0; i < fields.length; i++) {
-    var field = fields[i];
-    var is_longitude = longitude_keywords.some(v => field.field_name.includes(v));
-    if (is_longitude) {
-      var stripped_name = field.field_name.replace(longitude_keywords.find(v => field.field_name.includes(v)), '');
-      var matching_latitude_field = fields.find(v => v.field_name.includes(stripped_name) && latitude_keywords.some(b => v.field_name.includes(b)));
-      if (!matching_latitude_field) {
-        continue;
-      }
-      coordinate_fields[stripped_name] = {
-        'longitude': field,
-        'latitude': matching_latitude_field
-      };
-    }
-  }
-  return coordinate_fields;
-}
-
-// A function that takes a checkbox field name and returns a report that has been transformed into a longer format
-function getCheckboxReport(report, checkbox_field) {
-  // If the field is not a checkbox field, return the report
-  if (!isCheckboxField(checkbox_field)) {
-    return report;
-  }
-  var checkbox_fields = Object.keys(report[0]).filter(function (field) {
-    // The field matches regex `checkbox_field_name___[0-9]+\b`
-    return field.match(new RegExp('^' + checkbox_field.field_name + '___[0-9]+\\b'));
-  });
-  var longer_report = report.flatMap(function (row) {
-    var new_rows = [];
-    for (var i = 0; i < checkbox_fields.length; i++) {
-      // Get the numerical portion of the checkbox field name
-      var checkbox_field_name = checkbox_fields[i];
-      var checkbox_field_name_number = checkbox_field_name.split('___')[1];
-
-      // Get the checkbox field value
-      var checkbox_field_value = row[checkbox_field_name];
-
-      // If the checkbox field is checked, add a new row to the report
-      if (checkbox_field_value === '1') {
-        var new_row = Object.assign({}, row);
-
-        // Remove all the checkbox fields from the new row
-        for (var j = 0; j < checkbox_fields.length; j++) {
-          delete new_row[checkbox_fields[j]];
-        }
-
-        // Add the checkbox field value to the new row
-        new_row[checkbox_field_name] = checkbox_field_name_number;
-
-        // Add the new row to the new rows
-        new_rows.push(new_row);
-      }
-    }
-    return new_rows;
-  });
-  return longer_report;
-}
-function getFieldLabel(field) {
-  return field.field_label;
-}
-
-// A function that wraps a string given a max width
-function wrapString(str, maxWidth) {
-  var newLineStr = "\n";
-  var res = '';
-  while (str.length > maxWidth) {
-    var found = false;
-    // Inserts new line at first whitespace of the line
-    for (var i = maxWidth - 1; i >= 0; i--) {
-      if (" \n\r\t".includes(str.charAt(i))) {
-        res = res + [str.slice(0, i), newLineStr].join('');
-        str = str.slice(i + 1);
-        found = true;
-        break;
-      }
-    }
-    // Inserts new line at maxWidth position, the word is too long to wrap
-    if (!found) {
-      res += [str.slice(0, maxWidth), newLineStr].join('');
-      str = str.slice(maxWidth);
-    }
-  }
-  return res + str;
-}
-
-// A function that truncates a string given a max width
-function truncateString(str, maxWidth) {
-  if (str.length > maxWidth) {
-    return str.slice(0, maxWidth - 3) + '...';
-  } else {
-    return str;
-  }
-}
-let uuid = 0;
-function getUuid() {
-  return uuid++;
-}
-
-/***/ }),
-
 /***/ 3744:
 /***/ (function(__unused_webpack_module, exports) {
 
@@ -18973,34 +18725,19 @@ exports.Z = (sfc, props) => {
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	!function() {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = function(module) {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				function() { return module['default']; } :
-/******/ 				function() { return module; };
-/******/ 			__webpack_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	}();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	!function() {
 /******/ 		// define getter functions for harmony exports
@@ -19023,21 +18760,6 @@ exports.Z = (sfc, props) => {
 /******/ 				if (typeof window === 'object') return window;
 /******/ 			}
 /******/ 		})();
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	!function() {
-/******/ 		__webpack_require__.hmd = function(module) {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: function() {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
-/******/ 		};
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
@@ -30458,16 +30180,13 @@ const initDirectivesForSSR = () => {
 
 
 
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/DashboardEditor.vue?vue&type=template&id=f25381d8
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/DashboardEditor.vue?vue&type=template&id=6d18bcaa
 
 const _hoisted_1 = /*#__PURE__*/createBaseVNode("h1", null, "Dashboard Editor", -1);
 const _hoisted_2 = {
   class: "AG-editor-final-buttons"
 };
-const _hoisted_3 = {
-  class: "btn btn-secondary"
-};
-function DashboardEditorvue_type_template_id_f25381d8_render(_ctx, _cache, $props, $setup, $data, $options) {
+function DashboardEditorvue_type_template_id_6d18bcaa_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_DashboardOptions = resolveComponent("DashboardOptions");
   const _component_editor_table = resolveComponent("editor-table");
   const _component_saved_modal = resolveComponent("saved-modal");
@@ -30487,17 +30206,20 @@ function DashboardEditorvue_type_template_id_f25381d8_render(_ctx, _cache, $prop
   }, null, 8, ["rows", "onAddRow"]), createBaseVNode("div", _hoisted_2, [createBaseVNode("button", {
     onClick: _cache[6] || (_cache[6] = (...args) => $options.saveDashboard && $options.saveDashboard(...args)),
     class: "btn btn-primary"
-  }, toDisplayString($props.dashboard ? $props.module.tt('dbe_save') : $props.module.tt('dbe_create')), 1), createBaseVNode("button", _hoisted_3, toDisplayString($props.module.tt('dbe_cancel')), 1)])]), $data.savedModal ? (openBlock(), createBlock(_component_saved_modal, {
+  }, toDisplayString($props.dashboard ? $props.module.tt('dbe_save') : $props.module.tt('dbe_create')), 1), createBaseVNode("button", {
+    onClick: _cache[7] || (_cache[7] = $event => $options.cancel()),
+    class: "btn btn-secondary"
+  }, toDisplayString($props.module.tt('dbe_cancel')), 1)])]), $data.savedModal ? (openBlock(), createBlock(_component_saved_modal, {
     key: 0,
     name: $data.title,
     list_link: $data.savedModal.list_link,
     dash_link: $data.savedModal.dash_link,
-    onClose: _cache[7] || (_cache[7] = $event => $data.savedModal = null)
+    onClose: _cache[8] || (_cache[8] = $event => $data.savedModal = null)
   }, null, 8, ["name", "list_link", "dash_link"])) : createCommentVNode("", true), runtime_core_esm_bundler_createVNode(_component_confirmation_modal, {
     ref: "confirmationModal"
   }, null, 512)], 64);
 }
-;// CONCATENATED MODULE: ./src/DashboardEditor.vue?vue&type=template&id=f25381d8
+;// CONCATENATED MODULE: ./src/DashboardEditor.vue?vue&type=template&id=6d18bcaa
 
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es.array.push.js
 var es_array_push = __webpack_require__(7658);
@@ -30509,7 +30231,7 @@ const DashboardOptionsvue_type_template_id_da773836_hoisted_1 = {
 const DashboardOptionsvue_type_template_id_da773836_hoisted_2 = {
   class: "AG-dashboard-options"
 };
-const DashboardOptionsvue_type_template_id_da773836_hoisted_3 = {
+const _hoisted_3 = {
   class: "labelrc"
 };
 const _hoisted_4 = {
@@ -30529,7 +30251,7 @@ const _hoisted_8 = {
   for: "is_public"
 };
 function DashboardOptionsvue_type_template_id_da773836_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("div", DashboardOptionsvue_type_template_id_da773836_hoisted_1, [createBaseVNode("table", DashboardOptionsvue_type_template_id_da773836_hoisted_2, [createBaseVNode("tr", null, [createBaseVNode("td", DashboardOptionsvue_type_template_id_da773836_hoisted_3, toDisplayString($options.module.tt('dbo_dashboard_title')) + ":", 1), createBaseVNode("td", _hoisted_4, [withDirectives(createBaseVNode("input", {
+  return openBlock(), createElementBlock("div", DashboardOptionsvue_type_template_id_da773836_hoisted_1, [createBaseVNode("table", DashboardOptionsvue_type_template_id_da773836_hoisted_2, [createBaseVNode("tr", null, [createBaseVNode("td", _hoisted_3, toDisplayString($options.module.tt('dbo_dashboard_title')) + ":", 1), createBaseVNode("td", _hoisted_4, [withDirectives(createBaseVNode("input", {
     type: "text",
     name: "dash_title",
     "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => $data.titleString = $event)
@@ -31280,8 +31002,238 @@ function CategoricalFieldSelectorvue_type_template_id_bc12b1ba_scoped_true_rende
 }
 ;// CONCATENATED MODULE: ./src/components/CategoricalFieldSelector.vue?vue&type=template&id=bc12b1ba&scoped=true
 
-// EXTERNAL MODULE: ./src/utils.js
-var utils = __webpack_require__(1262);
+;// CONCATENATED MODULE: ./src/utils.js
+
+// Utils.js
+
+// A function that gets the text from an HTML string 
+function stripHtml(html) {
+  let tmp = document.createElement("DIV");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+}
+
+// A function that parses a fields select_choices_or_calculations string into an object
+function parseChoicesOrCalculations(field) {
+  // If the field is not a radio field, return an empty object
+  if (!isRadioField(field) && !isCheckboxField(field)) {
+    return {};
+  }
+
+  // Get the choices or calculations string
+  var choices_or_calculations = field.select_choices_or_calculations;
+
+  // If the choices or calculations string is empty, return an empty array
+  if (choices_or_calculations === '') {
+    if (field.field_type === 'yesno') {
+      return {
+        0: 'No',
+        1: 'Yes'
+      };
+    }
+    if (field.field_type === 'yesno') {
+      return {
+        0: 'False',
+        1: 'True'
+      };
+    }
+    /*  if (field.field_type === 'yesno') {
+          return {
+              '0': module.tt('no_val'),
+              '1': module.tt('yes_val')
+          }
+      }
+        if (field.field_type === 'truefalse') {
+          return {
+              '0': module.tt('false_val'),
+              '1': module.tt('true_val')
+          }
+      } */
+
+    return {};
+  }
+  // If the choices or calculations string is not empty, return the parsed choices or calculations
+  return stripChoicesOrCalculations(choices_or_calculations);
+}
+function stripChoicesOrCalculations(choiceString) {
+  // Split the choices or calculations string by |
+  var choices_or_calculations_array = choiceString.split('|');
+
+  // Create an array to hold the parsed choices or calculations
+  var parsed_choices_or_calculations = {};
+
+  // Parse the choices or calculations
+  for (var i = 0; i < choices_or_calculations_array.length; i++) {
+    // Split the choice or calculation by ,
+    var choice_or_calculation = choices_or_calculations_array[i].split(',');
+    var choice_or_calculation_value = choice_or_calculation[0];
+    var choice_or_calculation_label = choice_or_calculation[1];
+
+    // remove the leading and trailing spaces from the value and label
+    choice_or_calculation_value = choice_or_calculation_value.trim();
+    choice_or_calculation_label = stripHtml(choice_or_calculation_label.trim());
+
+    // Add the parsed choice or calculation to the array
+    parsed_choices_or_calculations[choice_or_calculation_value] = choice_or_calculation_label;
+  }
+  return parsed_choices_or_calculations;
+}
+
+// A function that returns whether or not a field is a radio field
+function isRadioField(field) {
+  var radio_field_types = ['radio', 'dropdown', 'yesno', 'truefalse'];
+
+  // Return whether or not the field is a radio field
+  return radio_field_types.includes(field.field_type);
+}
+
+// A function that returns whether or not a field is a checkbox field
+function isCheckboxField(field) {
+  var checkbox_field_types = ['checkbox'];
+
+  // Return whether or not the field is a checkbox field
+  return checkbox_field_types.includes(field.field_type);
+}
+
+// A function that returns whether or not a field is a categorical field
+function isCategoricalField(field) {
+  return isRadioField(field) || isCheckboxField(field);
+}
+
+// A function that returns whether or not a field is a numeric field
+function isNumericField(field) {
+  var non_numeric_field_names = ['record_id', 'redcap_event_name', 'redcap_repeat_instrument', 'redcap_repeat_instance', 'longitude', 'longitud', 'Longitude', 'Longitud', 'latitude', 'latitud', 'Latitude', 'Latitud'];
+  var numeric_field_text_validation_types = ['number', 'integer', 'float', 'decimal'];
+  return !non_numeric_field_names.some(v => field.field_name.includes(v)) && (field.field_type == 'text' && numeric_field_text_validation_types.includes(field['text_validation_type_or_show_slider_number']) || field['field_type'] == 'calc');
+}
+function isTextField(field) {
+  return field.field_type == 'text';
+}
+function isDateField(field) {
+  return field.field_type == 'text'
+  // And the first 4 characters of the text_validation_type_or_show_slider_number is date
+  && field.text_validation_type_or_show_slider_number.substring(0, 4) == 'date';
+}
+function instrumentCanCreate(instrument, validationFunction) {
+  return validationFunction(instrument);
+}
+function getRadioFields(fields) {
+  return fields.filter(isRadioField);
+}
+function getCheckboxFields(fields) {
+  return fields.filter(isCheckboxField);
+}
+function getNumericFields(fields) {
+  return fields.filter(isNumericField);
+}
+function getTextFields(fields) {
+  return fields.filter(isTextField);
+}
+function getDateFields(fields) {
+  return fields.filter(isDateField);
+}
+function getCoordinateFields(fields) {
+  const longitude_keywords = ['longitude', 'longitud', 'Longitude', 'Longitud'];
+  const latitude_keywords = ['latitude', 'latitud', 'Latitude', 'Latitud'];
+  var coordinate_fields = {};
+  for (var i = 0; i < fields.length; i++) {
+    var field = fields[i];
+    var is_longitude = longitude_keywords.some(v => field.field_name.includes(v));
+    if (is_longitude) {
+      var stripped_name = field.field_name.replace(longitude_keywords.find(v => field.field_name.includes(v)), '');
+      var matching_latitude_field = fields.find(v => v.field_name.includes(stripped_name) && latitude_keywords.some(b => v.field_name.includes(b)));
+      if (!matching_latitude_field) {
+        continue;
+      }
+      coordinate_fields[stripped_name] = {
+        'longitude': field,
+        'latitude': matching_latitude_field
+      };
+    }
+  }
+  return coordinate_fields;
+}
+
+// A function that takes a checkbox field name and returns a report that has been transformed into a longer format
+function getCheckboxReport(report, checkbox_field) {
+  // If the field is not a checkbox field, return the report
+  if (!isCheckboxField(checkbox_field)) {
+    return report;
+  }
+  var checkbox_fields = Object.keys(report[0]).filter(function (field) {
+    // The field matches regex `checkbox_field_name___[0-9]+\b`
+    return field.match(new RegExp('^' + checkbox_field.field_name + '___[0-9]+\\b'));
+  });
+  var longer_report = report.flatMap(function (row) {
+    var new_rows = [];
+    for (var i = 0; i < checkbox_fields.length; i++) {
+      // Get the numerical portion of the checkbox field name
+      var checkbox_field_name = checkbox_fields[i];
+      var checkbox_field_name_number = checkbox_field_name.split('___')[1];
+
+      // Get the checkbox field value
+      var checkbox_field_value = row[checkbox_field_name];
+
+      // If the checkbox field is checked, add a new row to the report
+      if (checkbox_field_value === '1') {
+        var new_row = Object.assign({}, row);
+
+        // Remove all the checkbox fields from the new row
+        for (var j = 0; j < checkbox_fields.length; j++) {
+          delete new_row[checkbox_fields[j]];
+        }
+
+        // Add the checkbox field value to the new row
+        new_row[checkbox_field_name] = checkbox_field_name_number;
+
+        // Add the new row to the new rows
+        new_rows.push(new_row);
+      }
+    }
+    return new_rows;
+  });
+  return longer_report;
+}
+function getFieldLabel(field) {
+  return field.field_label;
+}
+
+// A function that wraps a string given a max width
+function wrapString(str, maxWidth) {
+  var newLineStr = "\n";
+  var res = '';
+  while (str.length > maxWidth) {
+    var found = false;
+    // Inserts new line at first whitespace of the line
+    for (var i = maxWidth - 1; i >= 0; i--) {
+      if (" \n\r\t".includes(str.charAt(i))) {
+        res = res + [str.slice(0, i), newLineStr].join('');
+        str = str.slice(i + 1);
+        found = true;
+        break;
+      }
+    }
+    // Inserts new line at maxWidth position, the word is too long to wrap
+    if (!found) {
+      res += [str.slice(0, maxWidth), newLineStr].join('');
+      str = str.slice(maxWidth);
+    }
+  }
+  return res + str;
+}
+
+// A function that truncates a string given a max width
+function truncateString(str, maxWidth) {
+  if (str.length > maxWidth) {
+    return str.slice(0, maxWidth - 3) + '...';
+  } else {
+    return str;
+  }
+}
+let uuid = 0;
+function getUuid() {
+  return uuid++;
+}
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/CategoricalFieldSelector.vue?vue&type=script&lang=js
 
 /* harmony default export */ var CategoricalFieldSelectorvue_type_script_lang_js = ({
@@ -31300,15 +31252,15 @@ var utils = __webpack_require__(1262);
   data() {
     return {
       currentField: this.modelValue,
-      stripHtml: utils/* stripHtml */.Vt
+      stripHtml: stripHtml
     };
   },
   computed: {
     radioFields() {
-      return (0,utils/* getRadioFields */.Cy)(this.fields);
+      return getRadioFields(this.fields);
     },
     checkboxFields() {
-      return (0,utils/* getCheckboxFields */.U)(this.fields);
+      return getCheckboxFields(this.fields);
     }
   },
   watch: {
@@ -31381,12 +31333,12 @@ function NumericFieldSelectorvue_type_template_id_31d96034_scoped_true_render(_c
   data() {
     return {
       currentField: this.modelValue,
-      stripHtml: utils/* stripHtml */.Vt
+      stripHtml: stripHtml
     };
   },
   computed: {
     numericFields() {
-      return (0,utils/* getNumericFields */.YA)(this.fields);
+      return getNumericFields(this.fields);
     }
   },
   watch: {
@@ -31413,31 +31365,31 @@ function NumericFieldSelectorvue_type_template_id_31d96034_scoped_true_render(_c
 const NumericFieldSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(NumericFieldSelectorvue_type_script_lang_js, [['render',NumericFieldSelectorvue_type_template_id_31d96034_scoped_true_render],['__scopeId',"data-v-31d96034"]])
 
 /* harmony default export */ var NumericFieldSelector = (NumericFieldSelector_exports_);
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=template&id=60186e0d&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=template&id=2077da49&scoped=true
 
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId = n => (pushScopeId("data-v-60186e0d"), n = n(), popScopeId(), n);
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_1 = {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId = n => (pushScopeId("data-v-2077da49"), n = n(), popScopeId(), n);
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_1 = {
   class: "palette-container"
 };
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_2 = /*#__PURE__*/PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_2 = /*#__PURE__*/PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
   class: "fa fa-plus",
   "aria-hidden": "true"
 }, null, -1));
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_3 = [PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_2];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_4 = ["onClick"];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_5 = /*#__PURE__*/PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_3 = [PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_2];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_4 = ["onClick"];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_5 = /*#__PURE__*/PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
   class: "fa fa-times",
   "aria-hidden": "true"
 }, null, -1));
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_6 = [PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_5];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_7 = ["onUpdate:modelValue"];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_8 = ["onClick"];
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_9 = /*#__PURE__*/PaletteSelectorvue_type_template_id_60186e0d_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_6 = [PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_5];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_7 = ["onUpdate:modelValue"];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_8 = ["onClick"];
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_9 = /*#__PURE__*/PaletteSelectorvue_type_template_id_2077da49_scoped_true_withScopeId(() => /*#__PURE__*/createBaseVNode("i", {
   class: "fa fa-plus",
   "aria-hidden": "true"
 }, null, -1));
-const PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_10 = [PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_9];
-function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+const PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_10 = [PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_9];
+function PaletteSelectorvue_type_template_id_2077da49_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_help_modal = resolveComponent("help-modal");
   return openBlock(), createElementBlock("div", null, [createBaseVNode("button", {
     type: "button",
@@ -31446,28 +31398,28 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
     key: 0,
     onClose: _cache[2] || (_cache[2] = $event => $data.showModal = false)
   }, {
-    default: withCtx(() => [createBaseVNode("h3", null, toDisplayString($options.module.tt("palette_palette_selector")), 1), createBaseVNode("div", PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_1, [createBaseVNode("button", {
+    default: withCtx(() => [createBaseVNode("h3", null, toDisplayString($options.module.tt("palette_palette_selector")), 1), createBaseVNode("div", PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_1, [createBaseVNode("button", {
       type: "button",
       onClick: _cache[1] || (_cache[1] = $event => $data.colors.splice(0, 0, '#000000'))
-    }, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_3), (openBlock(true), createElementBlock(runtime_core_esm_bundler_Fragment, null, renderList($data.colors, (color, index) => {
+    }, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_3), (openBlock(true), createElementBlock(runtime_core_esm_bundler_Fragment, null, renderList($data.colors, (color, index) => {
       return openBlock(), createElementBlock("div", {
         class: "color-container",
         key: index
       }, [createBaseVNode("button", {
         type: "button",
         onClick: $event => $data.colors.splice(index, 1)
-      }, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_6, 8, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_4), withDirectives(createBaseVNode("input", {
+      }, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_6, 8, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_4), withDirectives(createBaseVNode("input", {
         type: "color",
         "onUpdate:modelValue": $event => $data.colors[index] = $event
-      }, null, 8, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_7), [[vModelText, $data.colors[index]]]), createBaseVNode("button", {
+      }, null, 8, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_7), [[vModelText, $data.colors[index]]]), createBaseVNode("button", {
         type: "button",
         onClick: $event => $data.colors.splice(index + 1, 0, '#000000')
-      }, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_10, 8, PaletteSelectorvue_type_template_id_60186e0d_scoped_true_hoisted_8)]);
+      }, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_10, 8, PaletteSelectorvue_type_template_id_2077da49_scoped_true_hoisted_8)]);
     }), 128))])]),
     _: 1
   })) : createCommentVNode("", true)]);
 }
-;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=template&id=60186e0d&scoped=true
+;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=template&id=2077da49&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=script&lang=js
 
@@ -31480,7 +31432,7 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
   props: {
     modelValue: {
       type: Array,
-      default: () => ["#3E4A89", "#31688E", "#26828E", "#1F9E89", "#35B779", "#6DCD59"]
+      default: () => ["#7734EA", "#00A7EA", "#8AE800", "#FAF100", "#FFAA00", "#FF0061"]
     }
   },
   data() {
@@ -31500,10 +31452,10 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
 });
 ;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=style&index=0&id=60186e0d&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/PaletteSelector.vue?vue&type=style&index=0&id=2077da49&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=style&index=0&id=60186e0d&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue?vue&type=style&index=0&id=2077da49&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/PaletteSelector.vue
 
@@ -31513,7 +31465,7 @@ function PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render(_ctx, _
 ;
 
 
-const PaletteSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(PaletteSelectorvue_type_script_lang_js, [['render',PaletteSelectorvue_type_template_id_60186e0d_scoped_true_render],['__scopeId',"data-v-60186e0d"]])
+const PaletteSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(PaletteSelectorvue_type_script_lang_js, [['render',PaletteSelectorvue_type_template_id_2077da49_scoped_true_render],['__scopeId',"data-v-2077da49"]])
 
 /* harmony default export */ var PaletteSelector = (PaletteSelector_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphForm.vue?vue&type=script&lang=js
@@ -31618,7 +31570,7 @@ const PaletteSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pa
     },
     instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
       // If there is a categorical field
-      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => (0,utils/* isCategoricalField */.Vx)(field))) {
+      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isCategoricalField(field))) {
         // Return true
         return true;
       }
@@ -63170,42 +63122,42 @@ function outerRange(scale) {
   return [x1, x2 + scale.bandwidth()];
 }
 
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=46abc3ec&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=1195c026&scoped=true
 
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_withScopeId = n => (_pushScopeId("data-v-46abc3ec"), n = n(), _popScopeId(), n);
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_1 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_withScopeId = n => (_pushScopeId("data-v-1195c026"), n = n(), _popScopeId(), n);
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_1 = {
   class: "AG-bar-graph-options"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_2 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_2 = {
   class: "AG-bar-graph-options-row"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_3 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_3 = {
   class: "AG-bar-graph-options-block"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_4 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_4 = {
   class: "AG-bar-graph-options-row"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_5 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_5 = {
   class: "AG-bar-graph-options-block"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_6 = ["max"];
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_7 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_6 = ["max"];
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_7 = {
   class: "AG-bar-graph-options-block"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_8 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_8 = {
   class: "AG-bar-graph-options-row"
 };
-const BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_9 = {
+const BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_9 = {
   class: "AG-bar-graph-options-block"
 };
-function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+function BarGraphOptionsvue_type_template_id_1195c026_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_radio_component = resolveComponent("radio-component");
-  return openBlock(), createElementBlock("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_1, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_2, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_3, [createBaseVNode("label", null, [withDirectives(createBaseVNode("input", {
+  return openBlock(), createElementBlock("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_1, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_2, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_3, [createBaseVNode("label", null, [withDirectives(createBaseVNode("input", {
     ref: "show_legend",
     type: "checkbox",
     "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => $data.show_legend = $event),
     onChange: _cache[1] || (_cache[1] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 544), [[vModelCheckbox, $data.show_legend]]), createTextVNode(" " + toDisplayString($options.module.tt("bar_show_legend")), 1)])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_4, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_5, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_x_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bottom_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }, null, 544), [[vModelCheckbox, $data.show_legend]]), createTextVNode(" " + toDisplayString($options.module.tt("bar_show_legend")), 1)])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_4, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_5, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_x_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bottom_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bottom_margin",
     type: "number",
     "onUpdate:modelValue": _cache[2] || (_cache[2] = $event => $data.bottom_margin = $event),
@@ -63219,7 +63171,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     max: $data.bottom_margin,
     "onUpdate:modelValue": _cache[4] || (_cache[4] = $event => $data.x_title_offset = $event),
     onInput: _cache[5] || (_cache[5] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 40, BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_6), [[vModelText, $data.x_title_offset, void 0, {
+  }, null, 40, BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_6), [[vModelText, $data.x_title_offset, void 0, {
     number: true
   }]])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_x_title_size")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "x_title_size",
@@ -63263,7 +63215,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     onInput: _cache[14] || (_cache[14] = (...args) => $options.updateParameters && $options.updateParameters(...args))
   }, null, 544), [[vModelText, $data.x_rotate, void 0, {
     number: true
-  }]])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_7, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_y_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_left_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }]])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_7, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_y_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_left_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bottom_margin",
     type: "number",
     "onUpdate:modelValue": _cache[15] || (_cache[15] = $event => $data.left_margin = $event),
@@ -63321,7 +63273,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     onInput: _cache[27] || (_cache[27] = (...args) => $options.updateParameters && $options.updateParameters(...args))
   }, null, 544), [[vModelText, $data.y_rotate, void 0, {
     number: true
-  }]])])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_8, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_hoisted_9, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_bar_labels")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bar_label_size")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }]])])])]), createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_8, [createBaseVNode("div", BarGraphOptionsvue_type_template_id_1195c026_scoped_true_hoisted_9, [createBaseVNode("h3", null, toDisplayString($options.module.tt("bar_bar_labels")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("bar_bar_label_size")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bar_label_size",
     type: "range",
     min: "0",
@@ -63342,7 +63294,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
     number: true
   }]])])])])]);
 }
-;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=46abc3ec&scoped=true
+;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=template&id=1195c026&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=script&lang=js
 
@@ -63363,12 +63315,12 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
   emits: ['updateParameters'],
   data() {
     // Get the choices for the category
-    var choices = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field]);
+    var choices = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field]);
     var this_report = this.report;
 
     // If the category is a checkbox field, get a checkbox field report
-    if ((0,utils/* isCheckboxField */.lU)(this.parameters.categorical_field)) {
-      this_report = (0,utils/* getCheckboxReport */.FE)(this.parameters.categorical_field);
+    if (isCheckboxField(this.parameters.categorical_field)) {
+      this_report = getCheckboxReport(this.parameters.categorical_field);
     }
 
     // Get a dataframe that only has entries for the instrument specified by the instrument parameter
@@ -63441,11 +63393,11 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
 
     // If x_label_limit is set to truncate, truncate the labels
     if (x_label_limit == 'truncate') {
-      x_tick_format = d => (0,utils/* truncateString */.aS)(choices[d], x_label_length);
+      x_tick_format = d => truncateString(choices[d], x_label_length);
     }
     // If x_label_limit is set to wrap, wrap the labels
     if (x_label_limit == 'wrap') {
-      x_tick_format = d => (0,utils/* wrapString */.jP)(choices[d], x_label_length);
+      x_tick_format = d => wrapString(choices[d], x_label_length);
     }
     const x_rotate = this.parameters.x_rotate ? Number(this.parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
     const x_title_offset = this.parameters.x_title_offset ? Number(this.parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) * 0.5 + x_title_size + 20;
@@ -63460,19 +63412,19 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
 
     // If y_label_limit is set to truncate, truncate the labels
     if (y_label_limit == 'truncate') {
-      y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+      y_tick_format = d => truncateString(d, y_label_length);
     }
     // If y_label_limit is set to wrap, wrap the labels
     if (y_label_limit == 'wrap') {
-      y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+      y_tick_format = d => wrapString(d, y_label_length);
     }
 
     // If y_label_limit is a string and not truncate or wrap, use it as the tick format
     // if (typeof y_label_limit != 'undefined' && y_label_limit != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
     //     y_tick_format = d => d3.format(y_label_limit)(d);
     // }
-    const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 10;
-    const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 4.5;
+    const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 15;
+    const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 7;
     const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
     const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
     const left_margin = this.parameters.left_margin ? Number(this.parameters.left_margin) : y_label_length * y_label_size * Math.sin(y_rotate * Math.PI / 180) * 0.5 + y_title_size * 2 + 20;
@@ -63551,10 +63503,10 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
 });
 ;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=46abc3ec&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=1195c026&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=46abc3ec&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue?vue&type=style&index=0&id=1195c026&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/BarGraph/BarGraphOptions.vue
 
@@ -63564,7 +63516,7 @@ function BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render(_ctx, _
 ;
 
 
-const BarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(BarGraphOptionsvue_type_script_lang_js, [['render',BarGraphOptionsvue_type_template_id_46abc3ec_scoped_true_render],['__scopeId',"data-v-46abc3ec"]])
+const BarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(BarGraphOptionsvue_type_script_lang_js, [['render',BarGraphOptionsvue_type_template_id_1195c026_scoped_true_render],['__scopeId',"data-v-1195c026"]])
 
 /* harmony default export */ var BarGraphOptions = (BarGraphOptions_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/BarGraph/PieGraphOptions.vue?vue&type=template&id=6665c51e&scoped=true
@@ -63787,12 +63739,12 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
     },
     getGraph(parameters) {
       // Get the choices for the category
-      var choices = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[parameters.categorical_field]);
+      var choices = parseChoicesOrCalculations(this.data_dictionary[parameters.categorical_field]);
       var this_report = this.report;
 
       // If the category is a checkbox field, get a checkbox field report
-      if ((0,utils/* isCheckboxField */.lU)(parameters.categorical_field)) {
-        this_report = (0,utils/* getCheckboxReport */.FE)(parameters.categorical_field);
+      if (isCheckboxField(parameters.categorical_field)) {
+        this_report = getCheckboxReport(parameters.categorical_field);
       }
 
       // Get a dataframe that only has entries for the instrument specified by the instrument parameter
@@ -63861,11 +63813,11 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
 
       // If x_label_limit is set to truncate, truncate the labels
       if (x_label_limit == 'truncate') {
-        x_tick_format = d => (0,utils/* truncateString */.aS)(choices[d], x_label_length);
+        x_tick_format = d => truncateString(choices[d], x_label_length);
       }
       // If x_label_limit is set to wrap, wrap the labels
       if (x_label_limit == 'wrap') {
-        x_tick_format = d => (0,utils/* wrapString */.jP)(choices[d], x_label_length);
+        x_tick_format = d => wrapString(choices[d], x_label_length);
       }
       const x_rotate = parameters.x_rotate || parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / domain.length ? 90 : 0;
       const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) * 0.5 + x_title_size + 20;
@@ -63880,11 +63832,11 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
 
       // If y_label_limit is set to truncate, truncate the labels
       if (y_label_limit == 'truncate') {
-        y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+        y_tick_format = d => truncateString(d, y_label_length);
       }
       // If y_label_limit is set to wrap, wrap the labels
       if (y_label_limit == 'wrap') {
-        y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+        y_tick_format = d => wrapString(d, y_label_length);
       }
 
       // If y_label_limit is a string and not truncate or wrap, use it as the tick format
@@ -63897,7 +63849,7 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
       const bar_label_size = parameters.bar_label_size ? Number(parameters.bar_label_size) : 10;
       const bar_label_position = parameters.bar_label_position ? Number(parameters.bar_label_position) : 0.5;
       const show_legend = parameters.show_legend ? true : false;
-      const y_title = parameters.numeric_field ? (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function) : this.module.tt('count');
+      const y_title = parameters.numeric_field ? getFieldLabel(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function) : this.module.tt('count');
       var graph = null;
 
       // If the graph type is bar
@@ -63915,7 +63867,7 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
         const xAxisTitle = axisX({
           domain: domain,
           type: 'band',
-          label: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field]),
+          label: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
           labelOffset: x_title_offset,
           ticks: null,
           tickFormat: null,
@@ -63974,7 +63926,7 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
             type: 'categorical',
             domain: domain.map(d => choices[d]),
             range: domain.map(d => colorScale(d)),
-            title: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field]),
+            title: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
             format: x_tick_format,
             legend: show_legend
           },
@@ -64004,7 +63956,7 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
           value: d => d.value,
           name: d => choices[d.key],
           displayLegend: show_legend,
-          categoryName: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field]),
+          categoryName: getFieldLabel(this.data_dictionary[parameters.categorical_field]),
           numericName: y_title,
           colors: colorScale,
           spacing: label_spacing,
@@ -64176,22 +64128,22 @@ const PieGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(Pi
 const BarGraph_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(BarGraphvue_type_script_lang_js, [['render',BarGraphvue_type_template_id_27bae958_scoped_true_render],['__scopeId',"data-v-27bae958"]])
 
 /* harmony default export */ var BarGraph = (BarGraph_exports_);
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=template&id=e9cfda1c&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=template&id=3584a69a&scoped=true
 
-const GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_withScopeId = n => (_pushScopeId("data-v-e9cfda1c"), n = n(), _popScopeId(), n);
-const GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_1 = {
+const GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_withScopeId = n => (_pushScopeId("data-v-3584a69a"), n = n(), _popScopeId(), n);
+const GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_1 = {
   key: 0
 };
-const GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_2 = {
+const GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_2 = {
   class: "AG-two-panes"
 };
-const GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_3 = {
+const GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_3 = {
   class: "AG-pane-left"
 };
-const GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_4 = {
+const GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_4 = {
   class: "AG-pane-right"
 };
-function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+function GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_instrument_selector = resolveComponent("instrument-selector");
   const _component_helpful_parameter = resolveComponent("helpful-parameter");
   const _component_radio_component = resolveComponent("radio-component");
@@ -64202,7 +64154,7 @@ function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ct
     modelValue: $data.formData.instrument,
     "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => $data.formData.instrument = $event),
     availableInstruments: $options.availableInstruments
-  }, null, 8, ["modelValue", "availableInstruments"]), $data.formData.instrument !== null && typeof $data.formData.instrument === 'string' ? (openBlock(), createElementBlock("div", GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_1, [createBaseVNode("div", null, [runtime_core_esm_bundler_createVNode(_component_helpful_parameter, {
+  }, null, 8, ["modelValue", "availableInstruments"]), $data.formData.instrument !== null && typeof $data.formData.instrument === 'string' ? (openBlock(), createElementBlock("div", GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_1, [createBaseVNode("div", null, [runtime_core_esm_bundler_createVNode(_component_helpful_parameter, {
     "label-text": $options.module.tt('title'),
     "help-text": $options.module.tt('title_help')
   }, {
@@ -64230,10 +64182,10 @@ function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ct
       name: 'graph_type',
       values: ['stacked', 'grouped'],
       defaultValue: 'stacked',
-      labels: [$options.module.tt('grouped__stacked_stacked'), $options.module.tt('grouped_grouped')]
+      labels: [$options.module.tt('grouped_stacked_stacked'), $options.module.tt('grouped_grouped')]
     }, null, 8, ["modelValue", "labels"])]),
     _: 1
-  }, 8, ["label-text", "help-text"])]), createBaseVNode("div", GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_2, [createBaseVNode("div", GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_3, [runtime_core_esm_bundler_createVNode(_component_helpful_parameter, {
+  }, 8, ["label-text", "help-text"])]), createBaseVNode("div", GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_2, [createBaseVNode("div", GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_3, [runtime_core_esm_bundler_createVNode(_component_helpful_parameter, {
     "label-text": $options.module.tt('grouped_categorical_field_one'),
     "help-text": $options.module.tt('grouped_categorical_field_help')
   }, {
@@ -64269,7 +64221,7 @@ function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ct
       labels: [$options.module.tt('grouped_keep'), $options.module.tt('grouped_drop')]
     }, null, 8, ["modelValue", "labels"])]),
     _: 1
-  }, 8, ["label-text", "help-text"])]), createBaseVNode("div", GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_hoisted_4, [runtime_core_esm_bundler_createVNode(_component_helpful_parameter, {
+  }, 8, ["label-text", "help-text"])]), createBaseVNode("div", GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_hoisted_4, [runtime_core_esm_bundler_createVNode(_component_helpful_parameter, {
     "label-text": $options.module.tt('grouped_categorical_field_two'),
     "help-text": $options.module.tt('grouped_categorical_field_help')
   }, {
@@ -64358,7 +64310,7 @@ function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ct
     _: 1
   }, 8, ["label-text", "help-text"])])])) : createCommentVNode("", true)]);
 }
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=template&id=e9cfda1c&scoped=true
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=template&id=3584a69a&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=script&lang=js
 
@@ -64473,7 +64425,7 @@ function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ct
       // Count the number of categorical fields
       let count = 0;
       for (const field of fields) {
-        if ((0,utils/* isCategoricalField */.Vx)(field)) {
+        if (isCategoricalField(field)) {
           count++;
         }
       }
@@ -64488,10 +64440,10 @@ function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ct
 });
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=style&index=0&id=e9cfda1c&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=style&index=0&id=3584a69a&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=style&index=0&id=e9cfda1c&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphForm.vue?vue&type=style&index=0&id=3584a69a&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphForm.vue
 
@@ -64501,70 +64453,70 @@ function GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render(_ct
 ;
 
 
-const GroupedBarGraphForm_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphFormvue_type_script_lang_js, [['render',GroupedBarGraphFormvue_type_template_id_e9cfda1c_scoped_true_render],['__scopeId',"data-v-e9cfda1c"]])
+const GroupedBarGraphForm_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphFormvue_type_script_lang_js, [['render',GroupedBarGraphFormvue_type_template_id_3584a69a_scoped_true_render],['__scopeId',"data-v-3584a69a"]])
 
 /* harmony default export */ var GroupedBarGraphForm = (GroupedBarGraphForm_exports_);
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=f79d9bbe&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=c70955f8&scoped=true
 
-const GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_withScopeId = n => (_pushScopeId("data-v-f79d9bbe"), n = n(), _popScopeId(), n);
-const GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_1 = {
+const GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_withScopeId = n => (_pushScopeId("data-v-c70955f8"), n = n(), _popScopeId(), n);
+const GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_1 = {
   class: "AG-graph-container"
 };
-const GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_2 = {
+const GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_2 = {
   class: "AG-graph-title"
 };
-const GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_3 = {
+const GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_3 = {
   ref: "graphContainer",
   class: "AG-graphContainer"
 };
-const GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_4 = {
+const GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_4 = {
   class: "AG-graph-description"
 };
-function GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("div", GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_1, [createBaseVNode("div", GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_3, null, 512), createBaseVNode("div", GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
+function GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("div", GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_1, [createBaseVNode("div", GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_3, null, 512), createBaseVNode("div", GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
     key: 0,
     parameters: $props.parameters,
     onUpdateParameters: _cache[0] || (_cache[0] = $event => $options.updateParameters($event))
   }, null, 40, ["parameters"])) : createCommentVNode("", true)]);
 }
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=f79d9bbe&scoped=true
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=template&id=c70955f8&scoped=true
 
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=template&id=6317185e&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=template&id=3d674678&scoped=true
 
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_withScopeId = n => (_pushScopeId("data-v-6317185e"), n = n(), _popScopeId(), n);
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_1 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_withScopeId = n => (_pushScopeId("data-v-3d674678"), n = n(), _popScopeId(), n);
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_1 = {
   class: "AG-bar-graph-options"
 };
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_2 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_2 = {
   class: "AG-bar-graph-options-row"
 };
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_3 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_3 = {
   class: "AG-bar-graph-options-block"
 };
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_4 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_4 = {
   class: "AG-bar-graph-options-row"
 };
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_5 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_5 = {
   class: "AG-bar-graph-options-block"
 };
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_6 = ["max"];
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_7 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_6 = ["max"];
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_7 = {
   class: "AG-bar-graph-options-block"
 };
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_8 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_8 = {
   class: "AG-bar-graph-options-row"
 };
-const GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_9 = {
+const GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_9 = {
   class: "AG-bar-graph-options-block"
 };
-function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+function GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_radio_component = resolveComponent("radio-component");
-  return openBlock(), createElementBlock("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_1, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_2, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_3, [createBaseVNode("label", null, [withDirectives(createBaseVNode("input", {
+  return openBlock(), createElementBlock("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_1, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_2, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_3, [createBaseVNode("label", null, [withDirectives(createBaseVNode("input", {
     ref: "show_legend",
     type: "checkbox",
     "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => $data.show_legend = $event),
     onChange: _cache[1] || (_cache[1] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 544), [[vModelCheckbox, $data.show_legend]]), createTextVNode(" " + toDisplayString($options.module.tt("grouped_show_legend")), 1)])])]), createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_4, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_5, [createBaseVNode("h3", null, toDisplayString($options.module.tt("grouped_x_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_bottom_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }, null, 544), [[vModelCheckbox, $data.show_legend]]), createTextVNode(" " + toDisplayString($options.module.tt("grouped_show_legend")), 1)])])]), createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_4, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_5, [createBaseVNode("h3", null, toDisplayString($options.module.tt("grouped_x_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_bottom_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bottom_margin",
     type: "number",
     "onUpdate:modelValue": _cache[2] || (_cache[2] = $event => $data.bottom_margin = $event),
@@ -64578,7 +64530,7 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
     max: $data.bottom_margin,
     "onUpdate:modelValue": _cache[4] || (_cache[4] = $event => $data.x_title_offset = $event),
     onInput: _cache[5] || (_cache[5] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 40, GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_6), [[vModelText, $data.x_title_offset, void 0, {
+  }, null, 40, GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_6), [[vModelText, $data.x_title_offset, void 0, {
     number: true
   }]])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_x_title_size")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "x_title_size",
@@ -64599,19 +64551,19 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
   }, null, 544), [[vModelText, $data.x_label_size, void 0, {
     number: true
   }]])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_x_label_wrap")) + ": ", 1), runtime_core_esm_bundler_createVNode(_component_radio_component, {
-    modelValue: $data.x_label_limit,
-    "onUpdate:modelValue": [_cache[10] || (_cache[10] = $event => $data.x_label_limit = $event), $options.updateParameters],
+    modelValue: $data.color_tick_limit,
+    "onUpdate:modelValue": [_cache[10] || (_cache[10] = $event => $data.color_tick_limit = $event), $options.updateParameters],
     values: ['truncate', 'wrap', 'none'],
-    labels: [$options.module.tt('grouped_truncate'), $options.module.tt('grouped_wrap'), $options.module.tt('grouped_bar_none')],
+    labels: [$options.module.tt('grouped_truncate'), $options.module.tt('grouped_wrap'), $options.module.tt('grouped_none')],
     defaultValue: 'none'
   }, null, 8, ["modelValue", "labels", "onUpdate:modelValue"])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_x_label_length")) + ":", 1), withDirectives(createBaseVNode("input", {
-    ref: "x_label_length",
+    ref: "color_label_length",
     type: "range",
     min: "0",
     max: "50",
-    "onUpdate:modelValue": _cache[11] || (_cache[11] = $event => $data.x_label_length = $event),
+    "onUpdate:modelValue": _cache[11] || (_cache[11] = $event => $data.color_label_length = $event),
     onInput: _cache[12] || (_cache[12] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 544), [[vModelText, $data.x_label_length, void 0, {
+  }, null, 544), [[vModelText, $data.color_label_length, void 0, {
     number: true
   }]])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_x_rotate")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "x_rotate",
@@ -64632,19 +64584,19 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
   }, null, 544), [[vModelText, $data.color_label_size, void 0, {
     number: true
   }]])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_color_label_wrap")) + ": ", 1), runtime_core_esm_bundler_createVNode(_component_radio_component, {
-    modelValue: $data.color_tick_limit,
-    "onUpdate:modelValue": [_cache[17] || (_cache[17] = $event => $data.color_tick_limit = $event), $options.updateParameters],
+    modelValue: $data.x_label_limit,
+    "onUpdate:modelValue": [_cache[17] || (_cache[17] = $event => $data.x_label_limit = $event), $options.updateParameters],
     values: ['truncate', 'wrap', 'none'],
     labels: [$options.module.tt('grouped_truncate'), $options.module.tt('grouped_wrap'), $options.module.tt('grouped_none')],
     defaultValue: 'none'
   }, null, 8, ["modelValue", "labels", "onUpdate:modelValue"])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_color_label_length")) + ":", 1), withDirectives(createBaseVNode("input", {
-    ref: "color_label_length",
+    ref: "x_label_length",
     type: "range",
     min: "0",
     max: "50",
-    "onUpdate:modelValue": _cache[18] || (_cache[18] = $event => $data.color_label_length = $event),
+    "onUpdate:modelValue": _cache[18] || (_cache[18] = $event => $data.x_label_length = $event),
     onInput: _cache[19] || (_cache[19] = (...args) => $options.updateParameters && $options.updateParameters(...args))
-  }, null, 544), [[vModelText, $data.color_label_length, void 0, {
+  }, null, 544), [[vModelText, $data.x_label_length, void 0, {
     number: true
   }]])]), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_color_label_rotate")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "color_label_rotate",
@@ -64655,7 +64607,7 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
     onInput: _cache[21] || (_cache[21] = (...args) => $options.updateParameters && $options.updateParameters(...args))
   }, null, 544), [[vModelText, $data.color_label_rotate, void 0, {
     number: true
-  }]])])]), createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_7, [createBaseVNode("h3", null, toDisplayString($options.module.tt("grouped_y_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_left_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }]])])]), createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_7, [createBaseVNode("h3", null, toDisplayString($options.module.tt("grouped_y_axis")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_left_margin")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bottom_margin",
     type: "number",
     "onUpdate:modelValue": _cache[22] || (_cache[22] = $event => $data.left_margin = $event),
@@ -64713,7 +64665,7 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
     onInput: _cache[34] || (_cache[34] = (...args) => $options.updateParameters && $options.updateParameters(...args))
   }, null, 544), [[vModelText, $data.y_rotate, void 0, {
     number: true
-  }]])])])]), createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_8, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_hoisted_9, [createBaseVNode("h3", null, toDisplayString($options.module.tt("grouped_bar_labels")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_bar_label_size")) + ":", 1), withDirectives(createBaseVNode("input", {
+  }]])])])]), createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_8, [createBaseVNode("div", GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_hoisted_9, [createBaseVNode("h3", null, toDisplayString($options.module.tt("grouped_bar_labels")), 1), createBaseVNode("label", null, [createTextVNode(toDisplayString($options.module.tt("grouped_bar_label_size")) + ":", 1), withDirectives(createBaseVNode("input", {
     ref: "bar_label_size",
     type: "range",
     min: "0",
@@ -64734,7 +64686,7 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
     number: true
   }]])])])])]);
 }
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=template&id=6317185e&scoped=true
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=template&id=3d674678&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=script&lang=js
 
@@ -64755,8 +64707,8 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
   emits: ['updateParameters'],
   data() {
     // Get the choices for the category
-    var choices_one = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field_one]);
-    var choices_two = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field_two]);
+    var choices_one = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field_one]);
+    var choices_two = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field_two]);
     var this_report = this.report;
 
     // If the category is a checkbox field, get a checkbox field report
@@ -64854,11 +64806,11 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
 
     // If x_label_limit is set to truncate, truncate the labels
     if (x_label_limit == 'truncate') {
-      x_tick_format = d => (0,utils/* truncateString */.aS)(choices_one[d], x_label_length);
+      x_tick_format = d => truncateString(choices_one[d], x_label_length);
     }
     // If x_label_limit is set to wrap, wrap the labels
     if (x_label_limit == 'wrap') {
-      x_tick_format = d => (0,utils/* wrapString */.jP)(choices_one[d], x_label_length);
+      x_tick_format = d => wrapString(choices_one[d], x_label_length);
     }
     const x_rotate = this.parameters.x_rotate || this.parameters.x_rotate == 0 ? Number(this.parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / barDomain.length ? 90 : 0;
     const x_title_offset = this.parameters.x_title_offset ? Number(this.parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) * 0.5 + x_title_size + 20;
@@ -64873,11 +64825,11 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
 
     // If y_label_limit is set to truncate, truncate the labels
     if (y_label_limit == 'truncate') {
-      y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+      y_tick_format = d => truncateString(d, y_label_length);
     }
     // If y_label_limit is set to wrap, wrap the labels
     if (y_label_limit == 'wrap') {
-      y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+      y_tick_format = d => wrapString(d, y_label_length);
     }
     const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
     const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
@@ -64975,10 +64927,10 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
 });
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=style&index=0&id=6317185e&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=style&index=0&id=3d674678&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=style&index=0&id=6317185e&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue?vue&type=style&index=0&id=3d674678&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraphOptions.vue
 
@@ -64988,7 +64940,7 @@ function GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render(
 ;
 
 
-const GroupedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphOptionsvue_type_script_lang_js, [['render',GroupedBarGraphOptionsvue_type_template_id_6317185e_scoped_true_render],['__scopeId',"data-v-6317185e"]])
+const GroupedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphOptionsvue_type_script_lang_js, [['render',GroupedBarGraphOptionsvue_type_template_id_3d674678_scoped_true_render],['__scopeId',"data-v-3d674678"]])
 
 /* harmony default export */ var GroupedBarGraphOptions = (GroupedBarGraphOptions_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/StackedBarGraphOptions.vue?vue&type=template&id=abcb1f94&scoped=true
@@ -65184,8 +65136,8 @@ function StackedBarGraphOptionsvue_type_template_id_abcb1f94_scoped_true_render(
   emits: ['updateParameters'],
   data() {
     // Get the choices for the category
-    var choices_one = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field_one]);
-    var choices_two = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field_two]);
+    var choices_one = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field_one]);
+    var choices_two = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field_two]);
     var this_report = this.report;
 
     // If the category is a checkbox field, get a checkbox field report
@@ -65288,11 +65240,11 @@ function StackedBarGraphOptionsvue_type_template_id_abcb1f94_scoped_true_render(
 
     // If x_label_limit is set to truncate, truncate the labels
     if (x_label_limit == 'truncate') {
-      x_tick_format = d => (0,utils/* truncateString */.aS)(choices_one[d], x_label_length);
+      x_tick_format = d => truncateString(choices_one[d], x_label_length);
     }
     // If x_label_limit is set to wrap, wrap the labels
     if (x_label_limit == 'wrap') {
-      x_tick_format = d => (0,utils/* wrapString */.jP)(choices_one[d], x_label_length);
+      x_tick_format = d => wrapString(choices_one[d], x_label_length);
     }
     const x_rotate = this.parameters.x_rotate || this.parameters.x_rotate == 0 ? Number(this.parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / barDomain.length ? 90 : 0;
     const x_title_offset = this.parameters.x_title_offset ? Number(this.parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) * 0.5 + x_title_size + 20;
@@ -65307,11 +65259,11 @@ function StackedBarGraphOptionsvue_type_template_id_abcb1f94_scoped_true_render(
 
     // If y_label_limit is set to truncate, truncate the labels
     if (y_label_limit == 'truncate') {
-      y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+      y_tick_format = d => truncateString(d, y_label_length);
     }
     // If y_label_limit is set to wrap, wrap the labels
     if (y_label_limit == 'wrap') {
-      y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+      y_tick_format = d => wrapString(d, y_label_length);
     }
     const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
     const y_title_offset = this.parameters.y_title_offset ? Number(this.parameters.y_title_offset) : 45;
@@ -65477,8 +65429,8 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
     },
     getGraph(parameters) {
       // Get the choices for the category
-      var choices_one = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[parameters.categorical_field_one]);
-      var choices_two = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[parameters.categorical_field_two]);
+      var choices_one = parseChoicesOrCalculations(this.data_dictionary[parameters.categorical_field_one]);
+      var choices_two = parseChoicesOrCalculations(this.data_dictionary[parameters.categorical_field_two]);
       var this_report = this.report;
 
       // If the category is a checkbox field, get a checkbox field report
@@ -65595,16 +65547,16 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
       const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
       const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...barDomain.map(d => choices_one[d].length));
 
-      // Get the x tick format
+      // Get the x tick format            
       var x_tick_format = d => choices_one[d];
 
       // If x_label_limit is set to truncate, truncate the labels
       if (x_label_limit == 'truncate') {
-        x_tick_format = d => (0,utils/* truncateString */.aS)(choices_one[d], x_label_length);
+        x_tick_format = d => truncateString(choices_one[d], x_label_length);
       }
       // If x_label_limit is set to wrap, wrap the labels
       if (x_label_limit == 'wrap') {
-        x_tick_format = d => (0,utils/* wrapString */.jP)(choices_one[d], x_label_length);
+        x_tick_format = d => wrapString(choices_one[d], x_label_length);
       }
       const x_rotate = parameters.x_rotate || parameters.x_rotate == 0 ? Number(parameters.x_rotate) : x_label_length * x_label_size * 1.2 > 640 / barDomain.length ? 90 : 0;
       const x_title_offset = parameters.x_title_offset ? Number(parameters.x_title_offset) : x_label_length * x_label_size * Math.sin(x_rotate * Math.PI / 180) * 0.5 + x_title_size + 20;
@@ -65619,18 +65571,18 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
 
       // If y_label_limit is set to truncate, truncate the labels
       if (y_label_limit == 'truncate') {
-        y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+        y_tick_format = d => truncateString(d, y_label_length);
       }
       // If y_label_limit is set to wrap, wrap the labels
       if (y_label_limit == 'wrap') {
-        y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+        y_tick_format = d => wrapString(d, y_label_length);
       }
       const y_rotate = parameters.y_rotate ? Number(parameters.y_rotate) : 0;
       const y_title_offset = parameters.y_title_offset ? Number(parameters.y_title_offset) : 45;
       const bar_label_size = parameters.bar_label_size ? Number(parameters.bar_label_size) : 10;
       const bar_label_position = parameters.bar_label_position ? Number(parameters.bar_label_position) : 0.5;
       const show_legend = parameters.show_legend ? true : false;
-      const y_title = parameters.numeric_field ? (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function) : this.module.tt('count');
+      const y_title = parameters.numeric_field ? getFieldLabel(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function) : this.module.tt('count');
       var graph = null;
 
       // Create x axis labels
@@ -65646,9 +65598,9 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
       const xAxisTitle = axisX({
         domain: barDomain,
         type: 'band',
-        label: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field_one]),
+        label: getFieldLabel(this.data_dictionary[parameters.categorical_field_one]),
         labelOffset: x_title_offset,
-        ticks: null,
+        tick: null,
         tickFormat: null,
         fontSize: x_title_size
       });
@@ -65721,9 +65673,9 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
             type: 'ordinal',
             domain: colorDomain.map(d => choices_two[d]),
             range: colorDomain.map(d => colorScale(d)),
-            title: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field_two]),
+            title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
             format: x_tick_format,
-            legend: show_legend ? true : true
+            legend: show_legend ? true : false
           },
           marks: [yAxisTitle, yAxisLabels, xAxisTitle, xAxisLabels, stackedBars, barLabels],
           marginLeft: parameters.left_margin ? parameters.left_margin : 80,
@@ -65742,18 +65694,19 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
         const color_label_length = parameters.color_label_length ? Number(parameters.color_label_length) : Math.max(...colorDomain.map(d => choices_two[d].toString().length));
         var color_tick_format = d => choices_two[d];
         if (parameters.color_tick_limit == 'truncate') {
-          color_tick_format = d => (0,utils/* truncateString */.aS)(choices_two[d], color_label_length);
+          color_tick_format = d => truncateString(choices_two[d], color_label_length);
         } else if (parameters.color_tick_limit == 'wrap') {
-          color_tick_format = d => (0,utils/* wrapString */.jP)(choices_two[d], color_label_length);
+          color_tick_format = d => wrapString(choices_two[d], color_label_length);
         }
         const color_label_rotate = parameters.color_label_rotate ? Number(parameters.color_label_rotate) : 0;
         const color_label_size = parameters.color_label_size ? Number(parameters.color_label_size) : 10;
+        console.log(color_label_size, color_label_rotate);
         xAxisLabels = axisX(colorDomain, {
           domain: colorDomain,
           type: 'band',
           tickFormat: color_tick_format,
-          tickRotate: color_label_rotate,
-          fontSize: color_label_size
+          tickRotate: x_rotate,
+          fontSize: x_label_size
         });
         barLabels = text_text(countsFlattened, {
           x: d => d.type,
@@ -65780,9 +65733,9 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
             type: 'ordinal',
             domain: colorDomain.map(d => choices_two[d]),
             range: colorDomain.map(d => colorScale(d)),
-            title: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.categorical_field_two]),
+            title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
             format: x_tick_format,
-            legend: show_legend ? true : true
+            legend: show_legend
           },
           facet: {
             data: countsFlattened,
@@ -65795,6 +65748,7 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
           marginLeft: parameters.left_margin ? parameters.left_margin : 80,
           marginBottom: bottom_margin
         });
+        src_select(graph).attr('font-size', color_label_size);
         return graph;
       }
 
@@ -65807,10 +65761,10 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
 });
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=f79d9bbe&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=c70955f8&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=f79d9bbe&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue?vue&type=style&index=0&id=c70955f8&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/GroupedBarGraph/GroupedBarGraph.vue
 
@@ -65820,7 +65774,7 @@ const StackedBarGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default *
 ;
 
 
-const GroupedBarGraph_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphvue_type_script_lang_js, [['render',GroupedBarGraphvue_type_template_id_f79d9bbe_scoped_true_render],['__scopeId',"data-v-f79d9bbe"]])
+const GroupedBarGraph_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(GroupedBarGraphvue_type_script_lang_js, [['render',GroupedBarGraphvue_type_template_id_c70955f8_scoped_true_render],['__scopeId',"data-v-c70955f8"]])
 
 /* harmony default export */ var GroupedBarGraph = (GroupedBarGraph_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/Likert/LikertGraphForm.vue?vue&type=template&id=654a2964&scoped=true
@@ -66173,7 +66127,7 @@ const LikertCategoryCheckbox_exports_ = /*#__PURE__*/(0,exportHelper/* default *
       }
 
       // Return the fields that are categorical
-      return fields.filter(field => (0,utils/* isCategoricalField */.Vx)(field));
+      return fields.filter(field => isCategoricalField(field));
     }
   },
   watch: {
@@ -66209,7 +66163,7 @@ const LikertCategoryCheckbox_exports_ = /*#__PURE__*/(0,exportHelper/* default *
       // For each field in the instrument
       for (const field of report_fields_by_repeat_instrument[instrument_name].fields) {
         // If the field is categorical
-        if ((0,utils/* isCategoricalField */.Vx)(field)) {
+        if (isCategoricalField(field)) {
           // For each choice in the field
           for (const choice of field.select_choices_or_calculations.split("|")) {
             // If the choice contains a likert key word
@@ -66371,7 +66325,7 @@ function LikertGraphOptionsvue_type_template_id_6f671081_scoped_true_render(_ctx
   inject: ['module', 'data_dictionary', 'report'],
   emits: ['updateParameters'],
   data() {
-    var choices = (0,utils/* stripChoicesOrCalculations */.uV)(this.parameters.likert_choices);
+    var choices = stripChoicesOrCalculations(this.parameters.likert_choices);
 
     // Get the choices for the category field
     const y_label_size = this.parameters.y_label_size ? Number(this.parameters.y_label_size) : 10;
@@ -66384,11 +66338,11 @@ function LikertGraphOptionsvue_type_template_id_6f671081_scoped_true_render(_ctx
 
     // If y_label_limit is set to truncate, truncate the labels
     if (y_label_limit == 'truncate') {
-      y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+      y_tick_format = d => truncateString(d, y_label_length);
     }
     // If y_label_limit is set to wrap, wrap the labels
     if (y_label_limit == 'wrap') {
-      y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+      y_tick_format = d => wrapString(d, y_label_length);
     }
     const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;
     const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 10;
@@ -66508,7 +66462,7 @@ const LikertGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
     getGraph() {
       console.log('getGraph');
       var this_report = this.report;
-      var choices = (0,utils/* stripChoicesOrCalculations */.uV)(this.parameters.likert_choices);
+      var choices = stripChoicesOrCalculations(this.parameters.likert_choices);
 
       // Parse the choices or calculations
 
@@ -66610,15 +66564,15 @@ const LikertGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
       const y_label_length = this.parameters.y_label_length ? Number(this.parameters.y_label_length) : Math.max(...choiceCodes.map(d => choices[d].length));
 
       // Get the x tick format
-      var y_tick_format = d => (0,utils/* getFieldLabel */.N3)(this.data_dictionary[d]);
+      var y_tick_format = d => getFieldLabel(this.data_dictionary[d]);
 
       // If x_label_limit is set to truncate, truncate the labels
       if (y_label_limit == 'truncate') {
-        y_tick_format = d => (0,utils/* truncateString */.aS)((0,utils/* getFieldLabel */.N3)(this.data_dictionary[d]), y_label_length);
+        y_tick_format = d => truncateString(getFieldLabel(this.data_dictionary[d]), y_label_length);
       }
       // If x_label_limit is set to wrap, wrap the labels
       if (y_label_limit == 'wrap') {
-        y_tick_format = d => (0,utils/* wrapString */.jP)((0,utils/* getFieldLabel */.N3)(this.data_dictionary[d]), y_label_length);
+        y_tick_format = d => wrapString(getFieldLabel(this.data_dictionary[d]), y_label_length);
       }
       console.log(y_tick_format);
       var show_legend = this.parameters.show_legend ? this.parameters.show_legend : false;
@@ -66835,15 +66789,15 @@ function ScatterFieldSelectorvue_type_template_id_09712275_scoped_true_render(_c
   data() {
     return {
       currentField: this.modelValue,
-      stripHtml: utils/* stripHtml */.Vt
+      stripHtml: stripHtml
     };
   },
   computed: {
     numericFields() {
-      return (0,utils/* getNumericFields */.YA)(this.fields);
+      return getNumericFields(this.fields);
     },
     dateFields() {
-      return (0,utils/* getDateFields */.ht)(this.fields);
+      return getDateFields(this.fields);
     }
   },
   watch: {
@@ -66972,7 +66926,7 @@ const ScatterFieldSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.
     },
     instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
       // If there is a categorical field
-      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => (0,utils/* isNumericField */.H7)(field)) || report_fields_by_repeat_instrument[instrument_name].fields.some(field => (0,utils/* isDateField */.y2)(field))) {
+      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isNumericField(field)) || report_fields_by_repeat_instrument[instrument_name].fields.some(field => isDateField(field))) {
         // Return true
         return true;
       }
@@ -66998,30 +66952,30 @@ const ScatterFieldSelector_exports_ = /*#__PURE__*/(0,exportHelper/* default */.
 const ScatterPlotForm_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(ScatterPlotFormvue_type_script_lang_js, [['render',ScatterPlotFormvue_type_template_id_f27940ec_scoped_true_render],['__scopeId',"data-v-f27940ec"]])
 
 /* harmony default export */ var ScatterPlotForm = (ScatterPlotForm_exports_);
-;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=b18072d0&scoped=true
+;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=9ccbd29c&scoped=true
 
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_withScopeId = n => (_pushScopeId("data-v-b18072d0"), n = n(), _popScopeId(), n);
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_1 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_withScopeId = n => (_pushScopeId("data-v-9ccbd29c"), n = n(), _popScopeId(), n);
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_1 = {
   class: "AG-graph-container"
 };
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_2 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_2 = {
   class: "AG-graph-title"
 };
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_3 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_3 = {
   ref: "graphContainer",
   class: "AG-graphContainer"
 };
-const ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_4 = {
+const ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_4 = {
   class: "AG-graph-description"
 };
-function ScatterPlotvue_type_template_id_b18072d0_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_1, [createBaseVNode("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_3, null, 512), createBaseVNode("div", ScatterPlotvue_type_template_id_b18072d0_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
+function ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_1, [createBaseVNode("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_2, [createBaseVNode("h3", null, toDisplayString($props.parameters.title || ""), 1)]), createBaseVNode("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_3, null, 512), createBaseVNode("div", ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_hoisted_4, [createBaseVNode("p", null, toDisplayString($props.parameters.description || ""), 1)]), $props.editorMode ? (openBlock(), createBlock(resolveDynamicComponent($data.moreOptionsComponent), {
     key: 0,
     parameters: $props.parameters,
     onUpdateParameters: _cache[0] || (_cache[0] = $event => $options.updateParameters($event))
   }, null, 40, ["parameters"])) : createCommentVNode("", true)]);
 }
-;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=b18072d0&scoped=true
+;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=template&id=9ccbd29c&scoped=true
 
 ;// CONCATENATED MODULE: ./node_modules/@observablehq/plot/src/marks/dot.js
 
@@ -67452,11 +67406,11 @@ function ScatterPlotOptionsvue_type_template_id_877c0ece_scoped_true_render(_ctx
 
     // If marker_type is set to truncate, truncate the labels
     if (marker_type == 'truncate') {
-      y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+      y_tick_format = d => truncateString(d, y_label_length);
     }
     // If marker_type is set to wrap, wrap the labels
     if (marker_type == 'wrap') {
-      y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+      y_tick_format = d => wrapString(d, y_label_length);
     }
 
     // If marker_type is a string and not truncate or wrap, use it as the tick format
@@ -67566,6 +67520,7 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=script&lang=js
 
 
+
 //import * as d3Force from 'd3-force';
 // import {PieChart} from "@d3/pie-chart";
 // import {parseChoicesOrCalculations, isCheckboxField, getCheckboxReport, getFieldLabel, wrapString, truncateString} from '@/utils';
@@ -67574,6 +67529,66 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 
 
 //import ScatterPlot from "@/components/ScatterPlot/ScatterPlot.vue";
+
+/////////////////////////////////////
+// Usage example
+// const startDate = "2023-01-01";
+// const endDate = "2023-12-31";
+// const evenlySpacedDates = getEvenlySpacedDates(startDate, endDate);
+function getEvenlySpacedDates(startDate, endDate) {
+  const dates = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const interval = Math.floor((end - start) / 9); // Calculate interval between dates
+
+  for (let i = 0; i < 10; i++) {
+    const date = new Date(start.getTime() + i * interval);
+    const formattedDate = date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+    dates.push(formattedDate);
+  }
+  return dates;
+}
+
+// Example usage
+// const dates = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const { oldestDate, newestDate } = getOldestAndNewestDates(dates);
+function getOldestAndNewestDates(dates) {
+  const sortedDates = dates.slice().sort();
+  const oldestDate = sortedDates[0];
+  const newestDate = sortedDates[sortedDates.length - 1];
+  return {
+    oldestDate,
+    newestDate
+  };
+}
+
+// Example usage
+// const sortedValues = sortValuesByDate(xValues, yValues);
+function sortValuesByDate(xValues, yValues) {
+  const combinedValues = xValues.map((value, index) => ({
+    x: value,
+    y: yValues[index]
+  }));
+  combinedValues.sort((a, b) => {
+    const dateA = new Date(a.x);
+    const dateB = new Date(b.x);
+    return dateA - dateB;
+  });
+  const sortedXValues = combinedValues.map(value => value.x);
+  const sortedYValues = combinedValues.map(value => value.y);
+  return {
+    xValues: sortedXValues,
+    yValues: sortedYValues
+  };
+}
+
+// const xValues = ["2023-03-10", "2023-02-15", "2023-04-01", "2023-01-05"];
+// const yValues = ["2", "5", "3", "8"];
+
+// const sortedXValues = sortedValues.xValues;
+// const sortedYValues = sortedValues.yValues;
+// console.log("Sorted X Values:", sortedXValues);
+// console.log("Sorted Y Values:", sortedYValues);
 
 /* harmony default export */ var ScatterPlotvue_type_script_lang_js = ({
   name: 'ScatterPlot',
@@ -67631,7 +67646,7 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
     },
     getGraph(parameters) {
       // Get the choices for the category
-      var choices = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[parameters.numeric_field]);
+      var choices = parseChoicesOrCalculations(this.data_dictionary[parameters.numeric_field]);
       var this_report = this.report;
 
       // If the category is a checkbox field, get a checkbox field report
@@ -67760,7 +67775,7 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
       // const show_legend = parameters.show_legend ? true : false;
 
       // const y_title = parameters.numeric_field ?  getFieldLabel(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
-      const y_title = (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.numeric_field_y]); // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count'
+      const y_title = getFieldLabel(this.data_dictionary[parameters.numeric_field_y]); // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count'
 
       var graph = null;
       const xAxisLabels = axisX({
@@ -67768,17 +67783,18 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
         type: 'band',
         // tickFormat: x_tick_format,
         tickRotate: x_rotate,
-        fontSize: x_label_size
+        fontSize: x_label_size,
+        label: null
       });
 
       // Create x axis title
       const xAxisTitle = axisX({
         //domain: domain,
         type: 'band',
-        label: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.numeric_field]),
+        label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
         labelOffset: x_title_offset,
-        ticks: null,
-        tickFormat: null,
+        tick: null,
+        tickFormat: () => '',
         fontSize: x_title_size
       });
 
@@ -67863,15 +67879,63 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
         anchor: "start",
         fill: colorScale(parameters.scatter_dot_color * 10)
       });
+      console.log("yAxisLabels");
+      console.log(yAxisLabels);
+
+      //calc min and max of x axis
+      let minx = Math.min(...xValues);
+      let maxx = Math.max(...xValues);
+      let domainX = null; //[minx, maxx];
+      let miny = Math.min(...yValues);
+      let maxy = Math.max(...yValues);
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD format
+      // const isValidDateX = dateRegex.test(xValues[0]);
+      // const isValidDateY = dateRegex.test(yValues[0]);
+      let domainY = null; //[miny, maxy];
+      // console.log("isValidDate",isValidDate);
+      // console.log("minx",minx);
+      // console.log("maxx",maxx);
+      // console.log("miny",miny);
+      // console.log("maxy",maxy);
+
+      if (dateRegex.test(yValues[0])) {
+        const sortedValues = sortValuesByDate(yValues, xValues);
+        xValues = sortedValues.yValues;
+        yValues = sortedValues.xValues;
+        domainY = yValues;
+      } else {
+        domainY = [miny, maxy];
+      }
+      if (dateRegex.test(xValues[0])) {
+        // domainX = [new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+        const {
+          oldestDate,
+          newestDate
+        } = getOldestAndNewestDates(xValues);
+        domainX = getEvenlySpacedDates(oldestDate, newestDate, 10);
+        const sortedValues = sortValuesByDate(xValues, yValues);
+        xValues = sortedValues.xValues;
+        yValues = sortedValues.yValues;
+        domainX = xValues; //[new Date("2020-03-10"), new Date("2023-03-14")]; //xValues;
+      } else {
+        domainX = [minx, maxx];
+      }
       graph = plot({
         marks: [parameters.marker_type == "circle" ? dotPlot : parameters.marker_type == "square" ? squarePlot : squarePlot, parameters.marker_type == "square" ? squarePlot2 : trianglePlot, yAxisTitle, yAxisLabels, xAxisTitle, xAxisLabels],
         marginBottom: bottom_margin,
         marginLeft: parameters.left_margin ? parameters.left_margin : 80,
         x: {
-          label: ''
+          //label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
+          domain: domainX
+          //tickRotate: x_rotate,
+        },
+
+        y: {
+          label: '',
+          domain: domainY
         }
       });
-
+      console.log("xAxisTitle", xAxisTitle);
       // return scatterplot;
       return graph;
     },
@@ -67906,10 +67970,10 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 });
 ;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=script&lang=js
  
-;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=b18072d0&scoped=true&lang=css
+;// CONCATENATED MODULE: ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-54.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-54.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-54.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=9ccbd29c&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=b18072d0&scoped=true&lang=css
+;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue?vue&type=style&index=0&id=9ccbd29c&scoped=true&lang=css
 
 ;// CONCATENATED MODULE: ./src/components/ScatterPlot/ScatterPlot.vue
 
@@ -67919,7 +67983,7 @@ const ScatterPlotOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)
 ;
 
 
-const ScatterPlot_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(ScatterPlotvue_type_script_lang_js, [['render',ScatterPlotvue_type_template_id_b18072d0_scoped_true_render],['__scopeId',"data-v-b18072d0"]])
+const ScatterPlot_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(ScatterPlotvue_type_script_lang_js, [['render',ScatterPlotvue_type_template_id_9ccbd29c_scoped_true_render],['__scopeId',"data-v-9ccbd29c"]])
 
 /* harmony default export */ var ScatterPlot = (ScatterPlot_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/components/Tables/TableComponent.vue?vue&type=template&id=63c8ea48&scoped=true
@@ -67989,12 +68053,12 @@ function SummaryTablevue_type_template_id_b048d7e0_scoped_true_render(_ctx, _cac
   },
   data() {
     // Get the choices for the categorical field
-    var choices = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field]);
+    var choices = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field]);
     var this_report = this.report;
 
     // If the category is a checkbox field, get a checkbox field report
-    if ((0,utils/* isCheckboxField */.lU)(this.parameters.categorical_field)) {
-      this_report = (0,utils/* getCheckboxReport */.FE)(this.parameters.categorical_field);
+    if (isCheckboxField(this.parameters.categorical_field)) {
+      this_report = getCheckboxReport(this.parameters.categorical_field);
     }
 
     // Get a dataframe that only has entries for the instrument specified by the instrument parameter
@@ -68182,20 +68246,20 @@ function CrosstabTablevue_type_template_id_c79a30ba_scoped_true_render(_ctx, _ca
   },
   data() {
     // Get the choices for the categorical first category field
-    var choices_one = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field_one]);
+    var choices_one = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field_one]);
 
     // Get the choices for the categorical second category field
-    var choices_two = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.categorical_field_two]);
+    var choices_two = parseChoicesOrCalculations(this.data_dictionary[this.parameters.categorical_field_two]);
     var this_report = this.report;
 
     // If the first category is a checkbox field, get a checkbox field report
-    if ((0,utils/* isCheckboxField */.lU)(this.parameters.categorical_field_one)) {
-      this_report = (0,utils/* getCheckboxReport */.FE)(this.parameters.categorical_field_one);
+    if (isCheckboxField(this.parameters.categorical_field_one)) {
+      this_report = getCheckboxReport(this.parameters.categorical_field_one);
     }
 
     // If the second category is a checkbox field, get a checkbox field report
-    if ((0,utils/* isCheckboxField */.lU)(this.parameters.categorical_field_two)) {
-      this_report = (0,utils/* getCheckboxReport */.FE)(this.parameters.categorical_field_two);
+    if (isCheckboxField(this.parameters.categorical_field_two)) {
+      this_report = getCheckboxReport(this.parameters.categorical_field_two);
     }
 
     // Get a dataframe that only has entries for the instrument specified by the instrument parameter
@@ -69023,7 +69087,7 @@ const CrosstabTableForm_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(
     },
     instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
       // If there is a categorical field
-      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => (0,utils/* isCategoricalField */.Vx)(field))) {
+      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isCategoricalField(field))) {
         // Return true
         return true;
       }
@@ -69276,7 +69340,7 @@ const MapOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(MapOpti
       const locationIdentifiers = [...new Set(processedData.map(row => row.identifier))];
 
       // Get the choices for the category field if it exists
-      const categoryChoices = this.parameters.location_identifier ? (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.location_identifier]) : null;
+      const categoryChoices = this.parameters.location_identifier ? parseChoicesOrCalculations(this.data_dictionary[this.parameters.location_identifier]) : null;
 
       // Create a color scale for the dots
       const colorScale = ordinal().domain(locationIdentifiers).range(this.parameters.palette_brewer || category10);
@@ -69305,7 +69369,7 @@ const MapOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(MapOpti
       const locationIdentifiers = [...new Set(processedData.map(row => row.identifier))];
 
       // Get the choices for the category field if it exists
-      const categoryChoices = this.parameters.location_identifier ? (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[this.parameters.location_identifier]) : null;
+      const categoryChoices = this.parameters.location_identifier ? parseChoicesOrCalculations(this.data_dictionary[this.parameters.location_identifier]) : null;
 
       // Create a color scale for the dots
       const colorScale = ordinal().domain(locationIdentifiers).range(this.parameters.palette_brewer || category10);
@@ -69597,12 +69661,12 @@ function CoordinateSelectorvue_type_template_id_8d533a9c_scoped_true_render(_ctx
   data() {
     return {
       currentField: this.modelValue,
-      stripHtml: utils/* stripHtml */.Vt
+      stripHtml: stripHtml
     };
   },
   computed: {
     coordinateFields() {
-      return (0,utils/* getCoordinateFields */.Oz)(this.fields);
+      return getCoordinateFields(this.fields);
     }
   },
   watch: {
@@ -69682,7 +69746,7 @@ function UniqueLocationIdentifiervue_type_template_id_7ead66db_scoped_true_rende
 
     return {
       currentField: this.modelValue,
-      stripHtml: utils/* stripHtml */.Vt
+      stripHtml: stripHtml
     };
   },
   computed: {
@@ -69696,7 +69760,7 @@ function UniqueLocationIdentifiervue_type_template_id_7ead66db_scoped_true_rende
       const coordinateFields = JSON.parse(this.coordinateFields);
 
       // Get the list of radio fields
-      var radioFields = (0,utils/* getRadioFields */.Cy)(this.fields);
+      var radioFields = getRadioFields(this.fields);
 
       // Create a map of locations to the radio fields
       var locationToRadioFields = {};
@@ -69896,7 +69960,7 @@ const UniqueLocationIdentifier_exports_ = /*#__PURE__*/(0,exportHelper/* default
       }
     },
     instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
-      const coordinateFields = (0,utils/* getCoordinateFields */.Oz)(report_fields_by_repeat_instrument[instrument_name].fields);
+      const coordinateFields = getCoordinateFields(report_fields_by_repeat_instrument[instrument_name].fields);
       console.log('instrumentCanCreate', instrument_name, coordinateFields, report_fields_by_repeat_instrument[instrument_name]);
       // If there are coordinate fields
       if (Object.keys(coordinateFields).length > 0) {
@@ -70136,7 +70200,7 @@ function NetworkGraphFormvue_type_template_id_13e3abdf_scoped_true_render(_ctx, 
     },
     instrumentCanCreate(report_fields_by_repeat_instrument, instrument_name) {
       // If there is a categorical field
-      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => (0,utils/* isNumericField */.H7)(field))) {
+      if (report_fields_by_repeat_instrument[instrument_name].fields.some(field => isNumericField(field))) {
         // Return true
         return true;
       }
@@ -70435,11 +70499,11 @@ function NetworkGraphOptionsvue_type_template_id_13ec2f37_scoped_true_render(_ct
 
     // If marker_type is set to truncate, truncate the labels
     if (marker_type == 'truncate') {
-      y_tick_format = d => (0,utils/* truncateString */.aS)(d, y_label_length);
+      y_tick_format = d => truncateString(d, y_label_length);
     }
     // If marker_type is set to wrap, wrap the labels
     if (marker_type == 'wrap') {
-      y_tick_format = d => (0,utils/* wrapString */.jP)(d, y_label_length);
+      y_tick_format = d => wrapString(d, y_label_length);
     }
 
     // If marker_type is a string and not truncate or wrap, use it as the tick format
@@ -70603,7 +70667,7 @@ const NetworkGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z
     },
     getGraph(parameters) {
       // Get the choices for the category
-      var choices = (0,utils/* parseChoicesOrCalculations */.uJ)(this.data_dictionary[parameters.numeric_field]);
+      var choices = parseChoicesOrCalculations(this.data_dictionary[parameters.numeric_field]);
       var this_report = this.report;
 
       // If the category is a checkbox field, get a checkbox field report
@@ -70733,7 +70797,7 @@ const NetworkGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z
       // const show_legend = parameters.show_legend ? true : false;
 
       // const y_title = parameters.numeric_field ?  getFieldLabel(this.data_dictionary[parameters.numeric_field]) + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
-      const y_title = (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.numeric_field_y]); // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
+      const y_title = getFieldLabel(this.data_dictionary[parameters.numeric_field_y]); // parameters.numeric_field_y;// ?  + ' ' + this.module.tt(parameters.aggregation_function): this.module.tt('count')
 
       var graph = null;
 
@@ -70752,7 +70816,7 @@ const NetworkGraphOptions_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z
       const xAxisTitle = axisX({
         //domain: domain,
         type: 'band',
-        label: (0,utils/* getFieldLabel */.N3)(this.data_dictionary[parameters.numeric_field]),
+        label: getFieldLabel(this.data_dictionary[parameters.numeric_field]),
         labelOffset: x_title_offset,
         ticks: null,
         tickFormat: null,
@@ -71485,13 +71549,16 @@ const SavedModal_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(SavedMo
       isPublic: this.dashboard.is_public || false,
       body: reactive(this.dashboard.body ? JSON.parse(this.dashboard.body).map(row => row.map(cell => ({
         ...cell,
-        id: (0,utils/* getUuid */.pB)()
+        id: getUuid()
       }))) : []),
       localDashboard: this.dashboard,
       savedModal: null
     };
   },
   methods: {
+    cancel() {
+      if (history.length > 1) history.back();else location.reload();
+    },
     updateTitle(new_title) {
       this.title = new_title;
     },
@@ -71576,7 +71643,7 @@ const SavedModal_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(SavedMo
 
 
 ;
-const DashboardEditor_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(DashboardEditorvue_type_script_lang_js, [['render',DashboardEditorvue_type_template_id_f25381d8_render]])
+const DashboardEditor_exports_ = /*#__PURE__*/(0,exportHelper/* default */.Z)(DashboardEditorvue_type_script_lang_js, [['render',DashboardEditorvue_type_template_id_6d18bcaa_render]])
 
 /* harmony default export */ var DashboardEditor = (DashboardEditor_exports_);
 ;// CONCATENATED MODULE: ./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib/index.js??clonedRuleSet-82.use[1]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[3]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/DashboardList.vue?vue&type=template&id=3ccf7c8e

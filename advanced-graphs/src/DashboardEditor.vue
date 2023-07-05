@@ -19,7 +19,7 @@
         <button @click="saveDashboard" class="btn btn-primary">
           {{ dashboard ? module.tt('dbe_save') : module.tt('dbe_create') }}
         </button>
-        <button class="btn btn-secondary">{{ module.tt('dbe_cancel') }}</button>
+        <button @click="cancel()" class="btn btn-secondary">{{ module.tt('dbe_cancel') }}</button>
       </div>
     </div>
     <saved-modal
@@ -72,6 +72,12 @@
         }
     },
     methods: {
+      cancel() {
+        if(history.length > 1)
+          history.back();
+        else
+          location.reload();
+      },
       updateTitle(new_title) {
         this.title = new_title;
       },

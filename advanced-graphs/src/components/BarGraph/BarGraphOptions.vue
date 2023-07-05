@@ -178,8 +178,8 @@
             // if (typeof y_label_limit != 'undefined' && y_label_limit != 'truncate' && y_label_limit != 'wrap' && y_label_limit != null) {
             //     y_tick_format = d => d3.format(y_label_limit)(d);
             // }
-            const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 10;
-            const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 4.5;
+            const bar_label_size = this.parameters.bar_label_size ? Number(this.parameters.bar_label_size) : 15;
+            const bar_label_position = this.parameters.bar_label_position ? Number(this.parameters.bar_label_position) : 7;
 
 
             const y_rotate = this.parameters.y_rotate ? Number(this.parameters.y_rotate) : 0;

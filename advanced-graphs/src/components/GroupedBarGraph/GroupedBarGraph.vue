@@ -199,12 +199,12 @@ export default {
             const x_label_limit = parameters.x_label_limit ? parameters.x_label_limit : null;
             const x_label_length = parameters.x_label_length ? Number(parameters.x_label_length) : Math.max(...barDomain.map(d => choices_one[d].length));
                 
-            // Get the x tick format
+            // Get the x tick format            
             var x_tick_format = d => choices_one[d];
 
             // If x_label_limit is set to truncate, truncate the labels
             if (x_label_limit == 'truncate') {
-                x_tick_format = d => truncateString(choices_one[d], x_label_length);
+                x_tick_format = d => truncateString(choices_one[d], x_label_length);               
             }
             // If x_label_limit is set to wrap, wrap the labels
             if (x_label_limit == 'wrap') {
@@ -251,7 +251,7 @@ export default {
                 type: 'band',
                 tickFormat: x_tick_format,
                 tickRotate:  x_rotate,
-                fontSize: x_label_size, 
+                fontSize: x_label_size,
             });
 
             // Create x axis title
@@ -260,7 +260,7 @@ export default {
                 type: 'band',
                 label:  getFieldLabel(this.data_dictionary[parameters.categorical_field_one]),
                 labelOffset: x_title_offset,
-                ticks: null,
+                tick: null,
                 tickFormat: null,
                 fontSize: x_title_size
             });
@@ -332,7 +332,7 @@ export default {
                         range: colorDomain.map(d => colorScale(d)),
                         title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
                         format: x_tick_format,
-                        legend: show_legend ? true : true,
+                        legend: show_legend ? true : false,
                     },
                     marks: [
                         yAxisTitle,
@@ -370,12 +370,13 @@ export default {
                 const color_label_rotate = parameters.color_label_rotate ? Number(parameters.color_label_rotate) : 0;
                 const color_label_size = parameters.color_label_size ? Number(parameters.color_label_size) : 10;
 
+                console.log(color_label_size,color_label_rotate);
                 xAxisLabels = Plot.axisX(colorDomain, {
                     domain: colorDomain,
                     type: 'band',
                     tickFormat: color_tick_format,
-                    tickRotate:  color_label_rotate,
-                    fontSize: color_label_size, 
+                    tickRotate:  x_rotate,
+                    fontSize: x_label_size,
                 });
 
                 barLabels = Plot.text(
@@ -389,7 +390,7 @@ export default {
                         fontSize: bar_label_size, // Set the font size for the bar labels
                         text: d => y_tick_format(d.value)
                     });
-
+                
                 graph = Plot.plot({
                     width: 640,
                     height: 480,
@@ -406,7 +407,7 @@ export default {
                         range: colorDomain.map(d => colorScale(d)),
                         title: getFieldLabel(this.data_dictionary[parameters.categorical_field_two]),
                         format: x_tick_format,
-                        legend: show_legend ? true : true,
+                        legend: show_legend
                     },
                     facet: {
                         data: countsFlattened,
@@ -426,7 +427,8 @@ export default {
                     marginLeft: parameters.left_margin ? parameters.left_margin : 80,
                     marginBottom: bottom_margin
                 });
-
+                    d3.select(graph).attr('font-size', color_label_size);
+                    
                 return graph;
             }
 
